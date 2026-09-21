@@ -5,7 +5,7 @@ bizproof.xaikorea.ai.kr {
  }
  header {
   X-Content-Type-Options nosniff
-  Referrer-Policy no-referrer
+  Referrer-Policy same-origin
   X-Frame-Options DENY
   X-Robots-Tag "noindex, nofollow, noarchive"
   -Server
