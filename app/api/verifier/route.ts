@@ -1,3 +1,4 @@
+import {requestOrigin} from '@/lib/public-demo';
 import {requireBusinessAccess,visibleBusinessState} from '@/lib/business-access';
 import {FgaError} from '@/lib/openfga';
 import {env} from 'cloudflare:workers';
@@ -13,7 +14,7 @@ async function access(){const user=await getChatGPTUser(),role=await getActiveRo
 export async function GET(){const ctx=await access();if(!ctx)return json({error:'관리자·구매사·지원기관 로그인이 필요합니다.'},403);try{const {state}=await readState(ctx.user.storageOwner);const visible=await visibleBusinessState(state,{actor:ctx.user.userId,owner:ctx.user.storageOwner,authMode:ctx.user.authMode,role:ctx.role});const ids=new Set(visible.requests.map(r=>r.id));return json({configured:!!config(),notice:verifierNotice,sessions:(state.verifierSessions??[]).filter(s=>s.actor===ctx.user.userId&&s.role===ctx.role&&ids.has(s.requestId)).map(s=>sessionView(Date.parse(s.expiresAt)<=Date.now()&&['ACTIVE','UNUSED'].includes(s.status)?{...s,status:'EXPIRED'}:s))});}catch{return json({error:'외부 검증 설정을 확인하세요.'},503);}}
 export async function POST(req:Request){
  const ctx=await access();if(!ctx)return json({error:'관리자·구매사·지원기관 로그인이 필요합니다.'},403);
- if(req.headers.get('origin')!==new URL(req.url).origin)return json({error:'허용되지 않는 출처입니다.'},403);
+ if(req.headers.get('origin')!==requestOrigin(req))return json({error:'허용되지 않는 출처입니다.'},403);
  try{
   const text=await req.text();if(text.length>1000)return json({error:'요청이 너무 큽니다.'},413);
   const input=z.discriminatedUnion('action',[z.object({action:z.literal('create'),requestId:z.string().min(1).max(160),consent:z.literal(true)}).strict(),z.object({action:z.literal('refresh'),id:z.string().uuid()}).strict()]).parse(JSON.parse(text));

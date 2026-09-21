@@ -1,0 +1,20 @@
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
+const assert=require('node:assert/strict'),fs=require('node:fs'),{createHash}=require('node:crypto');
+(async()=>{const browser=await chromium.launch({headless:true,channel:'msedge'});const base=process.env.SMOKE_BASE||'http://localhost:3102';try{
+ fs.mkdirSync('outputs',{recursive:true});const ctx=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(base+'/signin-with-chatgpt',{waitUntil:'networkidle'});await page.getByRole('button',{name:'내 체험 공간 시작하기'}).click();await page.waitForURL('**/?view=journey');
+ async function post(action,payload={},status=200){const r=await ctx.request.post(base+'/api/platform',{data:{action,...payload}});const d=await r.json();assert.equal(r.status(),status,JSON.stringify(d));return d;}
+ async function get(){return (await ctx.request.get(base+'/api/platform')).json();}
+ await post('switch-role',{role:'admin'});await page.goto(base+'/?view=journey',{waitUntil:'networkidle'});await page.getByRole('button',{name:'새 시연 준비',exact:true}).click();await page.getByTestId('journey-credential').waitFor();
+ // Wait for the created fixture, not a pre-existing journey rendered while the request is pending.
+ await page.getByRole('button',{name:'새 시연 준비',exact:true}).waitFor({state:'visible'});await page.waitForFunction(()=>!Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='새 시연 준비')?.disabled);
+ let s=await get();const j=s.demoJourneys.at(-1),c=s.credentials.find(c=>c.id===j.credentialId);assert.equal(c.source.kind,'synthetic');
+ await post('check-demo-revocation',{id:j.id},422);
+ const bridge=false;if(bridge){const health=await (await ctx.request.get(base+'/api/midnight')).json();assert.equal(health.checks.find(c=>c.id==='bridge').reachable,true,JSON.stringify(health));const proof=await ctx.request.post(base+'/api/midnight',{data:{requestId:j.requestIds.revoked,credentialId:c.id}});assert.equal(proof.status(),200,await proof.text());assert.equal((await proof.json()).proofGenerated,false);}
+ for(const key of ['buyer','grant','negative']){const card=page.getByTestId('journey-'+key);assert.ok((await card.innerText()).includes(c.id));const submit=card.getByRole('button',{name:'같은 자격으로 제출',exact:true});assert.equal(await submit.isDisabled(),true);await card.getByRole('checkbox').check();await submit.click();await card.getByRole('button',{name:'기관에서 결과 확인',exact:true}).click();await card.getByText(key==='negative'?'미충족 확인':'충족 확인',{exact:true}).waitFor();}
+ s=await get();for(const key of ['buyer','grant','negative']){const p=s.presentations.find(p=>p.requestId===j.requestIds[key]);assert.equal(p.credentialId,c.id);assert.equal(p.eligible,key!=='negative');assert.ok(p.verifiedAt);assert.equal(p.mode,'signed-demo');assert.equal(p.claims,undefined);await post('verify-presentation',{id:p.id},409);}
+ assert.equal(new Set(['buyer','grant','negative'].map(key=>s.presentations.find(p=>p.requestId===j.requestIds[key]).nonce)).size,3);
+ await page.reload({waitUntil:'networkidle'});await page.screenshot({path:'outputs/nhn-journey-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:'outputs/nhn-journey-mobile.png',fullPage:true});await page.setViewportSize({width:1440,height:1000});
+ await page.getByLabel('이 시연 자격을 취소하고 재사용 차단을 확인합니다.').check();await page.getByRole('button',{name:'시연 자격 취소',exact:true}).click();await page.getByRole('button',{name:'현재 자격 상태 검사',exact:true}).click();await page.getByRole('status').filter({hasText:'취소된 자격: 제출 전 유효성 검사에서 차단됨'}).waitFor();
+ await post('present',{requestId:j.requestIds.revoked,credentialId:c.id,consent:true},422);
+assert.deepEqual(errors,[]);console.log('PASS NHN browser: actual issuance/reuse, buyer/grant/negative, revocation, mobile');}finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});
