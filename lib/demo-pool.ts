@@ -43,3 +43,9 @@ export async function ensurePreparedWorkspace(owner:string){
   try{await saveState(owner,state,version);return;}catch(e){if(!(e instanceof ConflictError)||attempt===2)throw e;}
  }
 }
+
+export async function prepareActiveDemoWorkspaces(){
+ await tables();const rows=await env.DB!.prepare('SELECT id FROM demo_sessions WHERE expires>?').bind(Date.now()).all<{id:string}>();
+ for(const row of rows.results)await ensurePreparedWorkspace(row.id);
+ return rows.results.length;
+}
