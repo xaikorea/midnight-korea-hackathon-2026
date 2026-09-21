@@ -13,3 +13,5 @@
 구현: `app/welcome-motion.tsx`, `app/welcome-motion.css`, `app/welcome-screen.tsx`.
 
 검증 항목: 실제 무음 재생, 정지/재개, 정지 선택 유지, 화면 밖 정지, 로딩·재시도 버튼, 모바일 재생·너비, 동작 줄이기·데이터 절약 시 영상 미요청, 영상 실패 시 기본 화면 유지.
+
+배포 완료: 앱 코드 `ad22876`, 이미지 `bizproof:welcome-motion` (`518809777f10`). 운영과 분리된 컨테이너 및 공개 HTTPS 주소에서 위 브라우저 검증을 통과했다. 공개 MP4 2개·포스터의 SHA-256이 원본과 일치하며 영상 Range 요청이 206/1,024 bytes로 응답함을 확인했다. 타입·ESLint·전체 배포 단위 테스트·Node 런타임·Next 빌드 통과. 공개 화면 캡처는 `outputs/welcome-motion-desktop.png`, `outputs/welcome-motion-mobile.png`에 저장했다.
