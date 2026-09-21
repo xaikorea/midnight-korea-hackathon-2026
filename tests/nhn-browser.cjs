@@ -3,6 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),{createHash}=re
 (async()=>{const browser=await chromium.launch({headless:true,channel:'msedge'});const base=process.env.SMOKE_BASE||'http://localhost:3102';try{
  fs.mkdirSync('outputs',{recursive:true});const ctx=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'/signin-with-chatgpt',{waitUntil:'networkidle'});await page.getByRole('button',{name:'내 체험 공간 시작하기'}).click();await page.waitForURL('**/?view=journey');
+ await page.getByLabel('방문 분석 안내', {exact:true}).getByRole('button',{name:'확인',exact:true}).click();
  async function post(action,payload={},status=200){const r=await ctx.request.post(base+'/api/platform',{data:{action,...payload}});const d=await r.json();assert.equal(r.status(),status,JSON.stringify(d));return d;}
  async function get(){return (await ctx.request.get(base+'/api/platform')).json();}
  await post('switch-role',{role:'admin'});await page.goto(base+'/?view=journey',{waitUntil:'networkidle'});await page.getByRole('button',{name:'새 시연 준비',exact:true}).click();await page.getByTestId('journey-credential').waitFor();
