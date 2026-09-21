@@ -18,7 +18,7 @@ export default function SimpleApplications({data,refresh,go}:Props){
  const policies=data.policies.filter(p=>p.status==='active'&&(!data.preparedDemo||data.preparedDemo.policyIds.includes(p.id)));
  const currentCompany=data.companies.find(c=>c.id===company);
  const existing=data.requests.filter(r=>r.companyId===company&&policies.some(p=>p.id===r.policyId)&&data.presentations.some(p=>p.requestId===r.id));
- const completed=(id:string)=>existing.find(r=>r.policyId===id&&['submitted','verified','rejected'].includes(applicationStatus(r,data.presentations.find(p=>p.requestId===r.id))));
+ const completed=(id:string)=>existing.find(r=>r.policyId===id&&['submitted','verified'].includes(applicationStatus(r,data.presentations.find(p=>p.requestId===r.id)))&&Date.parse(r.expiresAt)>Date.now());
  const pendingIds=selected.filter(id=>!completed(id));
  const identity=JSON.stringify({company,ids:pendingIds,choices,version:data.version,attempt});
  // Consent belongs to precisely these recipients, credentials and state version.
@@ -33,7 +33,7 @@ export default function SimpleApplications({data,refresh,go}:Props){
  },[identity]);
  const waiting=existing.some(r=>r.status==='submitted');
  useEffect(()=>{if(!waiting)return;const timer=setInterval(()=>void refresh(),30000);return()=>clearInterval(timer);},[waiting,refresh]);
- const ready=rows.length===pendingIds.length&&rows.length>0&&rows.every(r=>r.preview?.ready)&&!loading;
+ const ready=rows.length===pendingIds.length&&rows.length>0&&rows.every((r,i)=>r.policyId===pendingIds[i]&&r.preview?.companyId===company&&r.preview.ready)&&!loading;
  function toggle(id:string){if(busy)return;setConsent(false);setOutcomes([]);setSelected(current=>current.includes(id)?current.filter(x=>x!==id):current.length<5?[...current,id]:current);}
  async function submit(){
   if(!ready||!consent||busy)return;setBusy(true);setError('');
