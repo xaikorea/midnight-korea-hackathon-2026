@@ -1,0 +1,3 @@
+'use client';
+import {useEffect,useState} from 'react';
+export function PolicyEnginePanel(){const [mode,setMode]=useState('확인 중');useEffect(()=>{const c=new AbortController();fetch('/api/policy-engine',{signal:c.signal}).then(async r=>{if(!r.ok)throw Error();const data=await r.json() as {mode:string};setMode(data.mode==='opa'?'OPA 필수 평가':'기존 로컬 평가');}).catch(()=>{if(!c.signal.aborted)setMode('설정 확인 필요');});return()=>c.abort();},[]);return <section className="panel"><h2>업무 조건 판정 · OPA</h2><p>현재 설정: <b>{mode}</b></p><p>OPA 모드에서는 자격 제출 시 매출·업력·소재지·인증 조건을 Rego 정책으로 평가합니다. 기존 판정과 항목별 결과가 같아야 제출할 수 있습니다.</p><p>설정 표시는 실제 연결 성공을 의미하지 않습니다. OPA에는 판정에 필요한 원본 속성이 전달됩니다. 권한·자격 서명·취소 상태 검사는 별도로 유지합니다.</p></section>;}

@@ -1,0 +1,18 @@
+# Adjust DatabaseDirectory/TemporaryDirectory for your deployment.
+Foreground yes
+TCPSocket 3310
+TCPAddr 127.0.0.1
+DatabaseDirectory /var/lib/clamav
+TemporaryDirectory /tmp
+StreamMaxLength 2M
+MaxFileSize 2M
+MaxScanSize 20M
+MaxRecursion 16
+MaxFiles 1000
+MaxScanTime 15000
+AlertExceedsMax yes
+AlertEncrypted yes
+ScanPDF yes
+ScanArchive yes
+HeuristicAlerts yes
+SelfCheck 60

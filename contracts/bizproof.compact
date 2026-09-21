@@ -1,0 +1,103 @@
+// BizProof: reusable enterprise attestations and request-bound eligibility.
+// Adapted from midnightntwrk/example-zkloan, Apache-2.0.
+// Public: issuers, policy, holder pseudonym, revocation handle, request, result.
+// Private: enterprise revenue, founded date, region, certification, signature.
+pragma language_version >= 0.22 && <= 0.23;
+import CompactStandardLibrary;
+import "schnorr" prefix Schnorr_;
+export { Schnorr_SchnorrSignature };
+
+export struct BusinessClaims {
+  revenue: Uint<64>;
+  foundedDay: Uint<32>;
+  region: Uint<16>;
+  certified: Boolean;
+  expiresAt: Uint<64>;
+  credentialId: Bytes<32>;
+}
+export struct Policy {
+  minRevenue: Uint<64>;
+  maxRevenue: Uint<64>;
+  minFoundedDay: Uint<32>;
+  region: Uint<16>;
+  requireCertification: Boolean;
+  issuerId: Uint<16>;
+}
+export struct Request {
+  holder: Bytes<32>;
+  audience: Bytes<32>;
+  nonce: Bytes<32>;
+  policy: Policy;
+  deadline: Uint<64>;
+}
+export ledger administrator: Bytes<32>;
+export ledger trustedTime: Uint<64>;
+export ledger issuerKeys: Map<Uint<16>, JubjubPoint>;
+export ledger suspendedIssuers: Set<Uint<16>>;
+export ledger revoked: Set<Bytes<32>>;
+export ledger requests: Map<Bytes<32>, Request>;
+export ledger cancelled: Set<Bytes<32>>;
+export ledger results: Map<Bytes<32>, Boolean>;
+witness secret(): Bytes<32>;
+witness attestation(): [BusinessClaims, Schnorr_SchnorrSignature];
+
+constructor(initialTime: Uint<64>) {
+  administrator = disclose(adminKey(secret()));
+  trustedTime = disclose(initialTime);
+}
+export pure circuit adminKey(sk: Bytes<32>): Bytes<32> {
+  return persistentHash<[Bytes<32>,Bytes<32>]>([pad(32,"bizproof:admin:v1"),sk]);
+}
+export pure circuit holderKey(sk: Bytes<32>): Bytes<32> {
+  return persistentHash<[Bytes<32>,Bytes<32>]>([pad(32,"bizproof:holder:v1"),sk]);
+}
+export pure circuit credentialMessage(c: BusinessClaims, holder: Bytes<32>): Vector<4,Field> {
+  return [transientHash<BusinessClaims>(c),transientHash<Bytes<32>>(holder),transientHash<Bytes<32>>(c.credentialId),1001 as Field];
+}
+export pure circuit signingChallenge(ax:Field,ay:Field,px:Field,py:Field,msg:Vector<4,Field>):Field {
+  return Schnorr_schnorrChallenge(ax,ay,px,py,msg);
+}
+circuit requireAdmin(): [] { assert(administrator == adminKey(secret()),"Administrator required"); }
+export circuit registerIssuer(id: Uint<16>, pk: JubjubPoint): [] {
+  requireAdmin();
+  assert(!issuerKeys.member(disclose(id)),"Issuer key IDs are immutable; rotate with a new ID");
+  issuerKeys.insert(disclose(id),disclose(pk));
+}
+export circuit suspendIssuer(id: Uint<16>): [] { requireAdmin(); suspendedIssuers.insert(disclose(id)); }
+export circuit resumeIssuer(id: Uint<16>): [] { requireAdmin(); suspendedIssuers.remove(disclose(id)); }
+export circuit revokeCredential(id: Bytes<32>): [] { requireAdmin(); revoked.insert(disclose(id)); }
+export circuit advanceTime(timestamp: Uint<64>): [] {
+  requireAdmin(); assert(disclose(timestamp)>=trustedTime,"Time must not move backwards"); trustedTime=disclose(timestamp);
+}
+export circuit rotateAdministrator(next: Bytes<32>): [] { requireAdmin(); administrator=disclose(next); }
+export circuit createRequest(id: Bytes<32>, value: Request): [] {
+  requireAdmin();
+  assert(!requests.member(disclose(id)),"Request already exists");
+  assert(disclose(value.deadline)>trustedTime,"Request expired");
+  assert(disclose(value.policy.minRevenue)<=disclose(value.policy.maxRevenue),"Invalid revenue range");
+  assert(issuerKeys.member(disclose(value.policy.issuerId)),"Unknown issuer");
+  requests.insert(disclose(id),disclose(value));
+}
+export circuit cancelRequest(id: Bytes<32>): [] { requireAdmin(); assert(!results.member(disclose(id)),"Already submitted");cancelled.insert(disclose(id)); }
+export circuit submit(id: Bytes<32>): [] {
+  const requestId=disclose(id);
+  assert(requests.member(requestId),"Unknown request");
+  assert(!results.member(requestId),"Replay rejected");
+  assert(!cancelled.member(requestId),"Cancelled request");
+  const request=requests.lookup(requestId);
+  assert(request.deadline>trustedTime,"Request expired");
+  const holder=holderKey(secret());
+  assert(request.holder==holder,"Credential holder mismatch");
+  const [claims,signature]=attestation();
+  assert(claims.expiresAt>trustedTime,"Credential expired");
+  assert(!revoked.member(disclose(claims.credentialId)),"Credential revoked");
+  const policy=request.policy;
+  assert(!suspendedIssuers.member(policy.issuerId),"Issuer suspended");
+  const key=issuerKeys.lookup(policy.issuerId);
+  Schnorr_schnorrVerify<4>(credentialMessage(claims,holder),signature,key);
+  const eligible=claims.revenue>=policy.minRevenue && claims.revenue<=policy.maxRevenue
+    && claims.foundedDay>=policy.minFoundedDay
+    && (policy.region==0 || claims.region==policy.region)
+    && (!policy.requireCertification || claims.certified);
+  results.insert(requestId,disclose(eligible));
+}

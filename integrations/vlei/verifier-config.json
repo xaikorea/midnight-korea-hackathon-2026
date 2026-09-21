@@ -1,0 +1,26 @@
+{
+  "dt": "2022-01-20T21:57:59.82335+09:00",
+  "iurls": [
+    "http://49.12.190.139:5623/oobi",
+    "http://139.99.193.43:5623/oobi",
+    "http://20.3.144.86:5623/oobi",
+    "http://13.245.64.114:5623/oobi",
+    "http://47.242.47.124:5623/oobi"
+  ],
+  "durls": [
+    "https://raw.githubusercontent.com/GLEIF-IT/vLEI-schema/refs/heads/main/legal-entity-official-organizational-role-vLEI-credential.json",
+    "https://raw.githubusercontent.com/GLEIF-IT/vLEI-schema/refs/heads/main/legal-entity-engagement-context-role-vLEI-credential.json",
+    "https://raw.githubusercontent.com/GLEIF-IT/vLEI-schema/refs/heads/main/ecr-authorization-vlei-credential.json",
+    "https://raw.githubusercontent.com/GLEIF-IT/vLEI-schema/refs/heads/main/legal-entity-vLEI-credential.json",
+    "https://raw.githubusercontent.com/GLEIF-IT/vLEI-schema/refs/heads/main/oor-authorization-vlei-credential.json",
+    "https://raw.githubusercontent.com/GLEIF-IT/vLEI-schema/refs/heads/main/qualified-vLEI-issuer-vLEI-credential.json"
+  ],
+  "trustedLeis": [],
+  "revocationCheck": true,
+  "allowedSchemas": [
+    "ECR_SCHEMA_PROD",
+    "OOR_SCHEMA"
+  ],
+  "maxPresentationSize": 250000,
+  "witnessUrlAllowlist": []
+}

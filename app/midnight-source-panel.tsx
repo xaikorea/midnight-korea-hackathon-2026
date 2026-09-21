@@ -1,0 +1,20 @@
+"use client";
+import {useState} from 'react';
+import {Button} from '@/components/ui/button';
+import type {ViewState} from '@/lib/domain';
+export default function MidnightSourcePanel({data,busy,act}:{data:ViewState;busy:boolean;act:(action:string,payload:Record<string,unknown>)=>Promise<unknown>}){
+ const [id,setId]=useState(''),[network,setNetwork]=useState('undeployed'),[contract,setContract]=useState(''),[holder,setHolder]=useState(''),[consent,setConsent]=useState(false),[requests,setRequests]=useState<Record<string,string>>({});
+ const credential=data.credentials.find(c=>c.id===id);
+ if(!['admin','company'].includes(data.role))return null;
+ return <section className="panel bottom-panel"><div className="section-heading"><div><h2>웹 자격 → Midnight 연결</h2><p>발급한 자격과 구매·지원 요청을 하나의 서명된 연결 파일로 묶습니다.</p></div><span className="status warn">체인 실행 별도</span></div>
+ <div className="reviewed-form"><label>연결할 기업 자격<select aria-label="Midnight 연결 자격" value={id} disabled={busy} onChange={e=>{setId(e.target.value);setRequests({});setConsent(false);}}><option value="">자격 선택</option>{data.credentials.filter(c=>c.status==='active').map(c=><option key={c.id} value={c.id}>{data.companies.find(x=>x.id===c.companyId)?.name} · {c.id}</option>)}</select></label>
+ <label>네트워크<select disabled={busy} value={network} onChange={e=>{setNetwork(e.target.value);setConsent(false);}}><option value="undeployed">로컬 undeployed</option><option value="preprod">Preprod</option></select></label>
+ <label>배포된 컨트랙트 주소<input aria-label="연결 컨트랙트 주소" disabled={busy} maxLength={64} value={contract} onChange={e=>{setContract(e.target.value);setConsent(false);}}/></label>
+ <label>보유 지갑 커밋먼트<input aria-label="보유 지갑 커밋먼트" disabled={busy} maxLength={64} value={holder} onChange={e=>{setHolder(e.target.value);setConsent(false);}}/></label></div>
+ <p>주소와 커밋먼트는 SDK에서 확인한 64자리 소문자 16진수입니다. 개인키나 복구 문구를 입력하지 마세요.</p>
+ {credential&&data.requests.filter(r=>r.companyId===credential.companyId&&r.status==='pending').map(r=><div key={r.id}><label><input type="checkbox" disabled={busy} checked={r.id in requests} onChange={e=>{const next={...requests};if(e.target.checked)next[r.id]='';else delete next[r.id];setRequests(next);setConsent(false);}}/>{r.policy.name} · {r.policy.kind==='buyer'?'구매 등록':'지원사업'}</label>{r.id in requests&&<label className="field">담당자 권한<select disabled={busy} aria-label={r.policy.name+' 연결 권한'} value={requests[r.id]} onChange={e=>{setRequests({...requests,[r.id]:e.target.value});setConsent(false);}}><option value="">{data.authMode==='keycloak'?'본인 권한 선택 (필수)':'미첨부 (개인 데모)'}</option>{(data.authorities??[]).filter(a=>a.credentialId===id&&a.scope===r.policy.kind&&a.status==='active'&&(data.authMode!=='keycloak'||a.holderUserId===data.actor)).map(a=><option key={a.id} value={a.id}>{a.holder} · {a.title}</option>)}</select></label>}</div>)}
+ <p>구매·지원 요청은 각 1개, 최대 2개입니다. 파일 유효기간은 최대 10분이며 원본 속성이 포함됩니다. SDK에서 원본의 현재 상태를 다시 확인한 후 실행해야 합니다.</p>
+ <label><input type="checkbox" checked={consent} disabled={busy} onChange={e=>setConsent(e.target.checked)}/> 원본 속성이 포함된 Midnight 연결 파일 생성에 동의합니다.</label>
+ <div className="button-row"><Button disabled={busy||!consent||!credential||!/^[a-f0-9]{64}$/.test(contract)||!/^[a-f0-9]{64}$/.test(holder)||Object.keys(requests).length<1||Object.keys(requests).length>2||(data.authMode==='keycloak'&&Object.values(requests).some(v=>!v))} onClick={async()=>{try{const result=await act('export-midnight-source',{id,consent:true,binding:{network,contractAddress:contract,holder,requests:Object.entries(requests).map(([id,authorityId])=>({id,...(authorityId?{authorityId}:{})}))}});const url=URL.createObjectURL(new Blob([JSON.stringify(result,null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='bizproof-midnight-source.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setConsent(false);}catch{/* Shared action handler displays the API error. */}}}>서명된 Midnight 연결 파일 다운로드</Button></div>
+ <p className="context-note">파일 생성은 증명·배포·거래 완료가 아닙니다. 체인용 서명은 발급자가 원본 연결을 확인한 뒤 별도로 수행합니다.</p></section>;
+}

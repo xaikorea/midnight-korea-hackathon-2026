@@ -1,0 +1,2 @@
+const {chromium}=require('playwright');(async()=>{const b=await chromium.launch({headless:true,channel:'msedge'});const p=await b.newPage({viewport:{width:1440,height:1000}});await p.goto('https://docs.truvity.com/ssi/',{waitUntil:'domcontentloaded',timeout:60000});await p.waitForTimeout(2500);await p.screenshot({path:'outputs/truvity-reference-top.png'});await p.evaluate(()=>window.scrollTo(0,650));await p.screenshot({path:'outputs/truvity-reference-body.png'});await b.close();})();
+

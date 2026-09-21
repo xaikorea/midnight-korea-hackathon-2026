@@ -1,0 +1,22 @@
+name: Core verification
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run check:validators
+      - run: npm run test:unit
+# Midnight SDK/contract tests require generated Compact 0.31.1 assets.
+# Run npm run test:verification after generating contracts/managed locally.

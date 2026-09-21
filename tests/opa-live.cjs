@@ -1,0 +1,9 @@
+const fs=require('node:fs'),ts=require('typescript'),assert=require('node:assert/strict'),{spawn}=require('node:child_process');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,f);
+const {evaluateOpa}=require('../lib/opa.ts');
+(async()=>{const child=spawn(process.env.OPA_BIN||'.tools/opa/opa.exe',['run','--server','--addr=127.0.0.1:18181','--disable-telemetry','integrations/opa/eligibility.rego'],{windowsHide:true,stdio:'ignore'});let spawnError;child.on('error',e=>{spawnError=e;});try{let ready=false;for(let i=0;i<40;i++){if(spawnError)throw spawnError;try{if((await fetch('http://127.0.0.1:18181/health')).ok){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,100));}assert.ok(ready,'OPA server not ready');
+ const policy={id:'p',name:'정책',audience:'기관',kind:'buyer',version:1,minRevenue:100,maxRevenue:200,maxAgeMonths:1,region:'서울',requireCertification:true,issuerIds:['i'],createdAt:'2024-01-01',status:'active'},base={revenue:100,region:'서울',certified:true,foundedOn:'2024-01-31'};
+ for(const kind of ['buyer','grant'])for(const revenue of [0,99,100,200,201])for(const certified of [true,false])for(const region of ['서울','부산'])await evaluateOpa({...base,revenue,certified,region},{...policy,kind},new Date('2024-03-02'),{address:'http://127.0.0.1:18181'});
+ await evaluateOpa(base,policy,new Date('2024-03-02T00:00:00.001Z'),{address:'http://127.0.0.1:18181'});await evaluateOpa({...base,revenue:0,certified:false},{...policy,minRevenue:null,maxRevenue:null,maxAgeMonths:null,region:null,requireCertification:false},new Date(),{address:'http://127.0.0.1:18181'});
+ console.log('PASS live OPA: 42 actual REST decisions match local evaluator, including boundaries, month overflow and optional conditions.');
+ }finally{child.kill();}})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -1,0 +1,21 @@
+const fs=require('node:fs'),ts=require('typescript'),assert=require('node:assert/strict');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,f);
+const {parseKeriaFile,parseKeriaHeaders}=require('../lib/keria-import.ts');
+(async()=>{
+ const {snapshot,presentation,authorizationHeaders,operation,adminOrigin}=await import('../integrations/keria/core.mjs');
+ const aid='E'+'a'.repeat(43),said='E'+'b'.repeat(43),schema='E'+'c'.repeat(43),issuer='E'+'d'.repeat(43);
+ const vc={sad:{d:said,i:issuer,s:schema,a:{i:aid,LEI:'5493001KJTIIGC8Y1R12',engagementContextRole:'Procurement Officer',personName:'PRIVATE-SENTINEL'}},status:{et:'iss'}};
+ let prefix=aid,keys=['key'],group=false,event='iss',op={name:'credential.'+said,done:false};const calls=[];
+ const client={identifiers:()=>({list:async(start,end)=>{calls.push([start,end]);return {total:100,aids:[{name:'holder',prefix:aid,salty:{sxlt:'PRIVATE-SENTINEL'}}]};},get:async()=>({prefix,state:{k:keys,kt:'1'},group})}),credentials:()=>({list:async args=>{calls.push(args);return [vc];},get:async(id,cesr)=>cesr?'fictional-CESR':{...vc,status:{et:event}}}),operations:()=>({get:async()=>op})};
+ const snap=await snapshot(client,25);parseKeriaFile(JSON.stringify(snap));assert.deepEqual(calls,[[25,49],{skip:25,limit:25}]);assert.equal(snap.moreIdentifiers,true);assert.ok(!JSON.stringify(snap).includes('PRIVATE-SENTINEL'));
+ const pres=await presentation(client,said);assert.equal(parseKeriaFile(JSON.stringify(pres)).expected.aid,aid);
+ event='rev';await assert.rejects(presentation(client,said),/revoked/);event='iss';
+ await assert.rejects(presentation(client,issuer),/matching/);
+ prefix=issuer;await assert.rejects(authorizationHeaders(client,'holder',aid),/match/);prefix=aid;keys=['a','b'];await assert.rejects(authorizationHeaders(client,'holder',aid),/single-key/);keys=['a'];group=true;await assert.rejects(authorizationHeaders(client,'holder',aid),/single-key/);
+ assert.equal((await operation(client,op.name)).status,'pending');op.done=true;assert.equal((await operation(client,op.name)).status,'completed');op.error={message:'PRIVATE-SENTINEL'};const failed=await operation(client,op.name);assert.equal(failed.status,'failed');assert.ok(!JSON.stringify(failed).includes('PRIVATE-SENTINEL'));
+ await assert.rejects(operation(client,'../keys'));await assert.rejects(snapshot(client,-1));
+ for(const url of ['http://remote.invalid','https://u:p@example.com','https://example.com/path','https://example.com/#x'])assert.throws(()=>adminOrigin(url));assert.equal(adminOrigin('http://127.0.0.1:3901'),'http://127.0.0.1:3901');
+ assert.throws(()=>parseKeriaFile(JSON.stringify({...snap,bran:'SECRET'})));assert.throws(()=>parseKeriaFile('x'.repeat(400001)));assert.throws(()=>parseKeriaFile(JSON.stringify({...pres,expected:{...pres.expected,lei:'invalid'}})));
+ const headers={'signature-input':'signify=("@method" "@path" "signify-resource" "signify-timestamp");created='+Math.floor(Date.now()/1000),'signature':'fixture','signify-resource':aid,'signify-timestamp':new Date().toISOString()};assert.equal(parseKeriaHeaders(JSON.stringify(headers),pres.expected)['signify-resource'],aid);assert.throws(()=>parseKeriaHeaders(JSON.stringify({...headers,'signify-resource':issuer}),pres.expected));assert.throws(()=>parseKeriaHeaders(JSON.stringify({...headers,'signify-timestamp':'2000-01-01T00:00:00Z'}),pres.expected));
+ console.log('PASS KERIA offline adapter: pagination, minimal export, revoked/mismatched holder guards, multi-key rejection, operation states, strict import and signature freshness');
+})().catch(e=>{console.error(e);process.exit(1)});

@@ -1,0 +1,213 @@
+{
+  "schema_version": "1.1",
+  "type_definitions": [
+    {
+      "type": "user"
+    },
+    {
+      "type": "organization",
+      "relations": {
+        "member": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "member": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "workspace",
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "issuer": {
+          "this": {}
+        },
+        "company": {
+          "this": {}
+        },
+        "buyer": {
+          "this": {}
+        },
+        "grant": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "organization",
+                "relation": "member"
+              }
+            ]
+          },
+          "issuer": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "organization",
+                "relation": "member"
+              }
+            ]
+          },
+          "company": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "organization",
+                "relation": "member"
+              }
+            ]
+          },
+          "buyer": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "organization",
+                "relation": "member"
+              }
+            ]
+          },
+          "grant": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "organization",
+                "relation": "member"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "company",
+      "relations": {
+        "reader": {
+          "this": {}
+        },
+        "writer": {
+          "this": {}
+        },
+        "can_read_evidence": {
+          "union": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "reader"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "writer"
+                }
+              }
+            ]
+          }
+        },
+        "can_write_evidence": {
+          "computedUserset": {
+            "relation": "writer"
+          }
+        },
+        "business_reader": {
+          "this": {}
+        },
+        "business_writer": {
+          "this": {}
+        },
+        "can_read_business": {
+          "union": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "business_reader"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "business_writer"
+                }
+              }
+            ]
+          }
+        },
+        "can_write_business": {
+          "computedUserset": {
+            "relation": "business_writer"
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "reader": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "organization",
+                "relation": "member"
+              }
+            ]
+          },
+          "writer": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "organization",
+                "relation": "member"
+              }
+            ]
+          },
+          "business_reader": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "organization",
+                "relation": "member"
+              }
+            ]
+          },
+          "business_writer": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "organization",
+                "relation": "member"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

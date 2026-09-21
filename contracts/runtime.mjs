@@ -1,0 +1,19 @@
+// Schnorr signing pattern adapted from midnightntwrk/example-zkloan (Apache-2.0).
+import { randomBytes } from 'node:crypto';
+import { createConstructorContext,createCircuitContext,sampleContractAddress,ecMulGenerator } from '@midnight-ntwrk/compact-runtime';
+import {Contract,ledger,pureCircuits} from './managed/contract/index.js';
+const ORDER=6554484396890773809930967563523245729705921265872317281365359162392183254199n;
+const TWO248=1n<<248n;
+export const randomId=()=>new Uint8Array(randomBytes(32));
+const scalar=()=>BigInt('0x'+randomBytes(32).toString('hex'))%(ORDER-1n)+1n;
+export function signClaims(sk,claims,holder){const pk=ecMulGenerator(sk),k=scalar(),R=ecMulGenerator(k);const message=pureCircuits.credentialMessage(claims,holder);const c=pureCircuits.signingChallenge(R.x,R.y,pk.x,pk.y,message)%TWO248;return {announcement:R,response:(k+c*sk)%ORDER};}
+export const witnesses={secret:({privateState:s})=>[s,s.secret],attestation:({privateState:s})=>[s,[s.claims,s.signature]],getSchnorrReduction:({privateState:s},c)=>[s,[c/TWO248,c%TWO248]]};
+export class Simulator {
+ constructor(){this.adminSecret=randomId();this.holderSecret=randomId();this.providerSecret=scalar();this.now=BigInt(Math.floor(Date.now()/1000));this.contract=new Contract(witnesses);const init=this.contract.initialState(createConstructorContext({secret:this.adminSecret},'0'.repeat(64)),this.now);this.context=createCircuitContext(sampleContractAddress(),init.currentZswapLocalState,init.currentContractState,init.currentPrivateState);this.invoke('registerIssuer',[1n,ecMulGenerator(this.providerSecret)],this.adminSecret);this.holder=pureCircuits.holderKey(this.holderSecret);this.claims={revenue:300000000n,foundedDay:BigInt(Math.floor(Date.now()/864e5)-730),region:1n,certified:true,expiresAt:this.now+15552000n,credentialId:randomId()};this.signature=signClaims(this.providerSecret,this.claims,this.holder);}
+ invoke(name,args=[],secret=this.adminSecret,claims=this.claims,signature=this.signature){const input={...this.context,currentPrivateState:{secret,claims,signature}};const out=this.contract.circuits[name](input,...args);this.context=out.context;return out.result;}
+ get state(){return ledger(this.context.currentQueryContext.state);}
+ request(policy={}){const id=randomId();const p={minRevenue:200000000n,maxRevenue:1000000000000n,minFoundedDay:0n,region:0n,requireCertification:false,issuerId:1n,...policy};const request={holder:this.holder,audience:randomId(),nonce:randomId(),policy:p,deadline:this.now+86400n};this.invoke('createRequest',[id,request]);return id;}
+ submit(id,claims=this.claims,signature=this.signature,secret=this.holderSecret){this.invoke('submit',[id],secret,claims,signature);return this.state.results.lookup(id);}
+}
+export function runDemo(){const s=new Simulator();const vendor=s.request();const grant=s.request({minRevenue:0n,maxRevenue:500000000n,minFoundedDay:BigInt(Math.floor(Date.now()/864e5)-1095),region:1n});const premium=s.request({minRevenue:500000000n,requireCertification:true});const outcomes=[{name:'구매사 협력사 등록',eligible:s.submit(vendor)},{name:'지원사업 사전 자격',eligible:s.submit(grant)},{name:'프리미엄 공급망',eligible:s.submit(premium)}];const guards=[];const blocked=(name,fn)=>{try{fn();guards.push({name,blocked:false});}catch{guards.push({name,blocked:true});}};blocked('중복 제출',()=>s.submit(vendor));blocked('원본 속성 위조',()=>s.submit(s.request(),{...s.claims,revenue:900000000n}));blocked('다른 기업의 자격 사용',()=>s.submit(s.request(),s.claims,s.signature,randomId()));s.invoke('revokeCredential',[s.claims.credentialId]);blocked('취소된 자격',()=>s.submit(s.request()));return {mode:'compact-local',networkConnected:false,proofGenerated:false,compiler:'0.31.1',runtime:'0.16.0',credentialReuseCount:3,outcomes,guards,notice:'실제 Compact 컴파일 결과를 로컬 실행했습니다. ZK 증명 생성·온체인 제출과는 다릅니다.',at:new Date().toISOString()};}
+

@@ -1,0 +1,8 @@
+import {getChatGPTUser,getActiveRole} from '@/app/chatgpt-auth';
+import {z} from 'zod';
+import {vleiClient,vleiRequestSchema,VleiError} from '@/lib/vlei-verifier';
+export const dynamic='force-dynamic';
+const json=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+async function access(req:Request){if(!await getChatGPTUser())return json({error:'로그인이 필요합니다.'},401);const url=new URL(req.url);if(!['localhost','127.0.0.1'].includes(url.hostname))return json({error:'vLEI 어댑터는 로컬 개발 환경 전용입니다.'},503);if(req.headers.get('origin')&&req.headers.get('origin')!==url.origin)return json({error:'허용되지 않는 출처입니다.'},403);const role=(await getActiveRole())??'';if(!['admin','issuer','company'].includes(role))return json({error:'기업·발급기관 역할에서 외부 자격을 확인하세요.'},403);}
+export async function GET(req:Request){const denied=await access(req);if(denied)return denied;return json(await vleiClient().readiness());}
+export async function POST(req:Request){const denied=await access(req);if(denied)return denied;try{const text=await req.text();if(new TextEncoder().encode(text).length>350000)return json({error:'요청이 너무 큽니다.'},413);const body=vleiRequestSchema.parse(JSON.parse(text));const client=vleiClient();return json(body.action==='present'?await client.present(body.expected,body.cesr):body.action==='status'?await client.status(body.expected):await client.authorize(body.expected,body.headers));}catch(e){if(e instanceof z.ZodError||e instanceof SyntaxError)return json({error:'AID·SAID·LEI·역할, CESR 또는 서명 헤더 형식을 확인하세요.'},400);return json({error:e instanceof VleiError?e.message:'vLEI 검증기 요청을 완료하지 못했습니다.'},503);}}

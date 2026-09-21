@@ -1,0 +1,20 @@
+const fs=require('node:fs'),ts=require('typescript'),assert=require('node:assert/strict');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,f);
+const {seedState}=require('../lib/seed.ts'),{makeKeys,sign}=require('../lib/signatures.ts'),{exportPortableCredential,verifyPortableCredential}=require('../lib/portable-credential.ts');
+const {authorityPayload,issueAuthority,checkAuthority}=require('../lib/authority.ts');
+(async()=>{
+ const s=await seedState(),c=s.credentials[0],issuer=s.issuers[0],issued=await exportPortableCredential(s,c),verify=token=>verifyPortableCredential(s,token);
+ const original=await verify(issued.token);assert.equal(original.valid,true);assert.equal(original.checks.length,10);assert.equal(JSON.stringify(issued.didDocument).includes('"d":'),false);assert.ok(!JSON.stringify(original).includes('revenue'));assert.ok(!JSON.stringify(original).includes(c.claims.revenue.toString()));
+ const parts=issued.token.split('.'),payload=JSON.parse(Buffer.from(parts[1],'base64url'));assert.ok(payload.exp-payload.iat<=86400);assert.ok(issued.didDocument.id.startsWith('did:jwk:'));
+ const tamper=(value,head=parts[0])=>head+'.'+Buffer.from(JSON.stringify(value)).toString('base64url')+'.'+parts[2];
+ const altered=structuredClone(payload);altered.vc.credentialSubject.claims.revenue++;assert.equal((await verify(tamper(altered))).valid,false);
+ assert.equal((await verify(tamper(payload,Buffer.from('{"alg":"none","typ":"JWT","kid":"x"}').toString('base64url')))).valid,false);
+ assert.equal((await verify(tamper({...payload,exp:Number.MAX_SAFE_INTEGER}))).valid,false);assert.equal((await verify('not.a.jwt')).valid,false);
+ const other=await seedState();assert.equal((await verifyPortableCredential(other,issued.token)).valid,false);
+ issuer.previousKeys.push({keyId:issuer.keyId,publicKey:issuer.publicKey});Object.assign(issuer,await makeKeys(),{keyId:'rotated-test'});assert.equal((await verify(issued.token)).valid,true);assert.equal((await verify((await exportPortableCredential(s,c)).token)).valid,true);
+ issuer.status='suspended';assert.equal((await verify(issued.token)).valid,false);await assert.rejects(exportPortableCredential(s,c));issuer.status='active';
+ const a=await issueAuthority(s,{credentialId:c.id,holder:'테스트 담당자',title:'조달 담당자',scope:'buyer',days:30});assert.equal((await checkAuthority(s,a,c.companyId,'buyer')).valid,true);
+ const extended={...a,expiresAt:new Date(Date.parse(c.expiresAt)+86400000).toISOString()};extended.signature=await sign(issuer.privateKey,authorityPayload(extended));assert.equal((await checkAuthority(s,extended,c.companyId,'buyer')).valid,false);
+ c.status='revoked';const revoked=await verify(issued.token);assert.equal(revoked.valid,false);assert.equal(revoked.checks.find(x=>x.id==='signature').pass,true);assert.equal(revoked.checks.find(x=>x.id==='status').pass,false);await assert.rejects(exportPortableCredential(s,c));
+ console.log('PASS VC-JWT: real Ed25519, public DID, bound claims, no original claims in report, tamper/algorithm/size guards, workspace trust, rotation, suspension, revocation, child expiry');
+})().catch(e=>{console.error(e);process.exit(1)});

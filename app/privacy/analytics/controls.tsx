@@ -1,0 +1,3 @@
+"use client";
+import {useState} from 'react';
+export default function AnalyticsControls(){const [status,setStatus]=useState('');function update(stop:boolean){document.cookie='bp-analytics-optout='+(stop?'1':'')+'; Path=/; Max-Age='+(stop?'31536000':'0')+'; SameSite=Lax'+(location.protocol==='https:'?'; Secure':'');setStatus(stop?'이 브라우저의 향후 방문 수집을 중지했습니다.':'브라우저의 GPC 설정이 없다면 방문 수집을 다시 허용합니다.');}return <section style={{margin:'24px 0',display:'flex',gap:12,flexWrap:'wrap'}}><button onClick={()=>update(true)}>향후 방문 수집 중지</button><button onClick={()=>update(false)}>방문 수집 다시 허용</button>{status&&<p role="status" style={{width:'100%'}}>{status}</p>}</section>;}

@@ -1,0 +1,7 @@
+{
+  "name": "bizproof-keria-edge",
+  "private": true,
+  "type": "module",
+  "scripts": {"edge": "node edge.mjs"},
+  "dependencies": {"signify-ts": "0.4.0"}
+}

@@ -1,0 +1,17 @@
+import {readFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {validLei} from '../../lib/vlei-verifier.ts';
+const root=fileURLToPath(new URL('../vlei-verifier-upstream/',import.meta.url));
+const expected='5850051b52dce24ed59eae486af76e7c73f6012c';
+const actual=execFileSync('git',['-C',root,'rev-parse','HEAD'],{encoding:'utf8'}).trim();
+const config=JSON.parse(readFileSync(new URL('./verifier-config.json',import.meta.url),'utf8').replace(/^\uFEFF/,''));
+const failures=[];
+if(!Array.isArray(config.witnessUrlAllowlist)||!config.witnessUrlAllowlist.length)failures.push('취소 이벤트 조회에 사용할 실제 witnessUrlAllowlist를 설정하세요.');
+if(actual!==expected)failures.push('공식 소스 커밋이 검토한 버전과 다릅니다.');
+if(config.revocationCheck!==true)failures.push('revocationCheck=true가 필요합니다.');
+if(config.maxPresentationSize!==250000)failures.push('제출 크기 제한을 확인하세요.');
+if(!config.allowedSchemas?.length||config.allowedSchemas.some(s=>!['ECR_SCHEMA_PROD','OOR_SCHEMA'].includes(s)))failures.push('허용 스키마를 확인하세요.');
+if(!Array.isArray(config.trustedLeis)||!config.trustedLeis.length)failures.push('실제 허용할 기업 LEI를 trustedLeis에 설정하세요. 빈 목록은 원본 서비스에서 모든 LEI를 허용합니다.');
+else if(config.trustedLeis.some(value=>typeof value!=='string'||!validLei(value)))failures.push('trustedLeis의 LEI 체크섬을 확인하세요.');
+if(failures.length){console.error(failures.join('\n'));process.exitCode=1;}else console.log('로컬 설정 검사 통과. 실제 GLEIF 신뢰 루트·witness 접근과 서명·취소 검증은 별도로 확인해야 합니다.');

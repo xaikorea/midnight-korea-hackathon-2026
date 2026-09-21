@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {Simulator,randomId,signClaims,runDemo} from './runtime.mjs';
+test('same signed credential satisfies vendor and grant, fails premium',()=>{const r=runDemo();assert.deepEqual(r.outcomes.map(x=>x.eligible),[true,true,false]);assert.ok(r.guards.every(g=>g.blocked));});
+test('unknown and cancelled requests are rejected',()=>{const s=new Simulator();assert.throws(()=>s.submit(randomId()));const id=s.request();s.invoke('cancelRequest',[id]);assert.throws(()=>s.submit(id),/Cancelled/);});
+test('expired credential is rejected even with a valid issuer signature',()=>{const s=new Simulator();const c={...s.claims,expiresAt:s.now-1n};assert.throws(()=>s.submit(s.request(),c,signClaims(s.providerSecret,c,s.holder)),/expired/);});
+test('expired request and backward time are rejected',()=>{const s=new Simulator();const id=s.request();s.invoke('advanceTime',[s.now+86401n]);assert.throws(()=>s.submit(id),/expired/);assert.throws(()=>s.invoke('advanceTime',[s.now]),/backwards/);});
+test('suspended issuer fails; resume restores eligibility',()=>{const s=new Simulator();const id=s.request();s.invoke('suspendIssuer',[1n]);assert.throws(()=>s.submit(id),/suspended/);s.invoke('resumeIssuer',[1n]);assert.equal(s.submit(id),true);});
+test('holder cannot perform administrative actions',()=>{const s=new Simulator();assert.throws(()=>s.invoke('revokeCredential',[s.claims.credentialId],s.holderSecret),/Administrator/);});
+test('policy region and certification predicates are enforced',()=>{const s=new Simulator();assert.equal(s.submit(s.request({region:2n})),false);const c={...s.claims,certified:false};assert.equal(s.submit(s.request({requireCertification:true}),c,signClaims(s.providerSecret,c,s.holder)),false);});
+test('credential signature is bound to its holder',()=>{const s=new Simulator();const wrong=signClaims(s.providerSecret,s.claims,randomId());assert.throws(()=>s.submit(s.request(),s.claims,wrong),/signature/);});

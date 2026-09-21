@@ -1,0 +1,24 @@
+const fs=require('node:fs'),ts=require('typescript'),assert=require('node:assert/strict');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,f);
+(async()=>{
+ const jose=await import('jose'),k=require('../lib/keycloak.ts');
+ const config=k.keycloakConfig({issuer:'http://localhost:8080/realms/bizproof',clientId:'bizproof-web',origin:'http://localhost:5173',secret:'ab'.repeat(32)});
+ const pair=await jose.generateKeyPair('RS256'),keys=jose.createLocalJWKSet({keys:[{...await jose.exportJWK(pair.publicKey),kid:'test',alg:'RS256'}]});
+ const now=Math.floor(Date.now()/1000),claims={iss:config.issuer,aud:config.clientId,sub:'alice',iat:now,exp:now+300,azp:config.clientId,typ:'Bearer',resource_access:{'bizproof-web':{roles:['company']}}};
+ const token=payload=>new jose.SignJWT(payload).setProtectedHeader({alg:'RS256',kid:'test'}).sign(pair.privateKey);
+ const access=await token(claims),user=await k.validateAccess(config,access,keys);
+ assert.deepEqual(user.allowedRoles,['company']);assert.equal(k.selectRole(user.allowedRoles,'admin'),'company');assert.equal(k.selectRole([],'admin'),null);
+ for(const patch of [{iss:'https://evil.test/realms/bizproof'},{aud:'other'},{azp:'other'},{typ:'ID'},{exp:now-1},{iat:now-301},{sub:''},{resource_access:{}},{resource_access:{other:{roles:['admin']}},realm_access:{roles:['admin']}}])await assert.rejects(k.validateAccess(config,await token({...claims,...patch}),keys));
+ const split=access.split('.');split[1]=Buffer.from(JSON.stringify({...claims,sub:'mallory'})).toString('base64url');await assert.rejects(k.validateAccess(config,split.join('.'),keys));
+ assert.notEqual(user.userId,(await k.validateAccess(config,await token({...claims,sub:'bob'}),keys)).userId);
+ const login=await k.startLogin(config,'/?view=settings'),url=new URL(login.url),flow=await k.loginFlow(config,login.cookie,url.searchParams.get('state'));
+ assert.equal(url.searchParams.get('code_challenge_method'),'S256');assert.equal(url.searchParams.get('code_challenge'),require('crypto').createHash('sha256').update(flow.verifier).digest('base64url'));
+ await assert.rejects(k.loginFlow(config,login.cookie,'wrong'));await assert.rejects(k.loginFlow({...config,secret:new Uint8Array(32)},login.cookie,flow.state));
+ const id=await token({...claims,typ:'ID',nonce:flow.nonce});await k.validateId(config,id,flow.nonce,'alice',keys);await assert.rejects(k.validateId(config,id,'wrong','alice',keys));await assert.rejects(k.validateId(config,id,flow.nonce,'bob',keys));
+ const result=await k.finishLogin(config,login.cookie,flow.state,'code',async(endpoint,init)=>{assert.equal(endpoint,config.issuer+'/protocol/openid-connect/token');assert.equal(init.redirect,'manual');assert.equal(init.body.get('code_verifier'),flow.verifier);assert.equal(init.body.get('redirect_uri'),config.origin+'/api/auth/callback');return Response.json({access_token:access,id_token:id,token_type:'Bearer'});},keys);
+ assert.equal(result.returnTo,'/?view=settings');assert.equal(result.user.authMode,'keycloak');
+ await assert.rejects(k.finishLogin(config,login.cookie,flow.state,'code',async()=>Response.json({access_token:access,id_token:await token({...claims,nonce:'wrong'}),token_type:'Bearer'}),keys));
+ for(const path of ['//evil.test','/\\evil.test','https://evil.test','/api/auth/login','/signin-with-chatgpt'])assert.equal(k.safeReturn(path),'/');
+ assert.throws(()=>k.keycloakConfig({issuer:'http://evil.test/realms/a',origin:config.origin,clientId:config.clientId,secret:'ab'.repeat(32)}));
+ console.log('Keycloak: PKCE, state, nonce, JWT signature/claims, client roles, workspace isolation, token exchange and redirect protections passed.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

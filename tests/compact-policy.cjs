@@ -1,0 +1,5 @@
+const fs=require('node:fs'),ts=require('typescript'),assert=require('node:assert/strict');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,f);
+const {foundingCutoff}=require('../lib/compact-policy.ts'),{evaluate}=require('../lib/domain.ts');
+const policy={minRevenue:null,maxRevenue:null,maxAgeMonths:36,region:null,requireCertification:false};const at=new Date('2026-09-20T07:00:00Z');const cutoff=foundingCutoff(policy,at);for(let day=cutoff-40;day<cutoff+40;day++)assert.equal(evaluate({revenue:0,foundedOn:new Date(day*864e5).toISOString().slice(0,10),region:'',certified:false},policy,at).eligible,day>=cutoff);
+assert.throws(()=>foundingCutoff({...policy,maxAgeMonths:1},new Date('2026-03-02T12:00:00Z')),/월말/);assert.equal(foundingCutoff({...policy,maxAgeMonths:null},at),0);console.log('PASS: date mapping parity and non-monotone month-end rejection');

@@ -1,0 +1,18 @@
+services:
+  verifier:
+    build:
+      context: ../vlei-verifier-upstream
+      dockerfile: images/verifier.dockerfile
+    image: bizproof/vlei-verifier:5850051
+    ports:
+      - "127.0.0.1:7676:7676"
+    environment:
+      VERIFIER_CONFIG_FILE: bizproof.json
+      VERIFIER_MODE: production
+      VERIFY_ROOT_OF_TRUST: "True"
+      VERIFIER_SIGNIFY_MAX_SKEW_SEC: "300"
+    volumes:
+      - ./verifier-config.json:/usr/local/var/vlei-verifier/scripts/keri/cf/bizproof.json:ro
+      - verifier-data:/usr/local/var/keri
+volumes:
+  verifier-data:

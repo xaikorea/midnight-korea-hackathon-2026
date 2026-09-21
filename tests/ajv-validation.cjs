@@ -1,0 +1,9 @@
+const fs=require('node:fs'),ts=require('typescript'),assert=require('node:assert/strict');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,f);
+const {checkedInput,InputValidationError}=require('../lib/input-validation.ts');
+const c={revenue:0,foundedOn:'2024-02-29',region:'서울',certified:false};assert.deepEqual(checkedInput('claims',c),c);
+for(const patch of [{revenue:'0'},{revenue:1.5},{revenue:-1},{revenue:1e12+1},{certified:'false'},{foundedOn:'2023-02-29'},{region:' '},{privateKey:'secret'}]){const value={...c,...patch},original=JSON.stringify(value);assert.throws(()=>checkedInput('claims',value),InputValidationError);assert.equal(JSON.stringify(value),original);}
+assert.throws(()=>checkedInput('claims',{}),e=>e.issues.length===4&&!JSON.stringify(e.issues).includes('privateKey'));
+assert.throws(()=>checkedInput('claims',{...c,region:'x'.repeat(161)}));
+const p={name:'정책',audience:'기관',kind:'buyer',minRevenue:null,maxRevenue:0,maxAgeMonths:null,region:null,requireCertification:false,issuerIds:['issuer-1']};assert.deepEqual(checkedInput('policy',p),p);assert.throws(()=>checkedInput('policy',{...p,issuerIds:['issuer-1','issuer-1']}));assert.throws(()=>checkedInput('policy',{...p,maxAgeMonths:1201}));assert.throws(()=>checkedInput('company',{name:'기업',registration:'123',industry:'IT',region:'서울',contact:'bad'}));
+const generated=fs.readFileSync('lib/generated/business-validators.ts','utf8');assert.ok(!generated.includes('new Function('));assert.ok(!generated.includes('.compile('));console.log('PASS Ajv standalone: strict types, no mutation/coercion, dates, limits, duplicate issuers, unknown fields and safe error details.');

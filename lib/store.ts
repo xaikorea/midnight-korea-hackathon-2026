@@ -1,0 +1,8 @@
+import {encodeStorage,decodeStorage} from './storage-protection';
+import { env } from 'cloudflare:workers';
+import type { State } from './domain';
+import { seedState } from './seed';
+export function binding(){if(!env.DB)throw new Error('데이터베이스가 연결되지 않았습니다.');return env.DB;}
+export async function readState(owner:string){const db=binding();let row=await db.prepare('SELECT payload, version FROM workspaces WHERE owner = ?').bind(owner).first<{payload:string;version:number}>();if(!row){const s=await seedState();if(owner.startsWith("shared:")){s.companies=[];s.issuers=[];s.credentials=[];s.policies=[];s.connections=[];s.audit=[];s.settings.name="기관 공동 업무 공간";}await db.prepare('INSERT OR IGNORE INTO workspaces (owner,payload,version) VALUES (?,?,0)').bind(owner,await encodeStorage(owner,JSON.stringify(s))).run();row=await db.prepare('SELECT payload,version FROM workspaces WHERE owner=?').bind(owner).first<{payload:string;version:number}>();}if(!row)throw new Error('워크스페이스를 불러올 수 없습니다.');return {state:JSON.parse(await decodeStorage(owner,row.payload)) as State,version:row.version};}
+export async function saveState(owner:string,state:State,version:number){const r=await binding().prepare('UPDATE workspaces SET payload=?,version=version+1 WHERE owner=? AND version=?').bind(await encodeStorage(owner,JSON.stringify(state)),owner,version).run();if(r.meta.changes!==1)throw new ConflictError();}
+export class ConflictError extends Error {constructor(){super('다른 변경이 먼저 저장되었습니다. 새로고침 후 다시 시도하세요.');}}

@@ -1,0 +1,7 @@
+services:
+  opa:
+    image: openpolicyagent/opa:1.20.2
+    command: [run, --server, --addr=0.0.0.0:8181, --disable-telemetry, /policies/eligibility.rego]
+    ports: ["127.0.0.1:8181:8181"]
+    volumes:
+      - ./eligibility.rego:/policies/eligibility.rego:ro

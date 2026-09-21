@@ -1,0 +1,10 @@
+const fs=require('node:fs'),ts=require('typescript'),assert=require('node:assert/strict');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,f);
+const {evaluateOpa,opaAddress}=require('../lib/opa.ts');
+(async()=>{const claims={revenue:100,region:'서울',certified:true,foundedOn:'2024-01-31'},policy={id:'p',name:'정책',audience:'기관',kind:'buyer',version:1,minRevenue:100,maxRevenue:100,maxAgeMonths:1,region:'서울',requireCertification:true,issuerIds:['i'],createdAt:'2024-01-01',status:'active'},at=new Date('2024-03-02T00:00:00Z');
+ let captured;const good=async(url,init)=>{captured=JSON.parse(init.body).input;assert.equal(init.redirect,'error');assert.ok(!JSON.stringify(captured).includes('issuerIds'));return Response.json({result:{revision:'bizproof-eligibility-v1',binding:captured.binding,eligible:true,checks:{minRevenue:true,maxRevenue:true,age:true,region:true,certification:true}}});};
+ const options={address:'http://localhost:8181',fetcher:good};assert.equal((await evaluateOpa(claims,policy,at,options)).eligible,true);assert.equal(captured.facts.deadline,at.getTime());
+ for(const corrupt of [r=>({...r,eligible:false}),r=>({...r,binding:'0'.repeat(64)}),r=>({...r,revision:'unknown'}),r=>({...r,checks:{...r.checks,region:false}})])await assert.rejects(evaluateOpa(claims,policy,at,{...options,fetcher:async(...args)=>{const body=await (await good(...args)).json();return Response.json({result:corrupt(body.result)});}}));
+ for(const response of [()=>Response.json({}),()=>Response.json({result:true}),()=>new Response('unavailable',{status:503}),()=>new Response('x'.repeat(16001))])await assert.rejects(evaluateOpa(claims,policy,at,{...options,fetcher:async()=>response()}));
+ assert.throws(()=>opaAddress('http://remote.invalid'));assert.throws(()=>opaAddress('https://host.invalid/other'));console.log('PASS OPA adapter: boundaries, request binding, revision, per-rule parity, malformed/oversized responses and outage fail-closed.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

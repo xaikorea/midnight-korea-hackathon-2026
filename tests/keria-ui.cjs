@@ -1,0 +1,21 @@
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
+const assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});try{
+ const ctx=await browser.newContext({viewport:{width:1440,height:1100}}),page=await ctx.newPage(),base='http://localhost:5173';
+ await page.goto(base+'/signin-with-chatgpt?return_to=/',{waitUntil:'networkidle'});await ctx.request.post(base+'/api/platform',{data:{action:'switch-role',role:'admin'}});await page.goto(base+'/?view=settings',{waitUntil:'networkidle'});
+ const expected={aid:'E'+'a'.repeat(43),said:'E'+'b'.repeat(43),lei:'5493001KJTIIGC8Y1R12',role:'Procurement Officer'};
+ const upload=value=>page.getByLabel('KERIA 내보내기 파일',{exact:true}).setInputFiles({name:'fixture.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(value))});
+ const snapshot={format:'bizproof-keria-snapshot-v1',observedAt:new Date().toISOString(),offset:0,identifiers:[{name:'Fixture holder',aid:expected.aid}],credentials:[{...expected,issuer:'E'+'c'.repeat(43),schema:'E'+'d'.repeat(43),registryEvent:'rev'}],moreIdentifiers:false,moreCredentialsPossible:false};
+ await upload(snapshot);const choose=page.getByRole('button',{name:'이 자격을 조회 대상으로 선택',exact:true});await choose.waitFor();assert.equal(await choose.isDisabled(),true);
+ snapshot.credentials[0].registryEvent='iss';await upload(snapshot);await choose.click();await page.getByText('실제 vLEI 자격 제출 및 조회',{exact:true}).click();assert.equal(await page.getByLabel('담당자 AID',{exact:true}).inputValue(),expected.aid);
+ let submissions=0;await page.route('**/api/vlei',route=>{submissions++;const body=route.request().postDataJSON();assert.equal(body.action,'present');assert.equal(body.consent,true);assert.equal(body.cesr,'FICTIONAL CESR');return route.fulfill({json:{status:'accepted',expected,checkedAt:new Date().toISOString(),authorizationMatched:false,officialVleiVerified:false,rootOfTrustObserved:false,revocationConfigurationObserved:false,adapterSourceCommit:'5850051b52dce24ed59eae486af76e7c73f6012c',notice:'Fixture only'}});});
+ await upload({format:'bizproof-keria-presentation-v1',observedAt:new Date().toISOString(),expected,cesr:'FICTIONAL CESR'});await page.getByRole('button',{name:'CESR를 검증 입력으로 가져오기',exact:true}).click();assert.equal(submissions,0);assert.equal(await page.getByRole('button',{name:'CESR 검증 제출',exact:true}).isDisabled(),true);
+ await page.getByLabel('이 CESR를 로컬 검증기로 보내는 데 동의합니다.').check();await page.getByRole('button',{name:'CESR 검증 제출',exact:true}).click();await page.getByText('제출 수락 · 권한 확인 대기',{exact:true}).waitFor();assert.equal(submissions,1);
+ const headers={'signature-input':'signify=("@method" "@path" "signify-resource" "signify-timestamp");created='+Math.floor(Date.now()/1000),signature:'fixture','signify-resource':expected.aid,'signify-timestamp':new Date().toISOString()};
+ const headerUpload=value=>page.getByLabel('KERIA 권한 조회 서명 파일',{exact:true}).setInputFiles({name:'headers.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(value))});
+ await headerUpload(headers);await page.waitForFunction(()=>document.querySelector('textarea[aria-label="서명된 조회 헤더"]').value.includes('fixture'));
+ await headerUpload({...headers,'signify-resource':'E'+'z'.repeat(43)});await page.getByText('서명 파일의 형식·AID·유효 시간을 확인하세요.',{exact:true}).waitFor();assert.equal(await page.getByLabel('서명된 조회 헤더',{exact:true}).inputValue(),'');
+ await upload({...snapshot,bran:'NEVER-IMPORT'});await page.getByRole('alert').filter({hasText:'KERIA 파일 형식'}).waitFor();assert.equal(await page.getByRole('button',{name:'이 자격을 조회 대상으로 선택',exact:true}).count(),0);
+ await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.getByText('KERIA 자격 가져오기',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:'outputs/keria-mobile.png'});
+ console.log('PASS KERIA UI: revoked selection blocked, explicit CESR consent, header binding, unknown fields rejected, no automatic requests, mobile layout (fixtures)');
+ }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1)});

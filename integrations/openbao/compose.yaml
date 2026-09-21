@@ -1,0 +1,16 @@
+services:
+  openbao:
+    image: quay.io/openbao/openbao:2.6.0
+    command: [server, -config=/bao/config/server.hcl]
+    ports: ["127.0.0.1:8200:8200"]
+    cap_add: [IPC_LOCK]
+    environment:
+      BAO_ADDR: http://127.0.0.1:8200
+    volumes:
+      - ./server.hcl:/bao/config/server.hcl:ro
+      - ./app-policy.hcl:/bao/config/app-policy.hcl:ro
+      - bao-data:/bao/data
+      - bao-audit:/bao/logs
+volumes:
+  bao-data:
+  bao-audit:
