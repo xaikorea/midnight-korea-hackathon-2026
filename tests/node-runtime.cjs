@@ -1,0 +1,13 @@
+const fs=require('node:fs'),path=require('node:path'),ts=require('typescript'),assert=require('node:assert/strict');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,f);
+process.env.BIZPROOF_DATA_DIR=fs.mkdtempSync(path.resolve('outputs/node-runtime-'));
+process.env.BIZPROOF_DEMO_SECRET='regression-only-'.repeat(5);
+(async()=>{const {env}=require('../lib/node-bindings.ts'),db=env.DB;
+await db.prepare('INSERT INTO workspaces VALUES(?,?,0)').bind('test','first').run();
+assert.equal((await db.prepare('UPDATE workspaces SET payload=?,version=version+1 WHERE owner=? AND version=?').bind('second','test',0).run()).meta.changes,1);
+assert.equal((await db.prepare('UPDATE workspaces SET payload=?,version=version+1 WHERE owner=? AND version=?').bind('stale','test',0).run()).meta.changes,0);
+await assert.rejects(db.batch([db.prepare('INSERT INTO workspaces VALUES(?,?,0)').bind('rollback','x'),db.prepare('INSERT INTO workspaces VALUES(?,?,0)').bind('test','duplicate')]));assert.equal(await db.prepare('SELECT * FROM workspaces WHERE owner=?').bind('rollback').first(),null);
+const key='evidence/demo-'+crypto.randomUUID()+'/'+crypto.randomUUID(),bytes=new TextEncoder().encode('Synthetic evidence');await env.BUCKET.put(key,bytes.buffer,{customMetadata:{test:'yes'}});const file=await env.BUCKET.get(key);assert.equal(file.customMetadata.test,'yes');assert.deepEqual(new Uint8Array(await file.arrayBuffer()),bytes);await assert.rejects(env.BUCKET.put('../escape','x'));await env.BUCKET.delete(key);assert.equal(await env.BUCKET.get(key),null);
+const {issueDemo,verifyDemo}=require('../lib/public-demo.ts');const id='demo-'+crypto.randomUUID(),token=await issueDemo(id);assert.equal(await verifyDemo(token),id);assert.equal(await verifyDemo(token.slice(0,-3)+'bad'),null);
+const admin=require('../lib/demo-admin.ts');process.env.BIZPROOF_ADMIN_SECRET='admin-test-secret-'.repeat(5);const salt='test-salt';process.env.BIZPROOF_ADMIN_PASSWORD_HASH=salt+':'+require('node:crypto').scryptSync('test-password',salt,64).toString('hex');assert.equal(admin.checkAdminPassword('wrong'),false);assert.equal(admin.checkAdminPassword('test-password'),true);const adm=await admin.issueAdmin();assert.equal(await admin.verifyAdmin(adm),true);assert.equal(await admin.verifyAdmin(token),false);assert.equal(await verifyDemo(adm),null);
+console.log('PASS Node runtime: SQLite CAS, atomic rollback, file metadata/bytes, path guard, signed demo session and tamper rejection');})().catch(e=>{console.error(e);process.exit(1)});

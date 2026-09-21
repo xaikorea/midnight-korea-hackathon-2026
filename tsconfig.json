@@ -45,6 +45,8 @@
     "examples",
     "integrations",
     "contracts",
-    "sidecar"
+    "sidecar",
+    "outputs",
+    ".next"
   ]
 }

@@ -1,0 +1,29 @@
+name: bizproof
+services:
+  app:
+    image: bizproof:public-demo-1
+    restart: unless-stopped
+    env_file: /srv/bizproof/secrets/runtime.env
+    ports: ["127.0.0.1:3100:3100"]
+    volumes: ["/srv/bizproof/data:/data"]
+    mem_limit: 1100m
+    cpus: 0.8
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3100/signin-with-chatgpt').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  caddy:
+    image: caddy:2.11.2-alpine
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    mem_limit: 192m
+volumes:
+  caddy_data:
+  caddy_config:

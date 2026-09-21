@@ -5,7 +5,7 @@ import {startLogin,finishLogin,safeReturn} from '@/lib/keycloak';
 import {getChatGPTUser} from '@/app/chatgpt-auth';
 export const dynamic='force-dynamic';
 const options=(secure:boolean)=>({httpOnly:true,secure,sameSite:'lax' as const,path:'/'});
-function clear(res:NextResponse,secure:boolean){for(const name of ['bizproof-access','bizproof-persona','bizproof-flow'])res.cookies.set(name,'',{...options(secure),maxAge:0});return res;}
+function clear(res:NextResponse,secure:boolean){for(const name of ['bizproof-access','bizproof-persona','bizproof-flow','bizproof-admin'])res.cookies.set(name,'',{...options(secure),maxAge:0});return res;}
 function privateResponse(res:NextResponse){res.headers.set('Cache-Control','no-store');res.headers.set('Referrer-Policy','no-referrer');return res;}
 export async function GET(req:Request){const url=new URL(req.url),action=url.pathname.split('/').pop();try{
  const mode=authenticationMode();

@@ -13,7 +13,7 @@ export async function POST(req:Request){
  const db=await analyticsDb(env.DB);
  // Limit duplicate bursts per browser. Event ID additionally makes retries idempotent.
  const recent=await db.prepare('SELECT COUNT(*) n FROM visitor_events WHERE visitor_id=? AND occurred_at>?').bind(visitorId,new Date(now.getTime()-60000).toISOString()).first<{n:number}>();if((recent?.n??0)>=60)return new Response(null,{status:429});
- const {geoSource,...location}=locationInfo(req,env.BIZPROOF_ANALYTICS_CLOUDFLARE==='true');
+ const {geoSource,...location}=locationInfo(req,env.BIZPROOF_ANALYTICS_CLOUDFLARE==='true',process.env.BIZPROOF_PUBLIC_DEMO==='true');
  await recordVisit(db,{id:input.eventId,occurred_at:now.toISOString(),...kstParts(now),visitor_id:visitorId,user_id:user?.authMode==='keycloak'?user.userId:null,name:user?.authMode==='keycloak'?(user.fullName??user.displayName).slice(0,160):null,...location,...browserInfo(ua),geo_source:geoSource,user_agent:ua,path} as Parameters<typeof recordVisit>[1]);
  const res=new NextResponse(null,{status:204,headers:{'Cache-Control':'no-store'}});res.cookies.set('bp-visitor',visitorId,{httpOnly:true,sameSite:'lax',secure:new URL(req.url).protocol==='https:',path:'/',maxAge:365*86400});return res;
  }catch{return new Response(null,{status:400,headers:{'Cache-Control':'no-store'}});}

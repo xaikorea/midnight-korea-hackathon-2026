@@ -62,3 +62,11 @@ next-env.d.ts
 /integrations/vlei-verifier-upstream/
 /integrations/keria/node_modules/
 /integrations/keria/private-output/
+
+/.node-data/
+**/.terraform/
+**/*.tfstate*
+**/*.tfplan
+**/terraform.tfvars
+
+.next-nhn/

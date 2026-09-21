@@ -1,0 +1,21 @@
+bizproof.xaikorea.ai.kr {
+ encode zstd gzip
+ request_body {
+  max_size 3MB
+ }
+ header {
+  X-Content-Type-Options nosniff
+  Referrer-Policy no-referrer
+  X-Frame-Options DENY
+  X-Robots-Tag "noindex, nofollow, noarchive"
+  -Server
+ }
+ reverse_proxy 127.0.0.1:3100 {
+  header_up -oai-authenticated-user-id
+  header_up -oai-authenticated-user-email
+  header_up -oai-authenticated-user-full-name
+  header_up X-Bizproof-Client-IP {remote_host}
+  header_up X-Forwarded-Proto https
+  header_up Host bizproof.xaikorea.ai.kr
+ }
+}

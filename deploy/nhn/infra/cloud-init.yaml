@@ -1,0 +1,20 @@
+#cloud-config
+# Infrastructure bootstrap only. No credentials, application data or remote shell scripts.
+package_update: true
+packages:
+  - docker.io
+  - docker-compose-v2
+  - ca-certificates
+  - unattended-upgrades
+ssh_pwauth: false
+disable_root: true
+write_files:
+  - path: /etc/docker/daemon.json
+    permissions: '0644'
+    content: |
+      {"log-driver":"local","log-opts":{"max-size":"10m","max-file":"3"}}
+runcmd:
+  - [systemctl, enable, --now, docker]
+  - [install, -d, -m, '0750', /srv/bizproof, /srv/bizproof/releases]
+  - [install, -d, -m, '0700', /srv/bizproof/secrets, /srv/bizproof/backups]
+  - [install, -d, -m, '0750', -o, '10001', -g, '10001', /srv/bizproof/data, /srv/bizproof/models]

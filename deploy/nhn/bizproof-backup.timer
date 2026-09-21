@@ -1,0 +1,7 @@
+[Unit]
+Description=BizProof daily backup
+[Timer]
+OnCalendar=*-*-* 18:30:00 UTC
+Persistent=true
+[Install]
+WantedBy=timers.target

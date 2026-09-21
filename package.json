@@ -33,7 +33,9 @@
     "test:shared-workspace": "node tests/shared-workspace-api.cjs",
     "midnight:preflight": "node scripts/midnight-preflight.mjs",
     "test:unit": "node tests/unit-suite.mjs",
-    "test:verification": "npm run typecheck && npm run typecheck:sdk && npm run check:validators && npm run test:unit && npm run test:contracts && npm run test:sdk"
+    "test:verification": "npm run typecheck && npm run typecheck:sdk && npm run check:validators && npm run test:unit && npm run test:contracts && npm run test:sdk",
+    "build:nhn": "next build --webpack",
+    "start:nhn": "next start --hostname 127.0.0.1 --port 3100"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -93,5 +95,6 @@
     "miniflare": {
       "sharp": "0.35.4"
     }
-  }
+  },
+  "packageManager": "npm@11.19.0"
 }

@@ -8,7 +8,8 @@ export function browserInfo(ua:string){
  const os=/Windows/.test(ua)?'Windows':/Android/.test(ua)?'Android':/iPhone|iPad/.test(ua)?'iOS':/Macintosh/.test(ua)?'macOS':/Linux/.test(ua)?'Linux':'기타';
  return {browser:family,os,device:/bot|crawler|spider/i.test(ua)?'bot':/iPad|Tablet/i.test(ua)?'tablet':/Mobile|iPhone|Android/i.test(ua)?'mobile':'desktop'};
 }
-export function locationInfo(req:Request,trustedCloudflare:boolean){
+export function locationInfo(req:Request,trustedCloudflare:boolean,trustedNhnProxy=false){
+ if(trustedNhnProxy){const ip=req.headers.get('x-bizproof-client-ip');const valid=ip&&ip.length<=45&&(/^[a-f\d:]+$/i.test(ip)&&ip.includes(':')||/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)&&ip.split('.').every(n=>Number(n)<=255));return {ip:valid?ip:null,country:null,region:null,city:null,geoSource:'nhn-proxy-ip-only'};}
  if(!trustedCloudflare)return {ip:null,country:null,region:null,city:null,geoSource:'unavailable'};
  const cf=(req as Request&{cf?:Record<string,unknown>}).cf;
  const clean=(v:unknown,max=100)=>typeof v==='string'&&v.length<=max&&!/[\x00-\x1f]/.test(v)?v:null;

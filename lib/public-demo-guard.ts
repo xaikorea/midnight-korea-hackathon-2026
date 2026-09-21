@@ -1,0 +1,3 @@
+import {env} from 'cloudflare:workers';
+import {publicDemo} from './public-demo';
+export async function demoWriteAllowed(actor:string){if(!publicDemo()||!actor.startsWith('demo-'))return true;const db=env.DB!,minute=Math.floor(Date.now()/60000);await db.prepare('CREATE TABLE IF NOT EXISTS demo_rate(actor TEXT PRIMARY KEY,minute INTEGER,n INTEGER)').run();const r=await db.prepare('INSERT INTO demo_rate VALUES(?,?,1) ON CONFLICT(actor) DO UPDATE SET minute=excluded.minute,n=CASE WHEN demo_rate.minute=excluded.minute THEN demo_rate.n+1 ELSE 1 END WHERE demo_rate.minute<>excluded.minute OR demo_rate.n<60').bind(actor,minute).run();return r.meta.changes===1;}

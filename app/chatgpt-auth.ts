@@ -1,6 +1,7 @@
 import {accessConfig} from '@/lib/openfga-runtime';
 import {intersectFgaRoles} from '@/lib/openfga';
 import {env} from 'cloudflare:workers';
+import {publicDemo,verifyDemo,demoCookie} from '@/lib/public-demo';
 import {workspaceMembership} from '@/lib/workspace-membership';
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -32,6 +33,11 @@ const SIGN_OUT_PATH = "/signout-with-chatgpt";
 const CALLBACK_PATH = "/callback";
 
 export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
+  if(publicDemo()){
+    const id=await verifyDemo((await cookies()).get(demoCookie)?.value??'');
+    if(id&&await env.DB!.prepare('SELECT id FROM demo_sessions WHERE id=? AND expires>?').bind(id,Date.now()).first())return {userId:id,storageOwner:id,workspaceKind:'personal',organization:null,displayName:'공개 체험 사용자',email:'demo@example.invalid',fullName:null,allowedRoles:businessRoles,authMode:'demo'};
+    if(authenticationMode()!=='keycloak')return null;
+  }
   try{if(authenticationMode()==='keycloak'){const token=(await cookies()).get('bizproof-access')?.value;if(!token)return null;const user=await validateAccess(identityConfig(),token);const member={...user,...workspaceMembership(user,env.BIZPROOF_WORKSPACE_MEMBERSHIPS)};const allowedRoles=await intersectFgaRoles(member,accessConfig());return allowedRoles.length?{...member,allowedRoles}:null;}}catch{return null;}
   try{if(accessConfig())return null;}catch{return null;}
   const requestHeaders = await headers();
