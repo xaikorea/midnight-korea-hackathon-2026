@@ -2,8 +2,8 @@
 
 2026-09-22 제작. 기존 자격 시연·인증·데이터 보존 흐름을 유지하며 접속 경험을 추가했다.
 
-- 로고: 기업 자격 카드와 확인 표시를 결합한 벡터 심볼. 주색 #284CE8, 보조색 #B8F298.
-- 원본: public/bizproof-logo.svg. 파비콘: public/favicon.svg, favicon.ico, favicon-32.png.
+- 로고 v3: 하나의 기둥과 두 연결 곡선으로 만든 B 모노그램. 하나의 기업 자격을 구매사·지원사업에 재사용하는 구조를 표현한다. 남색 #142E52, 파랑 #3457EE, 청록 #119D9A. 체크 배지와 둥근 배경 타일을 제거하고 독립 심볼로 사용한다.
+- 원본: public/bizproof-logo.svg, 단독 심볼 public/bizproof-symbol.svg. 파비콘: public/favicon.svg, favicon.ico, favicon-32.png.
 - 모바일 아이콘: public/apple-touch-icon.png (180), public/icon-192.png (192).
 - 공유 카드: public/og-image.png (1200×630). Open Graph 및 Twitter large image 메타데이터 사용.
 - 공개 홈과 /welcome: 단일 체험 시작 버튼, 데이터·세션 범위 안내, 가이드 연결.

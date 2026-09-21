@@ -1,6 +1,6 @@
 export default function BizProofLogo({animated=false,compact=false}:{animated?:boolean;compact?:boolean}){
  return <span className={`bp-logo ${animated?'bp-logo-animated':''}`} aria-label="BizProof">
-  <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect className="bp-logo-tile" x="2" y="2" width="60" height="60" rx="19" fill="#284CE8"/><path d="M18 16H32C43 16 48 23 43 31C50 40 43 49 32 49H18V16Z" fill="white" fillOpacity=".16"/><path className="bp-logo-check" d="M18 33L28 43L47 23" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/><circle cx="48" cy="48" r="5" fill="#B8F298"/></svg>
-  {!compact&&<span className="bp-logo-word">BizProof<span>.</span></span>}
+  <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect x="7" y="7" width="10" height="50" rx="5" fill="#142E52"/><path className="bp-logo-upper" d="M26 12H35C54 12 54 32 35 32H26" stroke="#3457EE" strokeWidth="9" strokeLinecap="round"/><path className="bp-logo-lower" d="M26 32H37C56 32 56 52 37 52H26" stroke="#119D9A" strokeWidth="9" strokeLinecap="round"/></svg>
+  {!compact&&<span className="bp-logo-word">Biz<span>Proof</span></span>}
  </span>;
 }
