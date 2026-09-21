@@ -4,7 +4,7 @@ const headers={origin,host:new URL(origin).host,'x-forwarded-proto':new URL(orig
 async function request(path,method='GET',body,cookie=''){const r=await fetch(base+path,{method,headers:{...headers,cookie,...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,redirect:'manual'});return r;}
 assert.equal((await request('/api/platform')).status,401);
 assert.equal((await fetch(base+'/api/platform',{headers:{...headers,'oai-authenticated-user-id':'admin','oai-authenticated-user-email':'admin@example.invalid'}})).status,401);
-async function login(){const r=await request('/signin-with-chatgpt','POST');assert.equal(r.status,303,await r.text());return r.headers.getSetCookie().map(s=>s.split(';')[0]).join('; ');}
+async function login(){const r=await request('/signin-with-chatgpt','POST');assert.equal(r.status,303,await r.text());return r.headers.getSetCookie().map(s=>s.split(';')[0]).filter(s=>!s.startsWith('bizproof-persona=')).join('; ');}
 const a=await login(),b=await login();
 async function post(action,data={},status=200){const r=await request('/api/platform','POST',{action,...data},a+'; bizproof-persona=admin');const v=await r.json();assert.equal(r.status,status,JSON.stringify(v));return v;}
 let r=await request('/api/platform','GET',undefined,a);let s=await r.json();const actor=s.actor;
