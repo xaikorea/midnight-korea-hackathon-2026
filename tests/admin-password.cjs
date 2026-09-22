@@ -1,0 +1,64 @@
+const fs=require('node:fs'),path=require('node:path'),ts=require('typescript'),assert=require('node:assert/strict'),Module=require('node:module'),{DatabaseSync}=require('node:sqlite');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,f);
+const output=path.resolve('outputs');fs.mkdirSync(output,{recursive:true});
+const dir=fs.mkdtempSync(path.join(output,'admin-password-')),file=path.join(dir,'test.sqlite');
+let sqlite=new DatabaseSync(file);
+const db={prepare(sql){const make=args=>({sql,args,bind(...v){return make(v)},async first(){return sqlite.prepare(sql).get(...args)||null},async run(){return {meta:{changes:Number(sqlite.prepare(sql).run(...args).changes)}}}});return make([])},async batch(statements){sqlite.exec('BEGIN IMMEDIATE');try{const results=statements.map(s=>({meta:{changes:Number(sqlite.prepare(s.sql).run(...s.args).changes)}}));sqlite.exec('COMMIT');return results}catch(e){sqlite.exec('ROLLBACK');throw e}}};
+process.env.BIZPROOF_ADMIN_SECRET='admin-test-secret-'.repeat(5);
+process.env.BIZPROOF_PUBLIC_DEMO='true';process.env.BIZPROOF_APP_ORIGIN='https://admin.test';
+const auth=require('../lib/demo-admin.ts'),store=require('../lib/admin-credentials.ts');
+process.env.BIZPROOF_ADMIN_PASSWORD_HASH=auth.hashAdminPassword('original-test-password');
+(async()=>{
+ const initial=await store.adminCredential(db),old=await auth.issueAdmin(initial.revision);
+ assert.equal(await store.verifyStoredAdmin(db,old),true);
+ const invalid=p=>store.passwordChangeError({currentPassword:'original-test-password',newPassword:p,confirmPassword:p});
+ assert.ok(invalid('1234567'));assert.ok(invalid('😀😀😀😀'));assert.ok(invalid('a'.repeat(201)));assert.equal(invalid('12345678'),null);
+ assert.ok(store.passwordChangeError({currentPassword:'original-test-password',newPassword:'12345678',confirmPassword:'mismatch'}));
+ assert.equal(await store.replaceAdminPassword(db,initial,'wrong','12345678'),false);
+ assert.equal(await store.replaceAdminPassword(db,initial,'original-test-password','1234567'),false);
+ assert.equal(await store.replaceAdminPassword(db,initial,'original-test-password','12345678'),true);
+ assert.equal(await store.replaceAdminPassword(db,initial,'original-test-password','stale-password'),false);
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM admin_security_audit').get().n,1);
+ assert.equal(await store.verifyStoredAdmin(db,old),false);
+ sqlite.close();sqlite=new DatabaseSync(file);
+ const persisted=await store.adminCredential(db);
+ assert.equal(auth.checkAdminPassword('12345678',persisted.password_hash),true);
+ assert.equal(auth.checkAdminPassword('original-test-password',persisted.password_hash),false);
+ assert.notEqual(persisted.password_hash,'12345678');
+ // Concurrent submissions cannot both change a credential from the same revision.
+ const changes=await Promise.all([store.replaceAdminPassword(db,persisted,'12345678','parallel-one'),store.replaceAdminPassword(db,persisted,'12345678','parallel-two')]);
+ assert.deepEqual(changes,[true,false]);
+ const beforeRollback=await store.adminCredential(db);
+ sqlite.exec("CREATE TRIGGER reject_audit BEFORE INSERT ON admin_security_audit BEGIN SELECT RAISE(ABORT,'simulated storage failure'); END;");
+ await assert.rejects(store.replaceAdminPassword(db,beforeRollback,'parallel-one','must-not-stick'));
+ assert.deepEqual(await store.adminCredential(db),beforeRollback);sqlite.exec('DROP TRIGGER reject_audit');
+ let token=await auth.issueAdmin(beforeRollback.revision);const otherSession=token;
+ const original=Module._load;
+ Module._load=function(id,...rest){if(id==='cloudflare:workers')return {env:{DB:db}};if(id==='next/headers')return {cookies:async()=>({get:()=>token?{value:token}:undefined})};if(id.startsWith('@/'))id=path.resolve(id.slice(2))+'.ts';return original.call(this,id,...rest)};
+ try{
+  const api=require('../app/api/admin/password/route.ts');
+  const body={currentPassword:'parallel-one',newPassword:'route-password',confirmPassword:'route-password'};
+  const post=(value=body,origin='https://admin.test',type='application/json')=>api.POST(new Request('https://admin.test/api/admin/password',{method:'POST',headers:{origin,'content-type':type},body:typeof value==='string'?value:JSON.stringify(value)}));
+  assert.equal((await post(body,'https://evil.test')).status,403);
+  token='';assert.equal((await post()).status,401);token=old;assert.equal((await post()).status,401);token=otherSession;
+  assert.equal((await post(body,'https://admin.test','text/plain')).status,415);
+  assert.equal((await post('{')).status,400);assert.equal((await post('x'.repeat(4001))).status,413);
+  assert.equal((await post({...body,newPassword:'short',confirmPassword:'short'})).status,400);
+  assert.equal((await post({...body,confirmPassword:'mismatch'})).status,400);
+  assert.equal((await post({...body,currentPassword:'wrong'})).status,400);
+  const response=await post();assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');
+  const cookie=response.headers.get('set-cookie');for(const flag of ['HttpOnly','Secure','SameSite=strict'])assert.ok(cookie.includes(flag));
+  token=cookie.match(/bizproof-admin=([^;]+)/)[1];assert.equal(await store.verifyStoredAdmin(db,token),true);assert.equal(await store.verifyStoredAdmin(db,otherSession),false);
+  // Existing environment password must also be rejected by the actual login route.
+  const login=require('../app/api/demo-admin/route.ts');
+  const logIn=password=>login.POST(new Request('https://admin.test/api/demo-admin',{method:'POST',headers:{origin:'https://admin.test'},body:new URLSearchParams({username:'admin',password})}));
+  assert.equal((await logIn('original-test-password')).status,401);assert.equal((await logIn('route-password')).status,303);
+  sqlite.exec('DELETE FROM admin_password_rate');
+  for(let i=0;i<6;i++)assert.equal((await post({...body,currentPassword:'wrong'})).status,400);
+  const limited=await post({...body,currentPassword:'wrong'});assert.equal(limited.status,429);assert.equal(limited.headers.get('retry-after'),'900');
+  sqlite.exec('DELETE FROM admin_password_rate');
+  const prepare=db.prepare;db.prepare=()=>{throw Error('storage unavailable')};assert.equal((await post()).status,503);db.prepare=prepare;
+  assert.equal(auth.checkAdminPassword('route-password',(await store.adminCredential(db)).password_hash),true);
+ }finally{Module._load=original}
+ console.log('PASS admin password: min 8, confirmation, current password, durable restart, CAS races, audit rollback, session revocation, cookie flags, login, CSRF/auth/body guards, rate limit, fail closed');
+})().catch(e=>{console.error(e);process.exitCode=1}).finally(()=>{sqlite.close();assert.equal(path.dirname(path.resolve(dir)),output);fs.rmSync(dir,{recursive:true,force:true})});
