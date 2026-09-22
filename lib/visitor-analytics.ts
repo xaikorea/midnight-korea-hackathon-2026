@@ -1,7 +1,9 @@
 import {z} from 'zod';
 export const visitInput=z.object({eventId:z.string().uuid(),path:z.string().min(1).max(180)}).strict();
 const allowedViews=new Set(['access','apply','progress','reviews','overview','guide','journey','trust','connections','dashboard','companies','credentials','requests','policies','issuers','schemas','settings','studio','wallet','organization','identity','ssi','suppliers','audit']);
-export function safeVisitPath(value:string){const u=new URL(value,'https://analytics.invalid');if(u.origin!=='https://analytics.invalid'||u.pathname!=='/')throw Error('Unsupported page');const view=u.searchParams.get('view');return view&&allowedViews.has(view)?'/?view='+view:'/';}
+export function safeVisitPath(value:string){const u=new URL(value,'https://analytics.invalid');if(u.origin!=='https://analytics.invalid'||!['/','/welcome','/guide','/process'].includes(u.pathname))throw Error('Unsupported page');if(u.pathname!=='/')return u.pathname;const view=u.searchParams.get('view');return view&&allowedViews.has(view)?'/?view='+view:'/';}
+export const visitorCookieId=(value:string|undefined)=>value&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value)?value:null;
+export const visitorProfileInput=z.object({name:z.string().trim().min(1).max(80).regex(/^[^\x00-\x1f\x7f]+$/),company:z.string().trim().max(120).regex(/^[^\x00-\x1f\x7f]*$/),consent:z.literal(true)}).strict();
 export function kstParts(now=new Date()){const day=new Date(now.getTime()+9*3600000).toISOString().slice(0,10);return {day,month:day.slice(0,7)};}
 export function browserInfo(ua:string){
  const family=/Edg\//.test(ua)?'Edge':/OPR\//.test(ua)?'Opera':/Firefox\//.test(ua)?'Firefox':/Chrome\//.test(ua)?'Chrome':/Safari\//.test(ua)?'Safari':'기타';
@@ -29,24 +31,40 @@ export const analyticsSchema=[
  `CREATE INDEX IF NOT EXISTS visitor_events_month_time ON visitor_events(month,occurred_at DESC)`,
  `CREATE INDEX IF NOT EXISTS visitor_events_user ON visitor_events(user_id,occurred_at)`,
  `CREATE INDEX IF NOT EXISTS visitor_events_visitor ON visitor_events(visitor_id,occurred_at)`,
- `CREATE TABLE IF NOT EXISTS analytics_admin_audit (id TEXT PRIMARY KEY, actor TEXT NOT NULL, occurred_at TEXT NOT NULL, action TEXT NOT NULL, month TEXT NOT NULL)`
+ `CREATE TABLE IF NOT EXISTS analytics_admin_audit (id TEXT PRIMARY KEY, actor TEXT NOT NULL, occurred_at TEXT NOT NULL, action TEXT NOT NULL, month TEXT NOT NULL)`,
+ `CREATE TABLE IF NOT EXISTS visitor_profiles (visitor_id TEXT PRIMARY KEY, name TEXT NOT NULL, company TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`
 ];
 const initialized=new WeakMap<D1Database,Promise<unknown>>();
 export async function analyticsDb(db:D1Database|undefined){if(!db)throw Error('Analytics database unavailable');let pending=initialized.get(db);if(!pending){pending=db.batch(analyticsSchema.map(sql=>db.prepare(sql))).catch(e=>{initialized.delete(db);throw e;});initialized.set(db,pending);}await pending;return db;}
 export type VisitRow={id:string;occurred_at:string;month:string;day:string;visitor_id:string;user_id:string|null;name:string|null;ip:string|null;country:string|null;region:string|null;city:string|null;geo_source:string;user_agent:string;browser:string;os:string;device:string;path:string};
 export async function recordVisit(db:D1Database,row:VisitRow){const keys=Object.keys(row) as (keyof VisitRow)[];await db.prepare(`INSERT OR IGNORE INTO visitor_events (${keys.join(',')}) VALUES (${keys.map(()=>'?').join(',')})`).bind(...keys.map(k=>row[k])).run();}
+const enriched=`(SELECT e.*, COALESCE(e.name,p.name) display_name, CASE WHEN e.user_id IS NOT NULL THEN 'login' WHEN p.name IS NOT NULL THEN 'self-reported' ELSE 'anonymous' END name_source, p.company, COALESCE(e.user_id,'anonymous:'||e.visitor_id) identity FROM visitor_events e LEFT JOIN visitor_profiles p ON e.visitor_id=p.visitor_id AND e.user_id IS NULL)`;
 export async function analyticsReport(db:D1Database,month:string,search:string,page:number,kind:'visits'|'customers'){
- const escaped='%'+search.replace(/[\\%_]/g,v=>'\\'+v)+'%';const where="month=? AND (?='' OR COALESCE(name,'') LIKE ? ESCAPE '\\' OR COALESCE(ip,'') LIKE ? ESCAPE '\\' OR path LIKE ? ESCAPE '\\')";
- const args=[month,search,escaped,escaped,escaped];
+ const escaped='%'+search.replace(/[\\%_]/g,v=>'\\'+v)+'%';const where="month=? AND (?='' OR COALESCE(display_name,'') LIKE ? ESCAPE '\\' OR COALESCE(ip,'') LIKE ? ESCAPE '\\' OR path LIKE ? ESCAPE '\\' OR COALESCE(company,'') LIKE ? ESCAPE '\\')";
+ const args=[month,search,escaped,escaped,escaped,escaped];
  const queries=[
  db.prepare('SELECT COUNT(*) visits, COUNT(DISTINCT visitor_id) visitors, COUNT(DISTINCT user_id) customers, COUNT(DISTINCT country) countries FROM visitor_events WHERE month=?').bind(month),
  db.prepare('SELECT day label, COUNT(*) value FROM visitor_events WHERE month=? GROUP BY day ORDER BY day').bind(month),
  db.prepare("SELECT COALESCE(country,'미확인') label, COUNT(*) value FROM visitor_events WHERE month=? GROUP BY country ORDER BY value DESC LIMIT 12").bind(month),
  db.prepare('SELECT browser label, COUNT(*) value FROM visitor_events WHERE month=? GROUP BY browser ORDER BY value DESC').bind(month),
  db.prepare('SELECT month label, COUNT(*) value FROM visitor_events GROUP BY month ORDER BY month DESC LIMIT 24'),
- db.prepare(kind==='visits'?`SELECT COUNT(*) total FROM visitor_events WHERE ${where}`:`SELECT COUNT(*) total FROM (SELECT COALESCE(user_id,'anonymous:'||visitor_id) FROM visitor_events WHERE ${where} GROUP BY COALESCE(user_id,'anonymous:'||visitor_id))`).bind(...args),
- db.prepare(kind==='visits'?`SELECT * FROM visitor_events WHERE ${where} ORDER BY occurred_at DESC,id DESC LIMIT 50 OFFSET ?`:`SELECT COALESCE(user_id,'anonymous:'||visitor_id) identity, MAX(name) name, MAX(user_id) user_id, COUNT(*) visits, COUNT(DISTINCT ip) ip_count, MIN(occurred_at) first_seen, MAX(occurred_at) last_seen FROM visitor_events WHERE ${where} GROUP BY COALESCE(user_id,'anonymous:'||visitor_id) ORDER BY last_seen DESC,identity LIMIT 50 OFFSET ?`).bind(...args,page*50)
+ db.prepare(kind==='visits'?`SELECT COUNT(*) total FROM ${enriched} WHERE ${where}`:`SELECT COUNT(*) total FROM (SELECT identity FROM ${enriched} WHERE ${where} GROUP BY identity)`).bind(...args),
+ db.prepare(kind==='visits'?`SELECT * FROM ${enriched} WHERE ${where} ORDER BY occurred_at DESC,id DESC LIMIT 50 OFFSET ?`:`SELECT identity, MAX(display_name) display_name, MAX(name_source) name_source, MAX(company) company, MAX(user_id) user_id, COUNT(*) visits, COUNT(DISTINCT ip) ip_count, MIN(occurred_at) first_seen, MAX(occurred_at) last_seen FROM ${enriched} WHERE ${where} GROUP BY identity ORDER BY last_seen DESC,identity LIMIT 50 OFFSET ?`).bind(...args,page*50),
+ db.prepare('SELECT device label, COUNT(*) value FROM visitor_events WHERE month=? GROUP BY device ORDER BY value DESC').bind(month),
+ db.prepare("SELECT COALESCE(country,'미확인')||' · '||COALESCE(region,city,'미확인') label,COUNT(*) value FROM visitor_events WHERE month=? GROUP BY label ORDER BY value DESC LIMIT 8").bind(month),
+ db.prepare('SELECT path label, COUNT(*) value FROM visitor_events WHERE month=? GROUP BY path ORDER BY value DESC LIMIT 10').bind(month),
+ db.prepare('SELECT COUNT(*) visits, COUNT(DISTINCT visitor_id) visitors, MIN(occurred_at) first_seen, MAX(occurred_at) last_seen FROM visitor_events'),
+ db.prepare(`SELECT name_source label,COUNT(DISTINCT identity) value FROM ${enriched} WHERE month=? GROUP BY name_source`).bind(month),
+ db.prepare(`SELECT CASE WHEN EXISTS(SELECT 1 FROM visitor_events previous WHERE previous.visitor_id=current.visitor_id AND previous.month<?) THEN '재방문' ELSE '신규' END label, COUNT(DISTINCT current.visitor_id) value FROM visitor_events current WHERE current.month=? GROUP BY label`).bind(month,month)
  ];
  const results=await db.batch<Record<string,unknown>>(queries);
- return {month,summary:results[0].results[0],daily:results[1].results,countries:results[2].results,browsers:results[3].results,months:results[4].results,total:Number(results[5].results[0]?.total??0),rows:results[6].results,page,kind,refreshedAt:new Date().toISOString(),retention:'자동 삭제 없음 · 과거 월 원본 유지',timezone:'Asia/Seoul'};
+ return {month,summary:results[0].results[0],daily:results[1].results,countries:results[2].results,browsers:results[3].results,months:results[4].results,total:Number(results[5].results[0]?.total??0),rows:results[6].results,devices:results[7].results,regions:results[8].results,pages:results[9].results,lifetime:results[10].results[0],identities:results[11].results,returning:results[12].results,page,kind,refreshedAt:new Date().toISOString(),retention:'자동 삭제 없음 · 과거 월 원본 유지',timezone:'Asia/Seoul'};
+}
+export async function analyticsCustomer(db:D1Database,identity:string,page:number){
+ const where=identity.startsWith('anonymous:')?'visitor_id=? AND user_id IS NULL':'user_id=?';const key=identity.startsWith('anonymous:')?identity.slice(10):identity;
+ const results=await db.batch<Record<string,unknown>>([
+ db.prepare(`SELECT MAX(display_name) display_name, MAX(name_source) name_source, MAX(company) company,COUNT(*) visits,COUNT(DISTINCT ip) ip_count,COUNT(DISTINCT path) page_count, MIN(occurred_at) first_seen,MAX(occurred_at) last_seen FROM ${enriched} WHERE ${where}`).bind(key),
+ db.prepare(`SELECT month label,COUNT(*) value FROM visitor_events WHERE ${where} GROUP BY month ORDER BY month DESC LIMIT 24`).bind(key),
+ db.prepare(`SELECT * FROM ${enriched} WHERE ${where} ORDER BY occurred_at DESC,id DESC LIMIT 50 OFFSET ?`).bind(key,page*50)
+ ]);return {identity,summary:results[0].results[0],months:results[1].results,rows:results[2].results,page};
 }

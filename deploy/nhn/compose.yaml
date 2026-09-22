@@ -4,6 +4,8 @@ services:
     image: bizproof:public-demo-1
     restart: unless-stopped
     env_file: /srv/bizproof/secrets/runtime.env
+    environment:
+      BIZPROOF_GEOIP_PATH: /data/geoip/dbip-city-lite.mmdb
     ports: ["127.0.0.1:3100:3100"]
     volumes: ["/srv/bizproof/data:/data"]
     mem_limit: 1100m

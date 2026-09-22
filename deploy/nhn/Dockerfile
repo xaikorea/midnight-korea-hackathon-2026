@@ -13,6 +13,7 @@ RUN groupadd -g 10001 bizproof && useradd -u 10001 -g bizproof bizproof
 COPY --from=build --chown=10001:10001 /app/.next-nhn/standalone ./
 COPY --from=build --chown=10001:10001 /app/.next-nhn/static ./.next-nhn/static
 COPY --from=build --chown=10001:10001 /app/public ./public
+COPY --from=build --chown=10001:10001 /app/scripts/update-geoip.mjs ./scripts/update-geoip.mjs
 USER 10001
 EXPOSE 3100
 CMD ["node","server.js"]

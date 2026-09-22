@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./admin/analytics-enhancements.css";
 import VisitTracker from "./visit-tracker";
 export const metadata: Metadata = {
  metadataBase:new URL('https://bizproof.xaikorea.ai.kr'),

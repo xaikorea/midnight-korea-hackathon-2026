@@ -1,0 +1,10 @@
+[Unit]
+Description=Monthly GeoIP refresh, retry during the first week
+
+[Timer]
+OnCalendar=*-*-02..07 03:10:00 Asia/Seoul
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
