@@ -1,0 +1,29 @@
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const base=process.env.SMOKE_BASE||'http://127.0.0.1:3106';
+(async()=>{
+ const browser=await chromium.launch({headless:true,channel:'msedge',args:base.startsWith('https:')?['--host-resolver-rules=MAP bizproof.xaikorea.ai.kr 203.0.113.10']:[]});
+ const errors=[];fs.mkdirSync('outputs',{recursive:true});
+ async function enter(ctx){const page=await ctx.newPage();page.setDefaultTimeout(60000);page.on('pageerror',e=>errors.push(e.message));await page.goto(base+'/welcome',{waitUntil:'domcontentloaded'});const notice=page.getByLabel('방문 분석 안내',{exact:true});if(await notice.isVisible())await notice.getByRole('button',{name:'확인',exact:true}).click();await page.getByRole('button',{name:'내 체험 공간 시작하기'}).click();await page.waitForURL('**/?view=apply');await page.getByRole('button',{name:'모두 선택',exact:true}).waitFor();return page;}
+ const ctx=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});ctx.setDefaultTimeout(60000);let foreign;
+ try{
+  const page=await enter(ctx),monitor=await ctx.newPage();monitor.on('pageerror',e=>errors.push(e.message));await monitor.goto(base+'/process',{waitUntil:'domcontentloaded'});await monitor.getByText('아직 실행 기록이 없습니다.',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'모두 선택',exact:true}).click();await page.getByRole('button',{name:'선택한 2곳에 제출',exact:true}).waitFor();await page.getByRole('checkbox').check();
+  const responsePromise=page.waitForResponse(r=>r.url().endsWith('/api/platform')&&r.request().postData()?.includes('submit-applications'));
+  await page.getByRole('button',{name:'선택한 2곳에 제출',exact:true}).click();const response=await responsePromise;assert.match(response.headers()['content-type'],/application\/x-ndjson/);
+  const dialog=page.getByRole('dialog',{name:'처리 과정 관제'});await dialog.getByText('처리·저장 완료',{exact:true}).waitFor();
+  const run=await page.evaluate(async()=>{const r=await fetch('/api/process-runs');return (await r.json()).runs[0]});assert.equal(run.committed,true);assert.equal(run.historySaved,true);assert.equal(run.engine.networkConnected,false);assert.ok(run.events.length>=30);assert.equal(new Set(run.events.filter(e=>e.data.nonce).map(e=>e.data.nonce)).size,2);
+  const wire=(await response.text()).trim().split('\n').map(x=>JSON.parse(x));assert.equal(wire[0].type,'run');assert.equal(wire.at(-1).type,'complete');assert.equal(wire.at(-1).run.id,run.id);
+  assert.ok(wire.some(e=>e.type==='event'&&e.event.stage==='credential'&&e.event.data.checks?.some(c=>c.pass)));
+  await dialog.locator('.process-events details').first().locator('summary').click();await page.screenshot({path:'outputs/process-panel-desktop.png'});
+  const buyer=run.policies[0];await dialog.getByRole('navigation',{name:'처리 기관 필터'}).getByRole('button',{name:buyer.audience,exact:true}).click();assert.equal(await dialog.locator('.process-audience').filter({hasText:run.policies[1].audience}).count(),0);
+  await page.getByRole('button',{name:'관제 창 닫기'}).click();await page.getByRole('region',{name:'신청 결과'}).waitFor();
+  await monitor.getByText('처리·저장 완료',{exact:true}).waitFor();await monitor.reload({waitUntil:'domcontentloaded'});await monitor.getByText('처리·저장 완료',{exact:true}).waitFor();await monitor.screenshot({path:'outputs/process-monitor-desktop.png'});
+  const downloadPromise=monitor.waitForEvent('download');await monitor.getByRole('button',{name:'기록 JSON',exact:true}).click();const download=await downloadPromise;await download.saveAs('outputs/process-demo-trace.json');const exported=JSON.parse(fs.readFileSync('outputs/process-demo-trace.json','utf8'));assert.equal(exported.id,run.id);assert.equal(exported.committed,true);
+  await monitor.setViewportSize({width:390,height:844});assert.ok(await monitor.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await monitor.screenshot({path:'outputs/process-monitor-mobile.png'});
+  await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'처리 과정 보기',exact:true}).click();await page.getByRole('dialog').getByText('처리·저장 완료',{exact:true}).waitFor();assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:'outputs/process-panel-mobile.png'});await page.getByRole('button',{name:'관제 창 닫기'}).click();
+  foreign=await browser.newContext({viewport:{width:1200,height:900}});const other=await enter(foreign);const isolated=await other.evaluate(async id=>(await (await fetch('/api/process-runs?id='+encodeURIComponent(id))).json()).runs,run.id);assert.deepEqual(isolated,[]);
+  await other.goto(base+'/signout-with-chatgpt');await page.goto(base+'/signout-with-chatgpt');assert.deepEqual(errors,[]);
+  console.log(JSON.stringify({pass:true,base,run:run.id,events:run.events.length,checks:['real streamed execution','two request nonces','database confirmed','automatic panel','separate monitor','recipient filter','history after reload','safe JSON download','desktop and mobile','workspace isolation']}));
+ }finally{await ctx.close();if(foreign)await foreign.close();await browser.close()}
+})().catch(e=>{console.error(e);process.exit(1)});
