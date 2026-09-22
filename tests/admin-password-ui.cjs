@@ -1,16 +1,15 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 const mode=process.env.ADMIN_UI_MODE||'stage';
-const base=mode==='public'?'https://bizproof.xaikorea.ai.kr':(process.env.SMOKE_BASE||'http://127.0.0.1:3111');
-if(mode!=='public'&&base!=='http://127.0.0.1:3111')throw Error('Password mutation test requires the isolated staging origin');
-const original=mode==='public'?fs.readFileSync('outputs/test-admin-access.txt','utf8').split(/\r?\n/).find(s=>s.startsWith('Password: ')).slice(10):'initial-stage-password';
+const base=process.env.SMOKE_BASE||'http://127.0.0.1:3111';
+if(!['stage','verify-restart'].includes(mode)||base!=='http://127.0.0.1:3111')throw Error('Password mutation test requires the isolated staging origin');
+const original='initial-stage-password';
 const next='newpass8';
 (async()=>{
- const browser=await chromium.launch({channel:'msedge',headless:true,args:mode==='public'?['--host-resolver-rules=MAP bizproof.xaikorea.ai.kr 203.0.113.10']:[]});
+ const browser=await chromium.launch({channel:'msedge',headless:true,args:[]});
  try{
   const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();
   const login=async(p,password)=>{await p.goto(base+'/admin/login');await p.getByLabel('관리자 아이디').fill('admin');await p.getByLabel('관리자 비밀번호').fill(password);await Promise.all([p.waitForURL(base+'/admin'),p.getByRole('button',{name:'관리자 로그인',exact:true}).click()]);};
-  const post=async(p,url,body)=>p.evaluate(async({url,body})=>{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return {status:r.status,body:await r.json()}},{url,body});
   const analytics=async p=>p.evaluate(async()=> (await fetch('/api/admin/analytics')).status);
   await login(page,mode==='verify-restart'?next:original);
   if(mode==='verify-restart'){
@@ -25,11 +24,7 @@ const next='newpass8';
   await page.screenshot({path:'outputs/admin-password-'+mode+'-desktop.png',fullPage:true});
   await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.screenshot({path:'outputs/admin-password-'+mode+'-mobile.png',fullPage:true});await page.setViewportSize({width:1440,height:1000});
-  if(mode==='public'){
-   const denied=await post(page,'/api/admin/password',{currentPassword:'synthetic-wrong-current-password',newPassword:'synthetic-test-password',confirmPassword:'synthetic-test-password'});assert.equal(denied.status,400);
-   const short=await post(page,'/api/admin/password',{currentPassword:'synthetic-wrong-current-password',newPassword:'short',confirmPassword:'short'});assert.equal(short.status,400);
-   assert.equal(await analytics(page),200);console.log('PASS public: password menu, guarded page, min 8, desktop/mobile, wrong current rejected, existing session intact; no password changed');return;
-  }
+
   const other=await browser.newContext(),otherPage=await other.newPage();await login(otherPage,original);
   await fields.current.fill(original);await fields.fresh.fill('1234567');await fields.confirm.fill('1234567');
   await page.getByRole('button',{name:'비밀번호 변경',exact:true}).click();

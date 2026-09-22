@@ -48,3 +48,7 @@ DB-IP Lite는 CC BY 4.0이며 화면과 안내에 [IP Geolocation by DB-IP](http
 - `tests/visitor-analytics.cjs`: 기존 SQLite 월 경계·검색·중복·관리자 감사·신뢰 메타데이터.
 - `tests/visitor-analytics-expanded.cjs`: 실제 다월 이력·프로필 동의·CSRF·소유권·속도 제한·이름 출처·페이지네이션·지역 DB 부재 처리.
 - `tests/visitor-analytics-public.cjs`: 운영과 같은 인증을 쓰는 브라우저에서 방문·이름 등록·지역 조회·고객 상세·PC/모바일·수집 중지·로그아웃. `SMOKE_BASE`로 격리된 로컬/서버 또는 공개 HTTPS를 지정한다. 테스트 프로필은 검증용으로 명시한다.
+
+## 관리자 비밀번호 변경
+
+로컬 관리자 계정은 관리자 메뉴의 **비밀번호 변경**(`/admin/security`)에서 현재 비밀번호와 8자 이상인 새 비밀번호·확인 값을 입력한다. 변경은 DB에 영구 저장되며 다른 기기의 관리자 세션을 만료시킨다. 운영 방법과 검증 결과는 `docs/admin-password.md`에 정리했다.
