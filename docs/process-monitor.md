@@ -11,6 +11,8 @@
 5. **별도 관제 창**(`/process`)을 열면 신청 화면과 나란히 볼 수 있다. 같은 공간의 기록을 3초 간격으로 조회하며, 숨겨진 탭의 주기적 조회는 생략한다.
 6. 최근 20개 처리 기록을 다시 선택하거나 안전한 기록 JSON을 내려받을 수 있다. 새로고침 후에도 저장된 이력을 확인할 수 있다.
 
+관제 기능 도입 전에 완료된 신청의 단계별 실행 기록은 소급 생성하지 않는다. 기존 접수는 신청 결과에서 확인하고 새 제출부터 실행 기록을 남긴다.
+
 ## 실제 실행과 표시의 관계
 
 `submit-applications`의 `observe: true` 요청은 실제 처리 경계에서 NDJSON 이벤트를 스트리밍한다. 표시를 위한 인위적인 지연이나 가짜 완료 타이머를 사용하지 않는다. 짧은 작업은 즉시 끝날 수 있고, 그 경우 기록을 펼쳐 단계별로 확인한다.
@@ -40,3 +42,13 @@
 - 종료 기록 없이 갱신이 멈춘 실행은 성공이나 실패로 추정하지 않고 마지막 갱신 상태를 안내한다.
 
 검증: `tests/application-process.cjs`(스트리밍·저장 확정 순서·실패·재시도·권한·비밀정보 제외), `tests/application-process-ui.cjs`(실제 제출·창·모바일·별도 화면·이력·파일·사용자 격리).
+
+## 공개 배포 검증
+
+2026-09-22 앱 코드 `5320fd2`, 이미지 `bizproof:process-monitor` (`4ec0718cda8e`)를 공개 사이트에 적용했다. 분리된 Linux 컨테이너와 공개 HTTPS 모두 실제 두 기관 제출에서 34개 실행 이벤트, 기관별 서로 다른 nonce, DB 저장 확인, 이력 재조회, 별도 창 갱신, JSON 내보내기, PC·모바일, 다른 방문자의 기록 차단을 확인했다. 기존 간편 신청 브라우저 검증도 통과했다.
+
+공개 검증 추적 번호: `process-09492217-ebe3-42ec-a64c-445a9af470f8` (자동 검증용 독립 가상 공간).
+
+시연 대기 데이터 5개를 보충했다. 서버 내부 백업 `bizproof-20260922T001401Z.tar.gz`의 SQLite 복구 무결성과 관제 기록 2건 포함을 확인했다. 임시 검증 컨테이너와 SSH 터널은 종료했다.
+
+실제 화면: `outputs/process-panel-desktop.png`, `outputs/process-inspection-details.png`, `outputs/process-monitor-desktop.png`, `outputs/process-monitor-mobile.png`, `outputs/process-panel-mobile.png`. 안전한 예제 기록: `outputs/process-demo-trace.json`.
