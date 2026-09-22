@@ -1,4 +1,4 @@
-CREATE TABLE `visitor_profiles` (
+CREATE TABLE IF NOT EXISTS `visitor_profiles` (
 	`visitor_id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`company` text NOT NULL,
