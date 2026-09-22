@@ -43,7 +43,7 @@ DB-IP Lite는 CC BY 4.0이며 화면과 안내에 [IP Geolocation by DB-IP](http
 
 ## 배포 및 검증
 
-`visitor_profiles`는 Drizzle `0002_fantastic_professor_monster.sql`과 앱의 멱등 초기화에 반영했다. 기존 DB와 방문 기록은 유지한다. Compose는 `/data/geoip/dbip-city-lite.mmdb`를 설정한다. 새 이미지 적용 후 초기 DB 다운로드, systemd 서비스·타이머 설치, 로그인·접근 제한·방문 저장·지역 조회·PC/모바일 검증을 수행한다.
+`visitor_profiles`는 Drizzle `0002_fantastic_professor_monster.sql`과 앱의 멱등 초기화에 반영했다. 기존 DB와 방문 기록은 유지한다. Compose는 `/data/geoip/dbip-city-lite.mmdb`를 설정한다. 2026-09-23 NHN 공개 서비스에 배포했다. 초기 DB 다운로드, systemd 서비스·타이머 설치, 로그인·접근 제한·방문 저장·지역 조회·PC/모바일 검증을 완료했다. 운영 이미지와 백업 검증 결과는 `docs/nhn-deployment-status.md`에 기록했다.
 
 - `tests/visitor-analytics.cjs`: 기존 SQLite 월 경계·검색·중복·관리자 감사·신뢰 메타데이터.
 - `tests/visitor-analytics-expanded.cjs`: 실제 다월 이력·프로필 동의·CSRF·소유권·속도 제한·이름 출처·페이지네이션·지역 DB 부재 처리.

@@ -28,6 +28,17 @@ resource "nhncloud_networking_secgroup_rule_v2" "ssh" {
   security_group_id = nhncloud_networking_secgroup_v2.demo.id
 }
 
+resource "nhncloud_networking_secgroup_rule_v2" "ssh_additional" {
+  for_each          = var.additional_admin_cidrs
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = 22
+  port_range_max    = 22
+  remote_ip_prefix  = each.value
+  security_group_id = nhncloud_networking_secgroup_v2.demo.id
+}
+
 resource "nhncloud_networking_port_v2" "demo" {
   name               = "${var.name}-port"
   network_id         = var.network_id

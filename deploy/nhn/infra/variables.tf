@@ -72,6 +72,16 @@ variable "ssh_public_key" {
     error_message = "Supply an OpenSSH public key, never a private key."
   }
 }
+variable "additional_admin_cidrs" {
+  type        = set(string)
+  default     = []
+  description = "Additional explicitly authorized administrator IPv4 addresses. Single-host rules only."
+  validation {
+    condition     = alltrue([for cidr in var.additional_admin_cidrs : can(cidrhost(cidr, 0)) && can(regex("^[0-9.]+/32$", cidr))])
+    error_message = "Each additional SSH rule must be a valid IPv4 /32 address."
+  }
+}
+
 variable "admin_cidr" {
   type        = string
   description = "Administrator's public IPv4 address with /32 for SSH."
