@@ -13,3 +13,5 @@
 구현 기준: `docs/simplified-demo.md`, `docs/process-monitor.md`, `docs/visitor-analytics.md`, `docs/admin-password.md` 및 해당 화면·API 소스. 외부 문서의 사양으로 현재 서비스 동작을 추정하지 않는다.
 
 검증 명령: `npm run typecheck`, 변경 파일 ESLint, `SMOKE_BASE`를 지정한 `tests/user-guide-ui.cjs`. 공개 검증은 가이드 조회와 별도 가상 체험 공간의 메뉴 이동만 수행하고 관리자 비밀번호 변경·실제 고객 정보 조회는 하지 않는다.
+
+2026-09-24 NHN 공개 서비스에 이미지 `bizproof:guide-current-20260924` (`593cf2cbafed`)로 배포했다. 위 검사와 Linux 빌드 파이프라인, 격리/공개 브라우저 검증을 모두 통과했다. 공개 가이드와 로그인한 업무 메뉴 양쪽에서 21개 안내·12개 FAQ, 최신 날짜, 검색, 바로가기와 모바일 화면을 확인했다. 기존 데이터와 인증 설정은 유지했다.
