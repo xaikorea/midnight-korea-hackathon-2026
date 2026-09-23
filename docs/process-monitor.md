@@ -62,3 +62,7 @@
 `prefers-reduced-motion` 사용자는 자동 재생 및 움직임 효과 대신 정지 상태와 수동 단계 이동을 사용한다. **동작 효과 끄기**도 지원한다. 숨겨진 탭·닫힌 관제 창에서는 재생 타이머와 애니메이션을 멈춘다. 30초 이상 갱신이 없는 진행 기록도 동작 표시를 멈추고 재확인을 안내한다.
 
 검증: `tests/process-animation.cjs`는 실제 이벤트 순서와 특정 시점까지의 상태, 기관 필터, 부분 실패·조건 미충족·수동 검토·재사용·저장 경계를 검사한다. `tests/application-process-ui.cjs`는 실제 제출 기록을 재생하며 일시정지·수동 이동·원래 결과 유지·동작 줄이기·PC/모바일을 함께 확인한다.
+
+`tests/process-animation-states-ui.cjs`는 격리된 브라우저 응답에 명시적인 가상 기록을 넣어 실행 중 CSS 효과, 동작 효과 스위치, 30초 이상 미갱신 시 정지, 실패·미충족·담당자 대기, 숨긴 탭에서의 재생 정지·재개를 검사한다. 실제 접수 검증을 대체하지 않으며 별도 시연 서버 주소에서만 실행한다.
+
+2026-09-23 앱 코드 `2974bad` / 이미지 `bizproof:process-animation`로 공개 배포했다. 격리 서버와 공개 HTTPS에서 실제 두 기관 제출의 34개 이벤트, 자동 기록 재생, 일시정지·수동 이동·원래 접수 상태 유지, 동작 줄이기, 기관 필터, 새로고침 후 이력, JSON, PC/모바일과 사용자 격리를 확인했다. 공개 추적 번호는 `process-69e2a39e-4f5e-4f4f-8b1d-643d7ce27384`이며 단계 상태 가상 fixture 검사와 별도로 수행했다. 공개 캡처는 `outputs/process-animation-desktop.png`, `outputs/process-animation-mobile.png`, `outputs/process-animation-replay.png`에 보관했다.
