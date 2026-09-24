@@ -1,6 +1,18 @@
 # Adapted from midnightntwrk/example-zkloan eff9030d, Apache-2.0.
 # Local development only. Service reachability does not prove chain integration.
 services:
+  runner:
+    profiles: ['tools']
+    build:
+      context: ..
+      dockerfile: contracts/Dockerfile
+    network_mode: host
+    volumes:
+      - ../outputs:/app/outputs
+    # Linux / WSL2 Docker Engine. Uses only the isolated local genesis wallet.
+    environment:
+      NODE_OPTIONS: '--max-old-space-size=8192'
+
   proof-server:
     container_name: 'bizproof-proof-server'
     image: 'midnightntwrk/proof-server:8.1.0'

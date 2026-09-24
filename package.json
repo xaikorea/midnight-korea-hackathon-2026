@@ -35,7 +35,8 @@
     "test:unit": "node tests/unit-suite.mjs",
     "test:verification": "npm run typecheck && npm run typecheck:sdk && npm run check:validators && npm run test:unit && npm run test:contracts && npm run test:sdk",
     "build:nhn": "next build --webpack",
-    "start:nhn": "next start --hostname 127.0.0.1 --port 3100"
+    "start:nhn": "next start --hostname 127.0.0.1 --port 3100",
+    "demo:local": "node scripts/dev-demo.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

@@ -1,0 +1,44 @@
+name: Compact verification
+on:
+  push:
+    paths: ['contracts/**', 'scripts/compile-contract.sh', '.github/workflows/compact-verification.yml']
+  pull_request:
+    paths: ['contracts/**', 'scripts/compile-contract.sh', '.github/workflows/compact-verification.yml']
+  workflow_dispatch:
+    inputs:
+      network_demo:
+        description: 'Also execute a new isolated Local Devnet scenario'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  compact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies, compile nine circuits, run contract and SDK tests
+        run: docker compose -p bizproof-ci -f contracts/standalone.yml build runner
+      - name: Start isolated Local Devnet
+        if: ${{ inputs.network_demo == true }}
+        run: docker compose -p bizproof-ci -f contracts/standalone.yml up -d node proof-server indexer
+      - name: Run real transactions with a public local genesis wallet
+        if: ${{ inputs.network_demo == true }}
+        run: |
+          for i in $(seq 1 60); do
+            if curl --fail -s http://127.0.0.1:6300/version && curl --fail -s http://127.0.0.1:9944/health; then break; fi
+            sleep 2
+          done
+          docker compose -p bizproof-ci -f contracts/standalone.yml run --rm --no-deps runner node contracts/sdk/run-devnet.ts outputs/midnight-ci
+      - uses: actions/upload-artifact@v4
+        if: ${{ inputs.network_demo == true && success() }}
+        with:
+          name: synthetic-midnight-devnet-evidence
+          path: |
+            outputs/midnight-ci/report.json
+            outputs/midnight-ci/receipts.json
+            outputs/midnight-ci/events.json
+      - name: Stop test services
+        if: ${{ always() && inputs.network_demo == true }}
+        run: docker compose -p bizproof-ci -f contracts/standalone.yml down

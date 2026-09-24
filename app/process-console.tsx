@@ -4,6 +4,7 @@ import {Activity,ArrowUpRight,Database,Download,RefreshCw,ShieldCheck} from 'luc
 import {processStages,type ProcessRun,type ProcessData} from '@/lib/process-types';
 import './process-console.css';
 import ProcessAnimation from './process-animation';
+import VerificationLink from './verification-link';
 
 const labels:Record<keyof ProcessData,string>={credentialId:'사용 자격',issuerId:'발급기관',schemaId:'자격 스키마',keyId:'서명 키 식별값',authorityId:'담당자 권한',requestId:'접수 번호',presentationId:'제출 결과 번호',policyHash:'정책 SHA-256',credentialDigest:'자격 SHA-256',nonce:'기관별 nonce',previewHash:'동의 내용 SHA-256',algorithm:'서명 방식',engine:'조건 판정 엔진',eligible:'조건 충족',replayed:'기존 접수 반환',operational:'기관 로그인(Keycloak) 모드',candidateCount:'사용 가능한 자격 수',savedVersion:'저장 버전',checks:'세부 검사'};
 const statusNames={running:'서버 처리 중',succeeded:'처리·저장 완료',partial:'일부 처리 완료',failed:'추가 확인 필요'};
@@ -50,5 +51,6 @@ export default function ProcessConsole({live,companyId,busy=false,enabled=true}:
       <footer className="process-footer"><Database size={14}/><span>추적 번호 {run.id}<br/>마지막 서버 기록 {time(run.updatedAt)}{updated&&' · 조회 '+time(updated)}</span></footer>
     </>}
     <p className="process-privacy">비밀키·토큰·정확한 매출 원본·증빙 파일은 관제 기록에 포함하지 않습니다. 서명 검증과 실제 사업 선정·계약 승인은 별개입니다.</p>
+    <VerificationLink/>
   </div>;
 }

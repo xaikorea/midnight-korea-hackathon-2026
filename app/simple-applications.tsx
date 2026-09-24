@@ -6,6 +6,7 @@ import type {ViewState} from '@/lib/domain';
 import type {ApplicationPreview} from '@/lib/application-flow';
 import type {ApplicationBatchOutcome} from '@/lib/application-batch';
 import ProcessConsole from './process-console';
+import VerificationLink from './verification-link';
 import {Sheet,SheetClose,SheetContent,SheetHeader,SheetTitle,SheetDescription} from '@/components/ui/sheet';
 import {readProcessStream} from '@/lib/process-stream';
 import type {ProcessRun} from '@/lib/process-types';
@@ -64,6 +65,7 @@ export default function SimpleApplications({data,refresh,go}:Props){
   {existing.length>0&&<section className="batch-results" aria-label="신청 결과" aria-live="polite"><h2>신청 결과</h2>{[...existing].reverse().map(r=>{const p=data.presentations.find(p=>p.requestId===r.id),status=applicationStatus(r,p),copy=applicationStatusCopy(status);return <article className="simple-card" key={r.id}><span className="simple-pill">{copy.title}</span><h3>{r.policy.audience}</h3><p>{copy.message}</p>{p?.checks.map(c=><p key={c.label}>{c.pass?'✓':'!'} {c.label} · {c.pass?'충족':'미충족'}</p>)}<details><summary>접수·자격 상세</summary><p>접수 번호: {r.id}</p><p>사용 자격: {p?.credentialId}</p></details></article>})}<Button variant="outline" onClick={()=>go('progress')}>전체 진행 현황</Button></section>}
   {!pendingIds.length&&!existing.length&&<p className="simple-note">신청할 대상을 선택하면 다음 내용이 자동으로 표시됩니다.</p>}
   {data.publicDemo&&<p className="simple-note">합성 데이터 기반 공개 시연입니다. 추가 사례와 기술 검증은 메뉴의 ‘상세 기능 더 보기’에서 선택할 수 있습니다.</p>}
+  <VerificationLink/>
  <Sheet open={processOpen} onOpenChange={setProcessOpen}><SheetContent className="process-sheet" showCloseButton={false}><SheetClose className="process-close" aria-label="관제 창 닫기"><X size={19}/></SheetClose><SheetHeader><SheetTitle>처리 과정 관제</SheetTitle><SheetDescription>서버의 실제 처리 기록입니다. 창을 닫아도 제출은 계속됩니다.</SheetDescription></SheetHeader><div className="process-sheet-scroll"><ProcessConsole key={processRun?.id??'history'} live={processRun} companyId={company} busy={busy} enabled={processOpen}/></div></SheetContent></Sheet>
  </div>;
 }

@@ -1,0 +1,14 @@
+{
+  "verifiedAt": "2026-09-24T14:56:32.433Z",
+  "network": "undeployed",
+  "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+  "finalizedReceipts": 11,
+  "compiledContractKeysMatch": true,
+  "requestResults": [
+    true,
+    true,
+    false
+  ],
+  "sourceRevocationConfirmed": true,
+  "notice": "Independent read-only comparison against the currently running original Local Devnet. No wallet or private state used."
+}

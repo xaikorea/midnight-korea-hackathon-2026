@@ -1,4 +1,5 @@
 import {spawnSync} from 'node:child_process';
 // No running services, funded wallets, browser installations or private fixtures required.
 const tests=['process-animation.cjs','admin-password.cjs','review-fixes.cjs','supplier-visibility.cjs','lei-directory.cjs','portable-credential.cjs','vlei-verifier.cjs','waltid-verifier.cjs','keycloak.cjs','openbao.cjs','jsonforms.cjs','ajv-validation.cjs','opa.cjs','openfga.cjs','openfga-api.cjs','malware-scan.cjs','malware-api.cjs','keria.cjs','business-enforcement.cjs','midnight-source.cjs','visitor-analytics.cjs','visitor-analytics-expanded.cjs','application-flow.cjs','application-batch.cjs','application-process.cjs','demo-pool.cjs','workflow-exceptions.cjs','review-20260922-probes.cjs'];
+tests.push('midnight-evidence.cjs');
 for(const name of tests){const result=spawnSync(process.execPath,['tests/'+name],{stdio:'inherit'});if(result.status!==0)process.exit(result.status??1);}

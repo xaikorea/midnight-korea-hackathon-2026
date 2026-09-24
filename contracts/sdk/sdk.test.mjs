@@ -16,6 +16,12 @@ import {activateNetwork,bytes32} from './config.ts';
 import {IssuerVault} from './issuer.ts';
 import {privateStorage} from './storage.ts';
 import {BizProofClient} from './client.ts';
+import {StateValue as CompactStateValue} from '@midnight-ntwrk/compact-runtime';
+import {StateValue as ProtocolStateValue} from '@midnight-ntwrk/midnight-js-protocol/onchain-runtime';
+
+test('Compact and SDK share the same WASM StateValue class for submitted calls',()=>{
+ assert.equal(CompactStateValue,ProtocolStateValue,'Duplicate onchain-runtime versions break submitCallTx after successful deployment');
+});
 
 test('official SDK prepares deployment and executes registerIssuer; verifies installed contract keys',async()=>{
  activateNetwork('undeployed');const manifest=await artifactManifest();assert.equal(manifest.circuits.length,9);assert.ok(manifest.circuits.every(c=>c.proverBytes>0&&c.verifierSha256.length===64));

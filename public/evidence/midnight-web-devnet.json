@@ -1,0 +1,973 @@
+{
+  "format": "bizproof-web-devnet-evidence-v1",
+  "startedAt": "2026-09-24T14:47:10.871Z",
+  "completedAt": "2026-09-24T14:51:50.652Z",
+  "network": "undeployed",
+  "environment": "Local Devnet",
+  "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+  "source": {
+    "origin": "https://bizproof.xaikorea.ai.kr",
+    "credentialId": "demo-credential-ed6d0714-7003-4c67-8c81-9db4173333df",
+    "digest": "8c85d8ec4bd871abc56f25a6b8a677df73e6b2523285b7e7797ce7ed8bc52f0d",
+    "issuerPublicKey": {
+      "kty": "OKP",
+      "crv": "Ed25519",
+      "x": "E_RFEi7eTwlps0f_DWZ4ruN29fXKKN4sPW3I8C1vbgQ"
+    }
+  },
+  "outcomes": [
+    {
+      "scenario": "buyer",
+      "audience": "미래산업 구매팀 (가상)",
+      "credentialId": "demo-credential-ed6d0714-7003-4c67-8c81-9db4173333df",
+      "sourceDigest": "8c85d8ec4bd871abc56f25a6b8a677df73e6b2523285b7e7797ce7ed8bc52f0d",
+      "webRequestId": "demo-request-buyer-ed6d0714-7003-4c67-8c81-9db4173333df",
+      "requestId": "914902e8ad49537f4ff0f90c981eae9eb6f12cc58328222fd7d6dde013cd2eef",
+      "policyHash": "f28c8032734c3dddf8ec9704dc5aaef42658de142bd17b1e43a1a4fc0ac39a1e",
+      "inspection": {
+        "network": "undeployed",
+        "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+        "checkedAt": "2026-09-24T14:50:01.978Z",
+        "found": true,
+        "contractCodeVerified": true,
+        "trustedTime": "1790261343",
+        "issuerCount": "1",
+        "revokedCount": "0",
+        "requestCount": "2",
+        "resultCount": "2",
+        "notice": "인덱서에서 조회한 공개 상태입니다. 업무 자격과의 연결 또는 특정 proof 생성 완료를 자동으로 보장하지 않습니다.",
+        "request": {
+          "id": "914902e8ad49537f4ff0f90c981eae9eb6f12cc58328222fd7d6dde013cd2eef",
+          "exists": true,
+          "cancelled": false,
+          "submitted": true,
+          "expired": false,
+          "eligible": true,
+          "deadline": "1790261877"
+        }
+      },
+      "receipt": {
+        "network": "undeployed",
+        "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+        "operation": "submit",
+        "txId": "00e78d4b96cb390da52709ed78861e8af58646043777d28469bdb7b7a3f70563bf",
+        "txHash": "3a5287dcd7f5ab6960ef5c10a68f33557d5caae00277f6e55ad32603027e25bd",
+        "blockHash": "10a856b3bf49eb9522f2aff53b42edf32119e3399eb60cf8c938f1a02c5e04f1",
+        "blockHeight": 172,
+        "blockTimestamp": 1790261328001,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      }
+    },
+    {
+      "scenario": "grant",
+      "audience": "서울창업지원센터 (가상)",
+      "credentialId": "demo-credential-ed6d0714-7003-4c67-8c81-9db4173333df",
+      "sourceDigest": "8c85d8ec4bd871abc56f25a6b8a677df73e6b2523285b7e7797ce7ed8bc52f0d",
+      "webRequestId": "demo-request-grant-ed6d0714-7003-4c67-8c81-9db4173333df",
+      "requestId": "a252d45fa8b567f4124e59f6bd8f2c9888253ff94499f8a7ce9398cdf4e6d047",
+      "policyHash": "f8c10440a6935920a0af8ffb825647cd1bfcafd0b6bf0f1e6a512af11d54dc8f",
+      "inspection": {
+        "network": "undeployed",
+        "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+        "checkedAt": "2026-09-24T14:50:01.992Z",
+        "found": true,
+        "contractCodeVerified": true,
+        "trustedTime": "1790261343",
+        "issuerCount": "1",
+        "revokedCount": "0",
+        "requestCount": "2",
+        "resultCount": "2",
+        "notice": "인덱서에서 조회한 공개 상태입니다. 업무 자격과의 연결 또는 특정 proof 생성 완료를 자동으로 보장하지 않습니다.",
+        "request": {
+          "id": "a252d45fa8b567f4124e59f6bd8f2c9888253ff94499f8a7ce9398cdf4e6d047",
+          "exists": true,
+          "cancelled": false,
+          "submitted": true,
+          "expired": false,
+          "eligible": true,
+          "deadline": "1790261877"
+        }
+      },
+      "receipt": {
+        "network": "undeployed",
+        "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+        "operation": "submit",
+        "txId": "00aaa48740028f4fe77cb9e1573307b90154d481cc0cbdec45a8d0f776b6db5b83",
+        "txHash": "568c33062dd45e6279d8e46aa408482e29bece32e2b410c0291b15fde7e1ccc8",
+        "blockHash": "b29598187a4d3d190979394ea1ab54a48dd9b975ee14ac80831c056856c146a7",
+        "blockHeight": 182,
+        "blockTimestamp": 1790261388005,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      }
+    },
+    {
+      "scenario": "negative",
+      "audience": "미충족 비교",
+      "credentialId": "demo-credential-ed6d0714-7003-4c67-8c81-9db4173333df",
+      "sourceDigest": "8c85d8ec4bd871abc56f25a6b8a677df73e6b2523285b7e7797ce7ed8bc52f0d",
+      "requestId": "bc7a7ec157ba97286eb856bd5165954fb1b564f6d3831f931ac691c890ac4f26",
+      "inspection": {
+        "network": "undeployed",
+        "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+        "checkedAt": "2026-09-24T14:51:09.197Z",
+        "found": true,
+        "contractCodeVerified": true,
+        "trustedTime": "1790261402",
+        "issuerCount": "1",
+        "revokedCount": "0",
+        "requestCount": "3",
+        "resultCount": "3",
+        "notice": "인덱서에서 조회한 공개 상태입니다. 업무 자격과의 연결 또는 특정 proof 생성 완료를 자동으로 보장하지 않습니다.",
+        "request": {
+          "id": "bc7a7ec157ba97286eb856bd5165954fb1b564f6d3831f931ac691c890ac4f26",
+          "exists": true,
+          "cancelled": false,
+          "submitted": true,
+          "expired": false,
+          "eligible": false,
+          "deadline": "1790262020"
+        }
+      },
+      "receipt": {
+        "network": "undeployed",
+        "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+        "operation": "submit",
+        "txId": "0058cf9598937bfea3d937468cc9036bf32654dc998f2d78d064aa62f4f090b515",
+        "txHash": "ab0d69581f0935e1aea34f4665c5deec66c57e840a2779ea6130577492d42e2f",
+        "blockHash": "dc71c39c14266e7737c56ce6b082dad94e889614aa1ed21fca8e0d56f1c79f05",
+        "blockHeight": 193,
+        "blockTimestamp": 1790261454001,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      }
+    }
+  ],
+  "webResults": [
+    {
+      "id": "presentation-f42c11f7-fd80-486b-962f-c4fe9a530b3a",
+      "requestId": "demo-request-buyer-ed6d0714-7003-4c67-8c81-9db4173333df",
+      "credentialId": "demo-credential-ed6d0714-7003-4c67-8c81-9db4173333df",
+      "eligible": true,
+      "verifiedAt": "2026-09-24T14:50:02.183Z"
+    },
+    {
+      "id": "presentation-01f362ff-853b-4133-a109-784bd985e86f",
+      "requestId": "demo-request-grant-ed6d0714-7003-4c67-8c81-9db4173333df",
+      "credentialId": "demo-credential-ed6d0714-7003-4c67-8c81-9db4173333df",
+      "eligible": true,
+      "verifiedAt": "2026-09-24T14:50:02.189Z"
+    }
+  ],
+  "receipts": [
+    {
+      "network": "undeployed",
+      "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+      "operation": "deploy",
+      "txId": "00740dd918bc90b523eaf3e44b58b766765b97f15875230874fc6b5bc00ce4e250",
+      "txHash": "e75e6850bd4fb2b8213bcc2a52845adb6486bf5e1e95ee717c3c43431749d35d",
+      "blockHash": "425c0242a8a8d20fa7f80ecf19ed65f7a63dcb99edee039027993e7626a749c9",
+      "blockHeight": 157,
+      "blockTimestamp": 1790261238001,
+      "status": "SucceedEntirely",
+      "mode": "midnight-finalized"
+    },
+    {
+      "network": "undeployed",
+      "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+      "operation": "registerIssuer",
+      "txId": "00f3b8a6b3c189ff934773509b547f018f6c4ffa17a2bb73dfcf8c9fa610944b25",
+      "txHash": "bd38d09867811175bf18d406194379d76cf14662d34cd8261cf0e09e2c88bf45",
+      "blockHash": "0bc62c9bcabc2431004ebb5f0e6564d8bc6e58f333c3446727c03038de3b456d",
+      "blockHeight": 161,
+      "blockTimestamp": 1790261262000,
+      "status": "SucceedEntirely",
+      "mode": "midnight-finalized"
+    },
+    {
+      "network": "undeployed",
+      "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+      "operation": "createRequest",
+      "txId": "00648bbc6119e3d4a8c52d722dc6c56e63f6ea45b850ba1cc646114d5633e7b136",
+      "txHash": "e30b4a1933617523a35603f92ba7a11c29170c3ae304a54f571ba9d685ebc755",
+      "blockHash": "cb46fc1920d47bd1652ee672bc526ad6a73a0a263c77475d925b84ec72f60926",
+      "blockHeight": 168,
+      "blockTimestamp": 1790261304000,
+      "status": "SucceedEntirely",
+      "mode": "midnight-finalized"
+    },
+    {
+      "network": "undeployed",
+      "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+      "operation": "submit",
+      "txId": "00e78d4b96cb390da52709ed78861e8af58646043777d28469bdb7b7a3f70563bf",
+      "txHash": "3a5287dcd7f5ab6960ef5c10a68f33557d5caae00277f6e55ad32603027e25bd",
+      "blockHash": "10a856b3bf49eb9522f2aff53b42edf32119e3399eb60cf8c938f1a02c5e04f1",
+      "blockHeight": 172,
+      "blockTimestamp": 1790261328001,
+      "status": "SucceedEntirely",
+      "mode": "midnight-finalized"
+    },
+    {
+      "network": "undeployed",
+      "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+      "operation": "createRequest",
+      "txId": "0043fb77a7a7718eceb8e43087983637d91183c0a1f02b7b6db8870e03d7e50143",
+      "txHash": "dd0ee38eb840872cc9e15b95a7bc97a98c41413faf392c8380ac41ed0ca15f19",
+      "blockHash": "1c24b43a212914e85436766dd3887c2d48dcd730da747f3114ce635562b32195",
+      "blockHeight": 179,
+      "blockTimestamp": 1790261370004,
+      "status": "SucceedEntirely",
+      "mode": "midnight-finalized"
+    },
+    {
+      "network": "undeployed",
+      "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+      "operation": "submit",
+      "txId": "00aaa48740028f4fe77cb9e1573307b90154d481cc0cbdec45a8d0f776b6db5b83",
+      "txHash": "568c33062dd45e6279d8e46aa408482e29bece32e2b410c0291b15fde7e1ccc8",
+      "blockHash": "b29598187a4d3d190979394ea1ab54a48dd9b975ee14ac80831c056856c146a7",
+      "blockHeight": 182,
+      "blockTimestamp": 1790261388005,
+      "status": "SucceedEntirely",
+      "mode": "midnight-finalized"
+    },
+    {
+      "network": "undeployed",
+      "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+      "operation": "advanceTime",
+      "txId": "00edcd5b4e55624f2c5bf0c3ddca5a24b39e2ac5c949258ecb3c1fabcb92169d36",
+      "txHash": "e9bc349160ead5688307bd58a59e050872ddee7f7b0893001c3c4d94c49f211e",
+      "blockHash": "e7c8924168239b9eb9471cddee89a69614342019bf340aad17180612a68a5f44",
+      "blockHeight": 185,
+      "blockTimestamp": 1790261406000,
+      "status": "SucceedEntirely",
+      "mode": "midnight-finalized"
+    },
+    {
+      "network": "undeployed",
+      "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+      "operation": "createRequest",
+      "txId": "0057a51e6ea5bf6519592da294050ca1339bc7dd24c392d9328699a8f84fb23d1e",
+      "txHash": "3573f92c870895605b28086351d9cfad16e64004732cf60444773482dceed0ba",
+      "blockHash": "10085637ea57ece26ed3c3818cba53d2e6de3f513991d626ad4c1a2210733443",
+      "blockHeight": 189,
+      "blockTimestamp": 1790261430000,
+      "status": "SucceedEntirely",
+      "mode": "midnight-finalized"
+    },
+    {
+      "network": "undeployed",
+      "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+      "operation": "submit",
+      "txId": "0058cf9598937bfea3d937468cc9036bf32654dc998f2d78d064aa62f4f090b515",
+      "txHash": "ab0d69581f0935e1aea34f4665c5deec66c57e840a2779ea6130577492d42e2f",
+      "blockHash": "dc71c39c14266e7737c56ce6b082dad94e889614aa1ed21fca8e0d56f1c79f05",
+      "blockHeight": 193,
+      "blockTimestamp": 1790261454001,
+      "status": "SucceedEntirely",
+      "mode": "midnight-finalized"
+    },
+    {
+      "network": "undeployed",
+      "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+      "operation": "createRequest",
+      "txId": "00ed98d556f48f01865cc8a02d45cf0ae179c4b6cf2b032b03be32be0bd3cbf570",
+      "txHash": "b05cc30683c59ff8711292c52dc10d88753d1f1891d238c4e4ce202b59149f4e",
+      "blockHash": "0b7ab11f279897178ad1f7d82f8cd8893bc502e0e77062d59aa6b978ab4652db",
+      "blockHeight": 197,
+      "blockTimestamp": 1790261478001,
+      "status": "SucceedEntirely",
+      "mode": "midnight-finalized"
+    },
+    {
+      "network": "undeployed",
+      "contractAddress": "8fba229668b1e5f163a379bd65cd92c93a61762f682175dc52fc2c4b539ff495",
+      "operation": "revokeCredential",
+      "txId": "000643b05981da23188730625b712f1b79aad2ff0cd88fc392c2e1147fb15c70d9",
+      "txHash": "c479b2aefa06b5de12d157ef6a48124dfe5a1adf0b5faf2c9c6544f714125df7",
+      "blockHash": "4c2861f9fcfda2ef0ad3676ae7073dd192da345c5e93ca68bb03ddef5d86602c",
+      "blockHeight": 200,
+      "blockTimestamp": 1790261496001,
+      "status": "SucceedEntirely",
+      "mode": "midnight-finalized"
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-09-24T14:47:10.966Z",
+      "operation": "prepare",
+      "stage": "wallet-sync",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:47:11.706Z",
+      "operation": "prepare",
+      "stage": "dust-ready",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:47:11.733Z",
+      "operation": "deploy",
+      "stage": "transaction",
+      "status": "pending"
+    },
+    {
+      "at": "2026-09-24T14:47:11.809Z",
+      "operation": "deploy",
+      "stage": "proof",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:47:11.812Z",
+      "operation": "deploy",
+      "stage": "proof",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:47:11.812Z",
+      "operation": "deploy",
+      "stage": "balance",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:47:12.764Z",
+      "operation": "deploy",
+      "stage": "balance",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:47:12.764Z",
+      "operation": "deploy",
+      "stage": "submission",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:47:31.646Z",
+      "operation": "deploy",
+      "stage": "submission",
+      "status": "sent",
+      "txId": "00740dd918bc90b523eaf3e44b58b766765b97f15875230874fc6b5bc00ce4e250"
+    },
+    {
+      "at": "2026-09-24T14:47:33.201Z",
+      "operation": "deploy",
+      "stage": "transaction",
+      "status": "finalized"
+    },
+    {
+      "at": "2026-09-24T14:47:33.691Z",
+      "operation": "registerIssuer",
+      "stage": "transaction",
+      "status": "pending"
+    },
+    {
+      "at": "2026-09-24T14:47:33.950Z",
+      "operation": "registerIssuer",
+      "stage": "proof",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:47:35.703Z",
+      "operation": "registerIssuer",
+      "stage": "proof",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:47:35.703Z",
+      "operation": "registerIssuer",
+      "stage": "balance",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:47:36.602Z",
+      "operation": "registerIssuer",
+      "stage": "balance",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:47:36.603Z",
+      "operation": "registerIssuer",
+      "stage": "submission",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:47:54.779Z",
+      "operation": "registerIssuer",
+      "stage": "submission",
+      "status": "sent",
+      "txId": "00f3b8a6b3c189ff934773509b547f018f6c4ffa17a2bb73dfcf8c9fa610944b25"
+    },
+    {
+      "at": "2026-09-24T14:47:56.079Z",
+      "operation": "registerIssuer",
+      "stage": "transaction",
+      "status": "finalized"
+    },
+    {
+      "at": "2026-09-24T14:47:57.405Z",
+      "operation": "registerIssuer",
+      "stage": "source-signature",
+      "status": "verified",
+      "credentialId": "demo-credential-ed6d0714-7003-4c67-8c81-9db4173333df",
+      "sourceDigest": "8c85d8ec4bd871abc56f25a6b8a677df73e6b2523285b7e7797ce7ed8bc52f0d"
+    },
+    {
+      "at": "2026-09-24T14:47:59.407Z",
+      "operation": "advanceTime",
+      "stage": "transaction",
+      "status": "pending"
+    },
+    {
+      "at": "2026-09-24T14:47:59.741Z",
+      "operation": "advanceTime",
+      "stage": "proof",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:48:01.567Z",
+      "operation": "advanceTime",
+      "stage": "proof",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:48:01.567Z",
+      "operation": "advanceTime",
+      "stage": "balance",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:48:02.433Z",
+      "operation": "advanceTime",
+      "stage": "balance",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:48:02.433Z",
+      "operation": "advanceTime",
+      "stage": "submission",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:48:18.795Z",
+      "operation": "advanceTime",
+      "stage": "submission",
+      "status": "sent",
+      "txId": "0089abbb7e27555e4b99e78642d2de014526bb4358a393ff774219933adbf25b73"
+    },
+    {
+      "at": "2026-09-24T14:48:20.051Z",
+      "operation": "createRequest",
+      "stage": "transaction",
+      "status": "pending"
+    },
+    {
+      "at": "2026-09-24T14:48:20.327Z",
+      "operation": "createRequest",
+      "stage": "proof",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:48:21.588Z",
+      "operation": "createRequest",
+      "stage": "proof",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:48:21.588Z",
+      "operation": "createRequest",
+      "stage": "balance",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:48:22.433Z",
+      "operation": "createRequest",
+      "stage": "balance",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:48:22.433Z",
+      "operation": "createRequest",
+      "stage": "submission",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:48:37.939Z",
+      "operation": "createRequest",
+      "stage": "submission",
+      "status": "sent",
+      "txId": "00648bbc6119e3d4a8c52d722dc6c56e63f6ea45b850ba1cc646114d5633e7b136"
+    },
+    {
+      "at": "2026-09-24T14:48:39.234Z",
+      "operation": "createRequest",
+      "stage": "transaction",
+      "status": "finalized"
+    },
+    {
+      "at": "2026-09-24T14:48:39.455Z",
+      "operation": "submit",
+      "stage": "transaction",
+      "status": "pending"
+    },
+    {
+      "at": "2026-09-24T14:48:39.759Z",
+      "operation": "submit",
+      "stage": "proof",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:48:41.802Z",
+      "operation": "submit",
+      "stage": "proof",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:48:41.802Z",
+      "operation": "submit",
+      "stage": "balance",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:48:42.685Z",
+      "operation": "submit",
+      "stage": "balance",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:48:42.686Z",
+      "operation": "submit",
+      "stage": "submission",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:49:01.082Z",
+      "operation": "submit",
+      "stage": "submission",
+      "status": "sent",
+      "txId": "00e78d4b96cb390da52709ed78861e8af58646043777d28469bdb7b7a3f70563bf"
+    },
+    {
+      "at": "2026-09-24T14:49:02.343Z",
+      "operation": "submit",
+      "stage": "transaction",
+      "status": "finalized"
+    },
+    {
+      "at": "2026-09-24T14:49:03.408Z",
+      "operation": "advanceTime",
+      "stage": "transaction",
+      "status": "pending"
+    },
+    {
+      "at": "2026-09-24T14:49:03.696Z",
+      "operation": "advanceTime",
+      "stage": "proof",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:49:04.969Z",
+      "operation": "advanceTime",
+      "stage": "proof",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:49:04.969Z",
+      "operation": "advanceTime",
+      "stage": "balance",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:49:05.873Z",
+      "operation": "advanceTime",
+      "stage": "balance",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:49:05.873Z",
+      "operation": "advanceTime",
+      "stage": "submission",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:49:25.087Z",
+      "operation": "advanceTime",
+      "stage": "submission",
+      "status": "sent",
+      "txId": "00e2e8b7934370b81649cb947948ac8ade1ed42b6157a511e634d06948133b7e10"
+    },
+    {
+      "at": "2026-09-24T14:49:26.367Z",
+      "operation": "createRequest",
+      "stage": "transaction",
+      "status": "pending"
+    },
+    {
+      "at": "2026-09-24T14:49:25.790Z",
+      "operation": "createRequest",
+      "stage": "proof",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:49:26.985Z",
+      "operation": "createRequest",
+      "stage": "proof",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:49:26.985Z",
+      "operation": "createRequest",
+      "stage": "balance",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:49:27.769Z",
+      "operation": "createRequest",
+      "stage": "balance",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:49:27.769Z",
+      "operation": "createRequest",
+      "stage": "submission",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:49:42.903Z",
+      "operation": "createRequest",
+      "stage": "submission",
+      "status": "sent",
+      "txId": "0043fb77a7a7718eceb8e43087983637d91183c0a1f02b7b6db8870e03d7e50143"
+    },
+    {
+      "at": "2026-09-24T14:49:44.178Z",
+      "operation": "createRequest",
+      "stage": "transaction",
+      "status": "finalized"
+    },
+    {
+      "at": "2026-09-24T14:49:44.384Z",
+      "operation": "submit",
+      "stage": "transaction",
+      "status": "pending"
+    },
+    {
+      "at": "2026-09-24T14:49:44.678Z",
+      "operation": "submit",
+      "stage": "proof",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:49:46.032Z",
+      "operation": "submit",
+      "stage": "proof",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:49:46.032Z",
+      "operation": "submit",
+      "stage": "balance",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:49:46.871Z",
+      "operation": "submit",
+      "stage": "balance",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:49:46.871Z",
+      "operation": "submit",
+      "stage": "submission",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:50:00.685Z",
+      "operation": "submit",
+      "stage": "submission",
+      "status": "sent",
+      "txId": "00aaa48740028f4fe77cb9e1573307b90154d481cc0cbdec45a8d0f776b6db5b83"
+    },
+    {
+      "at": "2026-09-24T14:50:01.957Z",
+      "operation": "submit",
+      "stage": "transaction",
+      "status": "finalized"
+    },
+    {
+      "at": "2026-09-24T14:50:02.310Z",
+      "operation": "submit",
+      "stage": "web-results",
+      "status": "verified",
+      "credentialId": "demo-credential-ed6d0714-7003-4c67-8c81-9db4173333df",
+      "count": 2
+    },
+    {
+      "at": "2026-09-24T14:50:02.311Z",
+      "operation": "advanceTime",
+      "stage": "transaction",
+      "status": "pending"
+    },
+    {
+      "at": "2026-09-24T14:50:02.644Z",
+      "operation": "advanceTime",
+      "stage": "proof",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:50:03.936Z",
+      "operation": "advanceTime",
+      "stage": "proof",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:50:03.936Z",
+      "operation": "advanceTime",
+      "stage": "balance",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:50:04.791Z",
+      "operation": "advanceTime",
+      "stage": "balance",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:50:04.791Z",
+      "operation": "advanceTime",
+      "stage": "submission",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:50:19.366Z",
+      "operation": "advanceTime",
+      "stage": "submission",
+      "status": "sent",
+      "txId": "00edcd5b4e55624f2c5bf0c3ddca5a24b39e2ac5c949258ecb3c1fabcb92169d36"
+    },
+    {
+      "at": "2026-09-24T14:50:20.676Z",
+      "operation": "advanceTime",
+      "stage": "transaction",
+      "status": "finalized"
+    },
+    {
+      "at": "2026-09-24T14:50:20.684Z",
+      "operation": "createRequest",
+      "stage": "transaction",
+      "status": "pending"
+    },
+    {
+      "at": "2026-09-24T14:50:21.008Z",
+      "operation": "createRequest",
+      "stage": "proof",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:50:22.253Z",
+      "operation": "createRequest",
+      "stage": "proof",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:50:22.254Z",
+      "operation": "createRequest",
+      "stage": "balance",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:50:23.102Z",
+      "operation": "createRequest",
+      "stage": "balance",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:50:23.102Z",
+      "operation": "createRequest",
+      "stage": "submission",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:50:43.847Z",
+      "operation": "createRequest",
+      "stage": "submission",
+      "status": "sent",
+      "txId": "0057a51e6ea5bf6519592da294050ca1339bc7dd24c392d9328699a8f84fb23d1e"
+    },
+    {
+      "at": "2026-09-24T14:50:45.196Z",
+      "operation": "createRequest",
+      "stage": "transaction",
+      "status": "finalized"
+    },
+    {
+      "at": "2026-09-24T14:50:45.206Z",
+      "operation": "submit",
+      "stage": "transaction",
+      "status": "pending"
+    },
+    {
+      "at": "2026-09-24T14:50:45.521Z",
+      "operation": "submit",
+      "stage": "proof",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:50:46.851Z",
+      "operation": "submit",
+      "stage": "proof",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:50:46.851Z",
+      "operation": "submit",
+      "stage": "balance",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:50:47.665Z",
+      "operation": "submit",
+      "stage": "balance",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:50:47.665Z",
+      "operation": "submit",
+      "stage": "submission",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:51:07.873Z",
+      "operation": "submit",
+      "stage": "submission",
+      "status": "sent",
+      "txId": "0058cf9598937bfea3d937468cc9036bf32654dc998f2d78d064aa62f4f090b515"
+    },
+    {
+      "at": "2026-09-24T14:51:09.174Z",
+      "operation": "submit",
+      "stage": "transaction",
+      "status": "finalized"
+    },
+    {
+      "at": "2026-09-24T14:51:09.200Z",
+      "operation": "createRequest",
+      "stage": "transaction",
+      "status": "pending"
+    },
+    {
+      "at": "2026-09-24T14:51:09.521Z",
+      "operation": "createRequest",
+      "stage": "proof",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:51:10.689Z",
+      "operation": "createRequest",
+      "stage": "proof",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:51:10.689Z",
+      "operation": "createRequest",
+      "stage": "balance",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:51:11.473Z",
+      "operation": "createRequest",
+      "stage": "balance",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:51:11.473Z",
+      "operation": "createRequest",
+      "stage": "submission",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:51:31.886Z",
+      "operation": "createRequest",
+      "stage": "submission",
+      "status": "sent",
+      "txId": "00ed98d556f48f01865cc8a02d45cf0ae179c4b6cf2b032b03be32be0bd3cbf570"
+    },
+    {
+      "at": "2026-09-24T14:51:33.265Z",
+      "operation": "createRequest",
+      "stage": "transaction",
+      "status": "finalized"
+    },
+    {
+      "at": "2026-09-24T14:51:33.275Z",
+      "operation": "revokeCredential",
+      "stage": "transaction",
+      "status": "pending"
+    },
+    {
+      "at": "2026-09-24T14:51:33.626Z",
+      "operation": "revokeCredential",
+      "stage": "proof",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:51:33.797Z",
+      "operation": "revokeCredential",
+      "stage": "proof",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:51:33.797Z",
+      "operation": "revokeCredential",
+      "stage": "balance",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:51:34.606Z",
+      "operation": "revokeCredential",
+      "stage": "balance",
+      "status": "complete"
+    },
+    {
+      "at": "2026-09-24T14:51:34.606Z",
+      "operation": "revokeCredential",
+      "stage": "submission",
+      "status": "running"
+    },
+    {
+      "at": "2026-09-24T14:51:48.985Z",
+      "operation": "revokeCredential",
+      "stage": "submission",
+      "status": "sent",
+      "txId": "000643b05981da23188730625b712f1b79aad2ff0cd88fc392c2e1147fb15c70d9"
+    },
+    {
+      "at": "2026-09-24T14:51:50.324Z",
+      "operation": "revokeCredential",
+      "stage": "transaction",
+      "status": "finalized"
+    },
+    {
+      "at": "2026-09-24T14:51:50.335Z",
+      "operation": "submit",
+      "stage": "transaction",
+      "status": "pending"
+    },
+    {
+      "at": "2026-09-24T14:51:50.651Z",
+      "operation": "submit",
+      "stage": "transaction",
+      "status": "unconfirmed"
+    },
+    {
+      "at": "2026-09-24T14:51:50.652Z",
+      "operation": "submit",
+      "stage": "revocation",
+      "status": "blocked"
+    }
+  ],
+  "revokedSubmissionBlocked": true,
+  "revocationBlockStage": "SDK circuit assertion after confirmed revoke transaction",
+  "disclosure": "Actual synthetic web credential and original requests re-proven on a local chain. Web results use Ed25519; chain results use Schnorr/Compact. Original attributes are processed by the web server and this local issuer/prover. This report does not validate another visitor’s application, imply official business certification, or keep a Local Devnet online."
+}
