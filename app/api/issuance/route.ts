@@ -16,9 +16,10 @@ async function context(){
 function failure(e:unknown){if(e instanceof RemoteIssuerError)return reply({error:e.message},e.status);if(e instanceof ConflictError)return reply({error:'발급 원본은 기관에 보존되어 있습니다. 새로고침 후 지갑에 다시 받으세요.'},409);if(e instanceof z.ZodError||e instanceof SyntaxError)return reply({error:'입력 형식 또는 발급기관 응답을 확인하세요.'},400);return reply({error:'발급 처리에 실패했습니다. 현재 상태를 다시 조회하세요.'},503);}
 export async function GET(){try{
  const u=await context();remoteConfig();
- const [catalog,list,{state}]=await Promise.all([issuerCall(u.scope,'GET','/v1/catalog'),issuerCall(u.scope,'GET','/v1/issuance-requests'),readState(u.storageOwner)]);
- const receipts=[];
- for(const r of state.credentialReceipts??[]){const c=state.credentials.find(c=>c.id===r.credentialId);if(!c||c.remoteBinding?.scope!==u.scope)continue;try{const status=await remoteCredentialStatus(c,r.statusRevision);receipts.push({...r,status:status.body.status==='revoked'?'revoked':Date.parse(c.expiresAt)<=Date.now()?'expired':'active',statusCheckedAt:status.body.checkedAt});}catch{receipts.push({...r,status:'unknown'});}}
+ const [catalog,list,{state,version}]=await Promise.all([issuerCall(u.scope,'GET','/v1/catalog'),issuerCall(u.scope,'GET','/v1/issuance-requests'),readState(u.storageOwner)]);
+ const receipts=[];let changed=false;
+ for(const r of state.credentialReceipts??[]){const c=state.credentials.find(c=>c.id===r.credentialId);if(!c||c.remoteBinding?.scope!==u.scope)continue;try{const status=await remoteCredentialStatus(c,r.statusRevision);if(status.body.revision>r.statusRevision){r.statusRevision=status.body.revision;changed=true;}if(status.body.status==='revoked'&&c.status!=='revoked'){c.status='revoked';c.revokedAt=status.body.checkedAt;changed=true;}receipts.push({...r,status:c.status==='revoked'?'revoked':Date.parse(c.expiresAt)<=Date.now()?'expired':'active',statusCheckedAt:status.body.checkedAt});}catch{receipts.push({...r,status:'unknown'});}}
+ if(changed)await saveState(u.storageOwner,state,version);
  return reply({catalog,...list,receipts,identityMode:'simulated',transport:'separate-http-service',blockchain:'not-submitted'});
  }catch(e){return failure(e);}}
 const command=z.object({action:z.enum(['apply','start-identity','confirm-identity','cancel-identity','submit','decide','resubmit','cancel','receive','revoke']),key:z.string().uuid(),id:z.string().max(100).optional(),identityId:z.string().uuid().optional(),documentHash:z.string().regex(/^[a-f0-9]{64}$/).optional(),consent:z.boolean().optional(),revision:z.number().int().positive().optional(),decision:z.enum(['approve','needs_changes','reject']).optional(),reason:z.string().max(300).optional()}).strict();
@@ -48,7 +49,7 @@ export async function POST(req:Request){try{
    const id=z.string().regex(/^remote-[a-f0-9-]{36}$/).parse(b.id);result=await issuerCall(u.scope,'POST','/v1/credentials/'+id+'/revocations',{key:b.key,reason:b.reason??''});
    // Issuer commit precedes workspace synchronization. Any failure is recoverable by a fresh status check.
    const {state,version}=await readState(u.storageOwner),c=state.credentials.find(c=>c.id===id);
-   if(c){c.status='revoked';c.revokedAt=new Date().toISOString();c.reason=b.reason;await saveState(u.storageOwner,state,version);}break;
+   if(c){const receipt=state.credentialReceipts?.find(r=>r.credentialId===id),status=await remoteCredentialStatus(c,receipt?.statusRevision);if(status.body.status!=='revoked')throw new RemoteIssuerError(503,'기관의 취소 결과를 다시 확인해야 합니다.');if(receipt)receipt.statusRevision=status.body.revision;c.status='revoked';c.revokedAt=status.body.checkedAt;c.reason=b.reason;await saveState(u.storageOwner,state,version);}break;
   }
  }
  return reply(result);

@@ -12,7 +12,7 @@ const labels:Record<string,string>={submitted:'기관 검토 대기',needs_chang
 export default function IssuanceExperience({operator=false}:{operator?:boolean}){
  const [data,setData]=useState<Data>(),[error,setError]=useState(''),[unauthorized,setUnauthorized]=useState(false),[busy,setBusy]=useState(false),[consent,setConsent]=useState(false),[reason,setReason]=useState(''),[notice,setNotice]=useState('');
  const [selected,setSelected]=useState('');const attempts=useRef<Record<string,string>>({});
- const load=useCallback(async()=>{try{const response=await fetch('/api/issuance',{cache:'no-store'});const body=await response.json().catch(()=>{throw Error('발급 서비스 응답을 확인하지 못했습니다. 잠시 후 다시 조회하세요.');}) as Data & {error?:string};setUnauthorized(response.status===401);if(!response.ok)throw Error(body.error);setData(body);setError('');}catch(e){setError(e instanceof Error?e.message:'현재 상태를 불러오지 못했습니다.');}},[]);
+ const load=useCallback(async()=>{try{const response=await fetch('/api/issuance',{cache:'no-store'});const body=await response.json().catch(()=>{throw Error('발급 서비스 응답을 확인하지 못했습니다. 잠시 후 다시 조회하세요.');}) as Data & {error?:string};setUnauthorized(response.status===401);if(!response.ok)throw Error(body.error);setData(body);setError('');}catch(e){setData(previous=>previous?{...previous,receipts:previous.receipts.map(r=>({...r,status:'unknown'}))}:previous);setError(e instanceof Error?e.message:'현재 상태를 불러오지 못했습니다.');}},[]);
  useEffect(()=>{void load();const timer=setInterval(()=>void load(),8000);return()=>clearInterval(timer);},[load]);
  const request=selected==='new'?undefined:(data?.requests.find(r=>r.id===selected)??data?.requests[0]);
  const receipt=data?.receipts.find(r=>r.requestId===request?.id);
