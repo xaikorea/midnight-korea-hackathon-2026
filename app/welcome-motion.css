@@ -4,16 +4,16 @@
 .welcome-stage { position: relative; isolation: isolate; overflow: hidden; }
 .welcome-backdrop { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; background: #eff4ff url('/media/credential-network-poster.webp') center / cover no-repeat; }
 .welcome-backdrop video { width: 100%; height: 100%; object-fit: cover; object-position: center; opacity: 0; transition: opacity 1.2s ease; }
-.welcome-backdrop video.is-ready { opacity: 1; }
-.welcome-backdrop-veil { position: absolute; inset: 0; background: linear-gradient(90deg, #f8faff 0%, #f8faffed 25%, #f8faff90 45%, #f8faff08 68%), linear-gradient(0deg, #f8faff, transparent 14%, transparent 93%, #f8faff80); }
-.welcome-aurora { position: absolute; width: 420px; height: 420px; border-radius: 50%; filter: blur(65px); opacity: .22; animation: welcome-drift 13s ease-in-out infinite; }
+.welcome-backdrop video.is-ready { opacity: .48; }
+.welcome-backdrop-veil { position: absolute; inset: 0; background: linear-gradient(90deg, #f8faff 0%, #f8faffed 25%, #f8faffc9 45%, #f8faff66 68%), linear-gradient(0deg, #f8faff, transparent 14%, transparent 93%, #f8faff80); }
+.welcome-aurora { position: absolute; width: 420px; height: 420px; border-radius: 50%; filter: blur(65px); opacity: .14; animation: welcome-drift 13s ease-in-out infinite; }
 .welcome-aurora-blue { right: -140px; top: -170px; background: #7297ff; }
 .welcome-aurora-teal { right: 7%; bottom: -290px; background: #27ccb1; animation-delay: -6s; }
 .welcome-hero { padding-top: 65px; padding-bottom: 25px; min-height: 610px; gap: 70px; }
 .welcome-copy { position: relative; z-index: 2; }
 .welcome-kicker i { box-shadow: 0 0 0 5px #3457ee0d; }
 .welcome-entry button { transition: transform .2s ease, box-shadow .2s ease; }
-.welcome-entry button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 28px #284ce836; }
+.welcome-entry button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 28px #1d5caa26; }
 .welcome-visual { padding: 38px 0 22px; perspective: 1100px; }
 .welcome-orbit { width: 440px; height: 440px; left: calc(50% - 220px); top: -15px; border: 1px solid #648dde2b; box-shadow: 0 0 0 35px #749bed06, 0 0 0 75px #4f9cba05; transform: rotateX(30deg) rotateZ(-20deg); animation: welcome-orbit-turn 28s linear infinite; }
 .welcome-orbit:before, .welcome-orbit:after { content: ''; position: absolute; border: 1px dashed #5187c52f; inset: -25px; border-radius: 50%; }
@@ -23,7 +23,7 @@
 .welcome-orbit i:nth-child(3) { top: 64%; left: 1%; width: 6px; height: 6px; background: #64aaec; }
 .welcome-visual-tag { position: relative; display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 23px; font-size: 9px; font-weight: 650; letter-spacing: 2.1px; color: #4d6c8a; }
 .welcome-visual-tag i { width: 5px; height: 5px; border-radius: 50%; background: #139b96; box-shadow: 0 0 0 4px #139b9612; }
-.welcome-pass { background: linear-gradient(130deg, #fffffffa, #fffffff0 65%, #edf8ffe8); border-color: #ffffff; box-shadow: 0 22px 60px #23447a1c, inset 0 0 0 1px #7da3d712; animation: welcome-card-float 8s ease-in-out infinite; overflow: hidden; }
+.welcome-pass { background: linear-gradient(130deg, #fffffffa, #fffffff0 65%, #edf8ffe8); border-color: #d2e1ec; box-shadow: 0 22px 60px #23447a12, inset 0 0 0 1px #7da3d712; animation: welcome-card-float 8s ease-in-out infinite; overflow: hidden; }
 .welcome-pass:after { content: ''; pointer-events: none; position: absolute; inset: -80% -50%; background: linear-gradient(105deg, transparent 38%, #ffffffa3 48%, transparent 58%); transform: translateX(-55%); animation: welcome-card-sheen 9s ease-in-out infinite; }
 .welcome-pass > * { position: relative; z-index: 1; }
 .welcome-company { font-size: 24px; }
@@ -31,7 +31,7 @@
 .welcome-connectors .welcome-signal { stroke: #3457ee; stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 12 180; animation: welcome-transmit 3.5s linear infinite; }
 .welcome-connectors .welcome-signal-alt { stroke: #119d9a; animation-delay: -1.75s; }
 .welcome-destinations { margin-top: 0; gap: 18px; }
-.welcome-destinations > div { background: #ffffffd9; border-color: #ffffff; box-shadow: 0 8px 25px #1b52890b; animation: welcome-destination 7s ease-in-out infinite; }
+.welcome-destinations > div { background: #ffffffd9; border-color: #d2e1ec; box-shadow: 0 8px 25px #1b52890b; animation: welcome-destination 7s ease-in-out infinite; }
 .welcome-destinations > div:nth-child(2) { animation-delay: -3.5s; }
 .welcome-caption { color: #536f8d; margin-top: 22px; }
 .welcome-motion-bar { position: relative; max-width: 1160px; margin: 0 auto; padding: 12px 0 30px; display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #677c96; font-size: 11px; }
@@ -55,7 +55,7 @@
   .welcome-hero { padding: 45px 24px 15px; gap: 22px; }
   .welcome-backdrop { background-position: 72% center; }
   .welcome-backdrop video { object-position: 72% center; }
-  .welcome-backdrop-veil { background: linear-gradient(180deg, #f8fafff5 0%, #f8faffeb 30%, #f8faff88 48%, #f8faff10 68%, #f8faff 100%); }
+  .welcome-backdrop-veil { background: linear-gradient(180deg, #f8fafff5 0%, #f8faffeb 30%, #f8faffc9 48%, #f8faff80 68%, #f8faff 100%); }
   .welcome-visual { max-width: 470px; }
   .welcome-motion-bar { margin: 0 24px; padding-bottom: 24px; }
   .welcome-orbit { width: 360px; height: 360px; left: calc(50% - 180px); top: 22px; }
