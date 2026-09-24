@@ -1,0 +1,163 @@
+{
+  "description": "Public NHN website independently issued synthetic credential; presenter-approved original two requests; actual Local Devnet proof and revocation. Not Preprod or mainnet.",
+  "environment": "Public NHN web + separate Local Devnet",
+  "origin": "https://bizproof.xaikorea.ai.kr",
+  "executedOn": "2026-09-25 KST",
+  "receipts": {
+    "jobId": "e75cfcb5-92ec-4113-b4f2-f1b356599d5b",
+    "network": "undeployed",
+    "contractAddress": "2195c198f8fd3395c3b339b16a69481a65e470914d30725288f2c8b9df4657e5",
+    "sourceDigest": "188c0f652eef43496480b61d5cdad75a58010157be36f810ef71cd61c83e324d",
+    "receipts": [
+      {
+        "network": "undeployed",
+        "contractAddress": "2195c198f8fd3395c3b339b16a69481a65e470914d30725288f2c8b9df4657e5",
+        "operation": "deploy",
+        "txId": "00c67658221dda89ac817747ac520c4e9ec2dffec67db45e76c07d25395d1269a6",
+        "txHash": "25ce6f53397315f835c72fba222799f2a1c0439631b07cb54123f6b26e88d382",
+        "blockHash": "824768840bbafa64559204a936be5c132f48ead20fed500ede92ae20468534f2",
+        "blockHeight": 1039,
+        "blockTimestamp": 1790292852000,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "2195c198f8fd3395c3b339b16a69481a65e470914d30725288f2c8b9df4657e5",
+        "operation": "registerIssuer",
+        "txId": "008195aba9b6477e9ca8878d705cb0869686a9d4b501af3afe979cea4611e7d90c",
+        "txHash": "98b46ef1ccf27cdff9657e7143ad735efa706f5e8d44fdb322d0f8468762b6ad",
+        "blockHash": "a545bd3d9a5f0db906c34aaf4c879298adc36c4fdff3294f75b47f1ede95297f",
+        "blockHeight": 1043,
+        "blockTimestamp": 1790292876002,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "2195c198f8fd3395c3b339b16a69481a65e470914d30725288f2c8b9df4657e5",
+        "operation": "advanceTime",
+        "txId": "00a68e8609ebafe9a4d806b7d06b16cd601d552b8e56996cf0d92f5af999049dea",
+        "txHash": "44b03573ddc607e90b06dd238da3a35db5910b02ed9a77854f8d869de7532610",
+        "blockHash": "6727c5c956cd1199e3a97cc6e77c548dba3d42c62b5ca7324a30abb825916023",
+        "blockHeight": 1047,
+        "blockTimestamp": 1790292900003,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "2195c198f8fd3395c3b339b16a69481a65e470914d30725288f2c8b9df4657e5",
+        "operation": "createRequest",
+        "txId": "0066781dca1ed3dc4bf8743f85f12f2ad01a7c419d8937cb49360a4a45ef2eb4bb",
+        "txHash": "ab13d6f69807f510a139c4df93fbfab69acace123e6991b77de4f0754dea25fc",
+        "blockHash": "043ff9b58206b899c9ccddcb11a8d448b4e6e95f634d5bff3dfa0939189d196d",
+        "blockHeight": 1051,
+        "blockTimestamp": 1790292924007,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "2195c198f8fd3395c3b339b16a69481a65e470914d30725288f2c8b9df4657e5",
+        "operation": "submit",
+        "txId": "004d042c0b5fb32e2227993fb1473e2c96b77c33cbb253ef5fd7eeeb8e9ea29b1f",
+        "txHash": "3085a797448dd1e7ad45e9ce387488c84f377fa5e778386d32a56c632b1cbfc6",
+        "blockHash": "6853c3c44c34a09015d8f22313e93902d841074f510270a59a8b9acc5d536c9e",
+        "blockHeight": 1055,
+        "blockTimestamp": 1790292948003,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "2195c198f8fd3395c3b339b16a69481a65e470914d30725288f2c8b9df4657e5",
+        "operation": "advanceTime",
+        "txId": "004cf002baffc1bdc5c95dce2339e8d49fd3a07ebfd2b94535194da591ca93a3cf",
+        "txHash": "eafef8b8f5c4f6d8453be84ed77095946bd43816cd07f6ba0dc0450f5b8bf69d",
+        "blockHash": "488f1687ccaad73dbed20b95d070a9405d97388ee32df8ed7c874194e1815468",
+        "blockHeight": 1059,
+        "blockTimestamp": 1790292972001,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "2195c198f8fd3395c3b339b16a69481a65e470914d30725288f2c8b9df4657e5",
+        "operation": "createRequest",
+        "txId": "00657e37c169f1b6e29dbb9438b137a96795409a2feff640ca144c79e9ad5b2bba",
+        "txHash": "33042f532c10dfa8d5e6303ffe3c845e8cd285f72abefdfc1479103fb48c310b",
+        "blockHash": "4f97bb4e618f3eeb13af92ce74e95eb0ce0a34b7fa90deca8795282bc22769c1",
+        "blockHeight": 1063,
+        "blockTimestamp": 1790292996003,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "2195c198f8fd3395c3b339b16a69481a65e470914d30725288f2c8b9df4657e5",
+        "operation": "submit",
+        "txId": "00b0e0f91591d4def5e4adfdeda4303319643f32a2a5c879b421884739211264b0",
+        "txHash": "582866121d72331ac723a89aecdabe01fcdf8a41a27a3b815a47cda4ede62213",
+        "blockHash": "50009b727c75b11416c43c5b1921adbeaf0fba443bbf92da9717f8982d047b49",
+        "blockHeight": 1066,
+        "blockTimestamp": 1790293014000,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "2195c198f8fd3395c3b339b16a69481a65e470914d30725288f2c8b9df4657e5",
+        "operation": "revokeCredential",
+        "txId": "009a948fa9f1d342bbcbf8d2a6861d794f5eb5cdea3878535ac3530b98ca7db5bd",
+        "txHash": "aa700ce1949c4cec114dcf9e9209e8eb11e03e1f83c6dcbc95407b6b561040ee",
+        "blockHash": "92365f25141c20027b35c5b053470c4249d8a9188d0014f108d6d47ba01f1397",
+        "blockHeight": 1079,
+        "blockTimestamp": 1790293092001,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      }
+    ]
+  },
+  "independentVerification": {
+    "context": "bizproof:midnight:job-verification:v1",
+    "jobId": "e75cfcb5-92ec-4113-b4f2-f1b356599d5b",
+    "challenge": "cb74d153-1fb3-41b2-bdfc-0e4a744cd0d1",
+    "taskDigest": "4b8bce40a5bd26f4977c55ed878f0616c471cb93738445c3ea78b4131c8a5bc2",
+    "sourceDigest": "188c0f652eef43496480b61d5cdad75a58010157be36f810ef71cd61c83e324d",
+    "network": "undeployed",
+    "contractAddress": "2195c198f8fd3395c3b339b16a69481a65e470914d30725288f2c8b9df4657e5",
+    "checkedAt": "2026-09-24T23:37:32.037Z",
+    "contractCodeVerified": true,
+    "receiptsVerified": 8,
+    "results": [
+      {
+        "id": "request-7e8d32ea-ec70-4272-a512-48c2a32f5346",
+        "requestId": "784bc38aa357c8498ceab72f8685d83e31cc34149ae6517c3cda632d63342cb3",
+        "policyHash": "f0032852d336842238c9e464417d538199974adb8bfa4f360ab637cfe0f99bcd",
+        "eligible": true
+      },
+      {
+        "id": "request-dda53002-69da-41c0-ac46-3b3e739dd8c7",
+        "requestId": "574a2aa6907244ee0be3c0c3367be00fa75b8a2bfc0a2dc8eb83311b98cbe3aa",
+        "policyHash": "8c2caef9337194eac795c57f64d6ec0ba70d1bedb9d5bc5439b56edd8deb5da4",
+        "eligible": true
+      }
+    ],
+    "revoked": false
+  },
+  "revocationVerification": {
+    "context": "bizproof:midnight:job-verification:v1",
+    "jobId": "e75cfcb5-92ec-4113-b4f2-f1b356599d5b",
+    "challenge": "20877d5e-f243-46fb-b66e-2d19fc9dc866",
+    "taskDigest": "b5a97f2932503e1bb5ae433a1a985db4f16f2f0fc62b126a85799454007ff425",
+    "sourceDigest": "188c0f652eef43496480b61d5cdad75a58010157be36f810ef71cd61c83e324d",
+    "network": "undeployed",
+    "contractAddress": "2195c198f8fd3395c3b339b16a69481a65e470914d30725288f2c8b9df4657e5",
+    "checkedAt": "2026-09-24T23:39:05.367Z",
+    "contractCodeVerified": true,
+    "receiptsVerified": 9,
+    "results": [],
+    "revoked": true
+  }
+}
