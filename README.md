@@ -32,10 +32,10 @@
 
 ## 빠른 실행
 
-웹은 Node.js **24.11.1** 이상에서 실행합니다.
+웹은 Node.js **24.11.1** 이상과 npm **11.19.0** 기준입니다.
 
 ```sh
-npm ci
+npx --yes npm@11.19.0 ci
 npm run demo:local
 ```
 
@@ -100,6 +100,8 @@ Schnorr 모듈과 지갑 초기화 패턴은 Midnight example-zkloan에서 참�
 ## 검증과 한계
 
 `Core verification` CI는 웹 빌드·핵심 테스트를, `Compact verification`은 새 환경의 회로 컴파일·SDK 검사를 실행합니다. 후자의 수동 실행에서 실제 Devnet 거래 검사도 선택할 수 있습니다.
+
+[실제 Devnet CI 실행](https://github.com/xaikorea/midnight-korea-hackathon-2026/actions/runs/36019675856)은 새 GitHub 환경에서 컴파일·23개 검사·배포·조건 판정·취소 후 차단까지 통과했습니다. 이 독립 실행의 13개 영수증은 웹 연결 시연의 11개 기록과 별도 사례입니다.
 
 - 실제 고객 도입 수요·업무 시간 절감률은 아직 측정하지 않았습니다. [고객 검증 기록 양식](docs/customer-validation.md)
 - 실제 기관의 자격 발급·GLEIF QVI 인증·SAP API 연결은 없습니다.

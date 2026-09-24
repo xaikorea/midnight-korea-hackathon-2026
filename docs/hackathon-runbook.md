@@ -1,6 +1,6 @@
 # 심사자용 실행·검증 안내
 
-Node.js 24.11.1, Docker Compose v2, Linux 또는 WSL2 기준. 공개 웹은 NHN의 Next.js / SQLite 배포이며 Sites 계정이 필요하지 않다.
+Node.js 24.11.1, npm 11.19.0, Docker Compose v2, Linux 또는 WSL2 기준. 공개 웹은 NHN의 Next.js / SQLite 배포이며 Sites 계정이 필요하지 않다.
 
 ## 웹 체험
 
@@ -15,7 +15,7 @@ Node.js 24.11.1, Docker Compose v2, Linux 또는 WSL2 기준. 공개 웹은 NHN�
 로컬 웹 실행:
 
 ```sh
-npm ci
+npx --yes npm@11.19.0 ci
 npm run demo:local
 ```
 
