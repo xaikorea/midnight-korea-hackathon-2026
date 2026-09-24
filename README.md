@@ -5,6 +5,7 @@
 - **공개 체험:** https://bizproof.xaikorea.ai.kr/welcome
 - **실제 Midnight 검증 증거:** https://bizproof.xaikorea.ai.kr/verification
 - **이용자 가이드:** https://bizproof.xaikorea.ai.kr/guide
+- **시연 영상·캡처·아키텍처·자막:** [2026-09-25 제출 자료](https://github.com/xaikorea/midnight-korea-hackathon-2026/releases/tag/hackathon-demo-2026-09-25)
 - **심사자 실행 안내:** [docs/hackathon-runbook.md](docs/hackathon-runbook.md)
 - **정보 공개 범위:** [docs/privacy-architecture.md](docs/privacy-architecture.md)
 
@@ -102,6 +103,8 @@ Schnorr 모듈과 지갑 초기화 패턴은 Midnight example-zkloan에서 참�
 `Core verification` CI는 웹 빌드·핵심 테스트를, `Compact verification`은 새 환경의 회로 컴파일·SDK 검사를 실행합니다. 후자의 수동 실행에서 실제 Devnet 거래 검사도 선택할 수 있습니다.
 
 [실제 Devnet CI 실행](https://github.com/xaikorea/midnight-korea-hackathon-2026/actions/runs/36019675856)은 새 GitHub 환경에서 컴파일·23개 검사·배포·조건 판정·취소 후 차단까지 통과했습니다. 이 독립 실행의 13개 영수증은 웹 연결 시연의 11개 기록과 별도 사례입니다.
+
+공개 영상은 5분 15초, 1080p이며 11개 기능 구간에 한국어 자막과 직접 합성한 음악을 포함합니다. 실제 웹 신청·저장·재조회와 별도 Midnight 실행 기록을 구분합니다. 릴리스 ZIP에는 주요 캡처 12개, 아키텍처, SRT 자막, 공개 증거, 음악 출처와 녹화·편집 스크립트가 있습니다.
 
 - 실제 고객 도입 수요·업무 시간 절감률은 아직 측정하지 않았습니다. [고객 검증 기록 양식](docs/customer-validation.md)
 - 실제 기관의 자격 발급·GLEIF QVI 인증·SAP API 연결은 없습니다.

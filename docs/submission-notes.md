@@ -10,6 +10,12 @@
 
 ## 실제 완료 증거
 
+공개 저장소: https://github.com/xaikorea/midnight-korea-hackathon-2026
+
+공개 시연 자료: https://github.com/xaikorea/midnight-korea-hackathon-2026/releases/tag/hackathon-demo-2026-09-25
+
+새 환경의 [웹 CI](https://github.com/xaikorea/midnight-korea-hackathon-2026/actions/runs/36021183167)와 [실제 Devnet CI](https://github.com/xaikorea/midnight-korea-hackathon-2026/actions/runs/36019675856)를 모두 통과했다. 아래 웹 연결 기록과 CI의 독립 실행은 서로 다른 합성 시연이다.
+
 | 항목 | 결과와 확인 자료 |
 |---|---|
 | 실제 네트워크 경로 | 공식 Wallet SDK, proof server, node, indexer를 사용한 Local Devnet 실행 |
