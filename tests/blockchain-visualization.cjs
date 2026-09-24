@@ -1,0 +1,28 @@
+const fs=require('node:fs'),ts=require('typescript'),assert=require('node:assert/strict');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,f);
+const {midnightEvidenceSchema}=require('../lib/midnight-evidence.ts');
+const {blockchainProjection:project,blockchainChapters}=require('../lib/blockchain-visualization.ts');
+const report=midnightEvidenceSchema.parse(JSON.parse(fs.readFileSync('public/evidence/midnight-web-devnet.json','utf8')));
+const chapters=blockchainChapters(report),buyer=report.outcomes.find(o=>o.scenario==='buyer');
+assert.equal(chapters.length,7);
+const start=chapters.find(c=>c.label==='구매사 증명').index;
+const sent=report.events.findIndex(e=>e.txId===buyer.receipt.txId);
+const before=project(report,start),proof=project(report,start+2),pending=project(report,sent),final=project(report,sent+1);
+assert.equal(before.states.proof,'waiting');assert.equal(before.receipt,undefined);
+assert.equal(proof.states.proof,'complete');assert.equal(proof.receipt,undefined);
+assert.equal(pending.txId,buyer.receipt.txId);assert.equal(pending.receipt,undefined);
+assert.equal(pending.confirmed.has(buyer.receipt.txId),false);
+assert.equal(final.receipt.blockHeight,172);assert.equal(final.confirmed.has(buyer.receipt.txId),true);
+const grant=project(report,chapters.find(c=>c.label==='지원사업 증명').index);
+assert.equal(grant.states.finality,'waiting');assert.equal(grant.receipt,undefined);
+assert.ok(grant.confirmed.has(buyer.receipt.txId));
+const end=project(report,report.events.length-1);
+assert.equal(end.confirmed.size,11);assert.equal(end.blocked,true);assert.equal(end.revoked,true);
+assert.equal(end.states.proof,'blocked');assert.equal(end.receipt,undefined);assert.equal(end.txId,undefined);
+assert.equal(end.states.finality,'skipped');assert.equal(end.states.submission,'skipped');
+// A finalized label without a matching sent tx ID cannot fabricate a receipt.
+const wrong=structuredClone(report);wrong.events[sent].txId='0'.repeat(64);
+const rejected=project(wrong,sent+1);assert.equal(rejected.receipt,undefined);assert.equal(rejected.states.finality,'unconfirmed');
+assert.equal(rejected.confirmed.has(buyer.receipt.txId),false);
+assert.equal(project(report,0).confirmed.size,0);
+console.log('PASS blockchain visualization: no future receipts, proof vs sent vs finalized, per-transaction reset, two requests, negative result, revocation block, missing linkage');

@@ -5,6 +5,7 @@ import {processStages,type ProcessRun,type ProcessData} from '@/lib/process-type
 import './process-console.css';
 import ProcessAnimation from './process-animation';
 import VerificationLink from './verification-link';
+import {BlockchainEvidenceViewer} from './blockchain-visualizer';
 
 const labels:Record<keyof ProcessData,string>={credentialId:'사용 자격',issuerId:'발급기관',schemaId:'자격 스키마',keyId:'서명 키 식별값',authorityId:'담당자 권한',requestId:'접수 번호',presentationId:'제출 결과 번호',policyHash:'정책 SHA-256',credentialDigest:'자격 SHA-256',nonce:'기관별 nonce',previewHash:'동의 내용 SHA-256',algorithm:'서명 방식',engine:'조건 판정 엔진',eligible:'조건 충족',replayed:'기존 접수 반환',operational:'기관 로그인(Keycloak) 모드',candidateCount:'사용 가능한 자격 수',savedVersion:'저장 버전',checks:'세부 검사'};
 const statusNames={running:'서버 처리 중',succeeded:'처리·저장 완료',partial:'일부 처리 완료',failed:'추가 확인 필요'};
@@ -14,6 +15,7 @@ export default function ProcessConsole({live,companyId,busy=false,enabled=true}:
   const [runs,setRuns]=useState<ProcessRun[]>([]),[picked,setPicked]=useState(''),[scope,setScope]=useState('all');
   const [error,setError]=useState(''),[fetching,setFetching]=useState(false),[updated,setUpdated]=useState('');
   const [now,setNow]=useState(()=>Date.now());
+  const [showBlockchain,setShowBlockchain]=useState(false);
   const load=useCallback(async()=>{
     setFetching(true);
     try{const r=await fetch('/api/process-runs',{cache:'no-store'});const value=await r.json() as {error?:string;runs:ProcessRun[]};if(!r.ok)throw Error(value.error??'기록 조회 실패');setRuns(value.runs);setError('');setUpdated(new Date().toISOString());setNow(Date.now());}
@@ -36,6 +38,8 @@ export default function ProcessConsole({live,companyId,busy=false,enabled=true}:
   function download(){if(!run)return;const url=URL.createObjectURL(new Blob([JSON.stringify(run,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=run.id+'.json';a.click();URL.revokeObjectURL(url);}
   return <div className="process-console">
     <div className="process-tools"><span><Activity size={15}/> 서버 실행 기록</span><div><button type="button" onClick={()=>void load()} disabled={fetching}><RefreshCw size={14}/>{fetching?'조회 중':'새로고침'}</button><a href="/process" target="_blank" rel="noopener noreferrer">별도 관제 창 <ArrowUpRight size={14}/></a></div></div>
+    <div className="chain-context"><span className="chain-context-label">현재 신청 경로</span><strong>웹 서버 검증 · Midnight 거래 미실행</strong><p>현재 신청의 자격 확인·서명·저장은 아래 서버 기록에 표시됩니다. Midnight의 증명 생성과 블록 확정은 별도의 실제 시연 기록으로 살펴볼 수 있습니다.</p><button type="button" aria-expanded={showBlockchain} onClick={()=>setShowBlockchain(v=>!v)}>{showBlockchain?'블록체인 시각화 닫기':'블록체인 흐름 보기'}</button></div>
+    {showBlockchain&&<BlockchainEvidenceViewer enabled={enabled}/>}
     {error&&<p className="process-warning" role="alert">{error} {runs.length>0&&'마지막으로 불러온 기록을 표시합니다.'}<a href="/welcome">체험 공간 접속</a></p>}
     {merged.length>0&&<label className="process-picker">처리 기록<select value={run?.id??''} onChange={e=>{setPicked(e.target.value);setScope('all');}}>{merged.map(r=><option key={r.id} value={r.id}>{time(r.startedAt)} · {r.companyName} · {statusNames[r.status]}</option>)}</select></label>}
     {!run?<section className="process-empty"><Activity size={34}/><h3>{busy?'서버 응답을 연결하고 있습니다.':'아직 실행 기록이 없습니다.'}</h3><p>신청 대상과 공유 동의를 확인한 뒤 제출하면 이 창에 실제 처리 기록이 쌓입니다.</p><div className="process-outline">자격 확인 → 조건 판정 → 서명·검증 → 저장</div><small>처리 시간을 늘리는 연출이나 가상의 완료 기록은 사용하지 않습니다.</small></section>:<>
