@@ -5,5 +5,5 @@ COPY contracts/package.json contracts/package-lock.json ./contracts/
 RUN npm ci --prefix contracts --no-audit --no-fund
 COPY contracts ./contracts
 COPY scripts/compile-contract.sh ./scripts/compile-contract.sh
-RUN bash scripts/compile-contract.sh && node --test contracts/test.mjs contracts/request-runner.test.mjs contracts/sdk/sdk.test.mjs contracts/sdk/wallet-adapter.test.mjs contracts/sdk/web-source.test.mjs
+RUN bash scripts/compile-contract.sh && node --test contracts/test.mjs contracts/request-runner.test.mjs contracts/sdk/sdk.test.mjs contracts/sdk/wallet-adapter.test.mjs contracts/sdk/web-source.test.mjs contracts/sdk/issued-source.test.mjs
 CMD ["node", "contracts/sdk/run-devnet.ts", "outputs/midnight-devnet"]

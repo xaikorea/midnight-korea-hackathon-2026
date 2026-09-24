@@ -6,6 +6,8 @@ services:
     env_file:
       - /srv/bizproof/secrets/runtime.env
       - /srv/bizproof/secrets/issuer-client.env
+      - path: /srv/bizproof/secrets/proof-jobs.env
+        required: false
     environment:
       BIZPROOF_GEOIP_PATH: /data/geoip/dbip-city-lite.mmdb
     ports: ["127.0.0.1:3100:3100"]

@@ -13,6 +13,8 @@ with tempfile.TemporaryDirectory(dir=out) as work:
   archive.add(snapshot,arcname='data/bizproof.sqlite')
   if (root/'data/evidence').exists():archive.add(root/'data/evidence',arcname='data/evidence')
   archive.add(root/'secrets/runtime.env',arcname='secrets/runtime.env')
+  if (root/'secrets/proof-jobs.env').exists():archive.add(root/'secrets/proof-jobs.env',arcname='secrets/proof-jobs.env')
+  if (root/'proof-worker-config').exists():archive.add(root/'proof-worker-config',arcname='proof-worker-config')
   if issuer_snapshot:
    archive.add(issuer_snapshot,arcname='issuer-data/issuer.sqlite')
    archive.add(root/'issuer-data/issuer-key.json',arcname='issuer-data/issuer-key.json')

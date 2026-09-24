@@ -1,7 +1,7 @@
 import {generateKeyPairSync,randomBytes,randomUUID} from 'node:crypto';
 import {mkdirSync,existsSync,writeFileSync,readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
-import {spawn} from 'node:child_process';
+import {spawn,spawnSync} from 'node:child_process';
 import {initializeIssuer} from '../services/issuer/core.mjs';
 import {ISSUER_ID} from '../services/issuer/protocol.mjs';
 
@@ -14,12 +14,16 @@ if(!existsSync(file)){
 }
 const config=JSON.parse(readFileSync(file,'utf8')),issuerRoot=resolve(root,'issuer-only'),issuer=initializeIssuer(issuerRoot);
 const issuerPort=process.env.ISSUER_PORT??'3201',port=process.env.PORT??'3120';
+const trust=JSON.stringify({issuerId:ISSUER_ID,keyId:issuer.keyId,publicKey:issuer.publicKey}),workerRoot=resolve(root,'worker-config');
+const provision=spawnSync(process.execPath,['scripts/provision-proof-worker.mjs',workerRoot],{stdio:'inherit',env:{...process.env,BIZPROOF_PROCESSING_KEY:JSON.stringify(config.processing),BIZPROOF_ISSUER_TRUST:trust,BIZPROOF_APP_ORIGIN:'http://127.0.0.1:'+port}});
+if(provision.status!==0)throw Error('Worker configuration could not be prepared');
+const workerEnv=Object.fromEntries(readFileSync(resolve(workerRoot,'proof-jobs.env'),'utf8').trim().split('\n').map(line=>[line.slice(0,line.indexOf('=')),line.slice(line.indexOf('=')+1)]));
 const children=[];
 children.push(spawn(process.execPath,['services/issuer/server.mjs'],{stdio:'inherit',env:{...process.env,ISSUER_SERVICE_SECRET:config.secret,ISSUER_DATA_DIR:issuerRoot,ISSUER_PORT:issuerPort}}));
 const issuerUrl='http://127.0.0.1:'+issuerPort;
 try{
  for(let attempt=0;;attempt++){try{const r=await fetch(issuerUrl+'/health');if(r.ok)break;}catch{}if(attempt>40)throw Error('Issuer startup timed out');await new Promise(r=>setTimeout(r,100));}
- children.push(spawn(process.execPath,['scripts/dev-demo.mjs'],{stdio:'inherit',env:{...process.env,PORT:port,BIZPROOF_NEXT_DIST:'.next-issuer-dev',BIZPROOF_DEMO_DIR:resolve(root,'web-only'),BIZPROOF_ISSUER_URL:issuerUrl,BIZPROOF_ISSUER_SERVICE_SECRET:config.secret,BIZPROOF_ISSUER_TRUST:JSON.stringify({issuerId:ISSUER_ID,keyId:issuer.keyId,publicKey:issuer.publicKey}),BIZPROOF_PROCESSING_KEY:JSON.stringify(config.processing)}}));
+ children.push(spawn(process.execPath,['scripts/dev-demo.mjs'],{stdio:'inherit',env:{...process.env,...workerEnv,PORT:port,BIZPROOF_NEXT_DIST:'.next-issuer-dev',BIZPROOF_DEMO_DIR:resolve(root,'web-only'),BIZPROOF_ISSUER_URL:issuerUrl,BIZPROOF_ISSUER_SERVICE_SECRET:config.secret,BIZPROOF_ISSUER_TRUST:trust,BIZPROOF_PROCESSING_KEY:JSON.stringify(config.processing)}}));
  console.log('Issuance experience: http://127.0.0.1:'+port+'/issuance');
 }catch(error){for(const child of children)child.kill();throw error;}
 let closing=false;

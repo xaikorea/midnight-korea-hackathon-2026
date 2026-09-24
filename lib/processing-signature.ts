@@ -1,7 +1,7 @@
 import {type Issuer,type Presentation,presentationPayload} from './domain';
 import {sign,verify} from './signatures';
 
-function platformKey(){
+export function platformKey(){
  const raw=process.env.BIZPROOF_PROCESSING_KEY;
  if(!raw)throw Error('플랫폼 처리 결과 서명 키를 설정해야 합니다.');
  const key=JSON.parse(raw) as {keyId:string;publicKey:JsonWebKey;privateKey:JsonWebKey};

@@ -1,0 +1,10 @@
+import {z} from 'zod';
+import {sourceBodySchema} from './web-source.ts';
+const hex=z.string().regex(/^[a-f0-9]{64}$/);
+export const jobReceiptSchema=z.object({network:z.literal('undeployed'),contractAddress:hex,operation:z.enum(['deploy','registerIssuer','advanceTime','createRequest','submit','revokeCredential']),txId:z.string().regex(/^[a-f0-9]{64,66}$/),txHash:hex,blockHash:hex,blockHeight:z.number().int().nonnegative(),blockTimestamp:z.number().int().positive(),status:z.literal('SucceedEntirely'),mode:z.literal('midnight-finalized')}).strict();
+export const jobEventSchema=z.object({stage:z.enum(['wallet','deploy','source','attestation','proof','balance','submission','create','submit','indexer','revoke','recovered','failed']),status:z.enum(['running','sent','complete','blocked','uncertain']),txId:z.string().regex(/^[a-f0-9]{64,66}$/).optional()}).strict();
+export const verificationTaskSchema=z.object({jobId:z.string().uuid(),scope:hex,sourceDigest:hex,binding:sourceBodySchema,receipts:z.array(jobReceiptSchema).max(30),revocation:z.boolean(),challenge:z.string().uuid()}).strict();
+export const jobVerificationSchema=z.object({context:z.literal('bizproof:midnight:job-verification:v1'),jobId:z.string().uuid(),challenge:z.string().uuid(),taskDigest:hex,sourceDigest:hex,network:z.literal('undeployed'),contractAddress:hex,checkedAt:z.string().datetime(),contractCodeVerified:z.literal(true),receiptsVerified:z.number().int().positive().max(30),results:z.array(z.object({id:z.string().max(200),requestId:hex,policyHash:hex,eligible:z.boolean()}).strict()).max(2),revoked:z.boolean()}).strict();
+export type JobReceipt=z.infer<typeof jobReceiptSchema>;
+export type JobEvent=z.infer<typeof jobEventSchema>;
+export type VerificationTask=z.infer<typeof verificationTaskSchema>;

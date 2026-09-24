@@ -3,6 +3,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {ArrowRight,Check,FileCheck2,RefreshCw,ShieldCheck,Building2,Activity,LockKeyhole} from 'lucide-react';
 import BizProofLogo from './bizproof-logo';
 import EntryForm from './welcome-start';
+import ProofJobsPanel from './proof-jobs-panel';
 import './issuance.css';
 
 type Issuance={id:string;companyId:string;status:string;revision:number;createdAt:string;reason:string;credentialId?:string;events:{seq:number;type:string;at:string;detail:string}[]};
@@ -45,7 +46,8 @@ export default function IssuanceExperience({operator=false}:{operator?:boolean})
       {operator&&request.status==='issued'&&<><p>자격 {request.credentialId}의 원본 서명이 발급 서버에 저장되어 있습니다.</p><a className="issuance-link" href="/issuance">신청자 화면에서 자격 받기 <ArrowRight size={16}/></a><details><summary>발급 취소 체험</summary><p>취소하면 이 자격으로 새 신청을 제출할 수 없습니다. 과거의 처리 기록과 블록체인 거래를 삭제하는 동작은 아닙니다.</p><label className="issuance-field">취소 사유<textarea maxLength={300} value={reason} onChange={e=>setReason(e.target.value)}/></label><button disabled={busy||reason.trim().length<2} onClick={()=>void command('revoke',{id:request.credentialId,reason})}>발급기관 원장에서 취소</button></details></>}
      </>}
      {operator&&!request&&<p>아직 접수된 신청이 없습니다. <a href="/issuance">기업 자격 발급 신청하기 →</a></p>}
-    </section><aside className="issuance-card issuance-monitor"><h2><Activity size={20}/> 실제 처리 기록</h2><p className="issuance-muted">발급 서버에 저장된 사건입니다. 새로고침해도 유지되며 자동으로 조회합니다.</p>{request?.events.length?<ol>{request.events.map(e=><li key={e.seq}><span className="issuance-event-dot"/><div><b>{labels[e.type]??e.type}</b><time dateTime={e.at}>{new Date(e.at).toLocaleTimeString('ko-KR')} · #{e.seq}</time><p>{e.detail}</p></div></li>)}</ol>:<p className="issuance-empty">발급 신청 후 접수·검토·서명 기록이 표시됩니다.</p>}{receipt&&<div className="issuance-received"><Check size={16}/><span>웹 지갑 수신·검증 기록<br/><time>{new Date(receipt.receivedAt).toLocaleString('ko-KR')}</time></span></div>}<div className="issuance-boundary"><b>실행 범위</b><p>인증: 시뮬레이션<br/>발급: 독립 프로세스·기관 서명<br/>재사용: 플랫폼 처리 결과 서명<br/>블록체인: 이 발급 건의 거래 미실행</p></div><button onClick={()=>void load()} disabled={busy}><RefreshCw size={14}/> 지금 상태 확인</button></aside></div></>}
+    </section><aside className="issuance-card issuance-monitor"><h2><Activity size={20}/> 실제 처리 기록</h2><p className="issuance-muted">발급 서버에 저장된 사건입니다. 새로고침해도 유지되며 자동으로 조회합니다.</p>{request?.events.length?<ol>{request.events.map(e=><li key={e.seq}><span className="issuance-event-dot"/><div><b>{labels[e.type]??e.type}</b><time dateTime={e.at}>{new Date(e.at).toLocaleTimeString('ko-KR')} · #{e.seq}</time><p>{e.detail}</p></div></li>)}</ol>:<p className="issuance-empty">발급 신청 후 접수·검토·서명 기록이 표시됩니다.</p>}{receipt&&<div className="issuance-received"><Check size={16}/><span>웹 지갑 수신·검증 기록<br/><time>{new Date(receipt.receivedAt).toLocaleString('ko-KR')}</time></span></div>}<div className="issuance-boundary"><b>실행 범위</b><p>인증: 시뮬레이션<br/>발급: 독립 프로세스·기관 서명<br/>재사용: 플랫폼 처리 결과 서명<br/>블록체인: 아래 작업 기록에서 별도 확인</p></div><button onClick={()=>void load()} disabled={busy}><RefreshCw size={14}/> 지금 상태 확인</button></aside></div></>}
+   {receipt&&!operator&&<ProofJobsPanel credentialId={receipt.credentialId}/>}
    {!data&&!error&&<p role="status">발급 서버의 현재 상태를 확인하고 있습니다…</p>}
   </>}
   <footer className="issuance-footer">BizProof · 합성 데이터로 체험하는 기업 자격 발급과 재사용<a href={operator?'/issuance':'/issuer-demo'}>{operator?'신청자 화면':'내 신청의 기관 검토 체험'}</a></footer>

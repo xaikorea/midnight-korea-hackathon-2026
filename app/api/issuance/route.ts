@@ -5,6 +5,7 @@ import {issuerCall,issuerScope,importRemoteCredential,remoteCredentialStatus,Rem
 import {readState,saveState,ConflictError} from '@/lib/store';
 import {z} from 'zod';
 import {digest} from '@/lib/signatures';
+import {noteCredentialRevoked} from '@/lib/proof-jobs';
 export const dynamic='force-dynamic';
 const reply=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
 async function context(){
@@ -48,6 +49,7 @@ export async function POST(req:Request){try{
   case 'revoke':{
    const id=z.string().regex(/^remote-[a-f0-9-]{36}$/).parse(b.id);result=await issuerCall(u.scope,'POST','/v1/credentials/'+id+'/revocations',{key:b.key,reason:b.reason??''});
    // Issuer commit precedes workspace synchronization. Any failure is recoverable by a fresh status check.
+   await noteCredentialRevoked(u.storageOwner,id);
    const {state,version}=await readState(u.storageOwner),c=state.credentials.find(c=>c.id===id);
    if(c){const receipt=state.credentialReceipts?.find(r=>r.credentialId===id),status=await remoteCredentialStatus(c,receipt?.statusRevision);if(status.body.status!=='revoked')throw new RemoteIssuerError(503,'기관의 취소 결과를 다시 확인해야 합니다.');if(receipt)receipt.statusRevision=status.body.revision;c.status='revoked';c.revokedAt=status.body.checkedAt;c.reason=b.reason;await saveState(u.storageOwner,state,version);}break;
   }

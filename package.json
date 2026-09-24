@@ -16,7 +16,7 @@
     "test:regression": "node tests/regression-suite.mjs",
     "test:contracts": "node --test contracts/test.mjs contracts/request-runner.test.mjs",
     "typecheck:sdk": "tsc -p contracts/tsconfig.sdk.json",
-    "test:sdk": "node --test contracts/sdk/sdk.test.mjs contracts/sdk/wallet-adapter.test.mjs contracts/sdk/web-source.test.mjs",
+    "test:sdk": "node --test contracts/sdk/sdk.test.mjs contracts/sdk/wallet-adapter.test.mjs contracts/sdk/web-source.test.mjs contracts/sdk/issued-source.test.mjs",
     "test:connector": "node tests/dapp-connector.cjs && node tests/dapp-connector-ui.cjs",
     "test:identity-exchange": "node tests/portable-credential.cjs && node tests/vlei-verifier.cjs && node tests/identity-exchange-ui.cjs",
     "test:keycloak": "node tests/keycloak.cjs && node tests/keycloak-ui.cjs",
