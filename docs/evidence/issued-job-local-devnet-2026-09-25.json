@@ -1,0 +1,163 @@
+{
+  "description": "Local synthetic independently issued credential; exact two original requests; real Local Devnet execution. Not public website execution or Preprod.",
+  "environment": "Local Devnet",
+  "origin": "http://127.0.0.1:3120",
+  "executedOn": "2026-09-25 KST",
+  "receipts": {
+    "jobId": "ef34ec66-7cad-4544-9d8d-163653f9fa8f",
+    "network": "undeployed",
+    "contractAddress": "b5c2de7118645dfe9810b8891b5b3366cea229d33f792daa5c3248a5be6bb19a",
+    "sourceDigest": "6fa4429036dfe780841f1b12e898138e7f23b0e2150ac74f788d7ff6f3afd3ec",
+    "receipts": [
+      {
+        "network": "undeployed",
+        "contractAddress": "b5c2de7118645dfe9810b8891b5b3366cea229d33f792daa5c3248a5be6bb19a",
+        "operation": "deploy",
+        "txId": "003d613f1904f1bc44ce9516af0a3b0447265f4ce80050a69d4097021cbfb450a6",
+        "txHash": "e591f661dd59f387c410e2a50be2fd966141f288b469ccaa20fd75151ad12c30",
+        "blockHash": "1abffc56e184d2d3a62990cc5e3cb69204e1d70ed30e291e98027f2255eb4dc0",
+        "blockHeight": 867,
+        "blockTimestamp": 1790291100001,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "b5c2de7118645dfe9810b8891b5b3366cea229d33f792daa5c3248a5be6bb19a",
+        "operation": "registerIssuer",
+        "txId": "006683b27343ad6682af2b44792193c4800eae7821ee199692e9695302ff5d145f",
+        "txHash": "2edcba45bf0a424480245b5fc347be9e71b070abe5398deef5733b2183223980",
+        "blockHash": "fff4128c121ae19fbd28b3f9e15a9ef75a6df3c86e18e1d076ebb94ea9a98455",
+        "blockHeight": 871,
+        "blockTimestamp": 1790291124002,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "b5c2de7118645dfe9810b8891b5b3366cea229d33f792daa5c3248a5be6bb19a",
+        "operation": "advanceTime",
+        "txId": "0027b12692aa0bf4250bbb201e5355461abf306ac7479df970b0f57e487c312d03",
+        "txHash": "cdedd2bdc38c84ea61d8e09804b3322e562c4c80a8c18b20ff3dc03af6b9c889",
+        "blockHash": "012ef6d2e9e42ca761255ccf6f8f0861f80c318eff4c087f1d5e5e39132f8c64",
+        "blockHeight": 875,
+        "blockTimestamp": 1790291148002,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "b5c2de7118645dfe9810b8891b5b3366cea229d33f792daa5c3248a5be6bb19a",
+        "operation": "createRequest",
+        "txId": "005e84f348400046f90b30d5580e6b4256a9a8321dd62782140cff6d83539a9406",
+        "txHash": "65bd4145a3d88883e79bc6e4190890f3f17d85ccbe99f0ca6f47ab4b885b5466",
+        "blockHash": "729c549165565f5be0ea7995c23395e83d7c4f2f35e937e5c208c97e75c8085e",
+        "blockHeight": 879,
+        "blockTimestamp": 1790291172003,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "b5c2de7118645dfe9810b8891b5b3366cea229d33f792daa5c3248a5be6bb19a",
+        "operation": "submit",
+        "txId": "00ec8b974d1b6fed7113cbb6fb70230c03e20ee1d53f36aa0b6fc9d3ff4622b1aa",
+        "txHash": "eddaf7c888f0c0b79236c270bbe82b25d32ced4615ef142a9a49546db56ab6f2",
+        "blockHash": "c1018107338569590460e56858e57c3984c1eb5bdb00eaf61182d92a556a7de3",
+        "blockHeight": 883,
+        "blockTimestamp": 1790291196001,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "b5c2de7118645dfe9810b8891b5b3366cea229d33f792daa5c3248a5be6bb19a",
+        "operation": "advanceTime",
+        "txId": "004b561aad06b7bbd14d9b03f7bb299130e79844c2149bd0828d2e0fe96def4164",
+        "txHash": "46999a93490cf66f10348b7d23a6d0c7e32ea18fa984960d5d6ec4782a838948",
+        "blockHash": "367febaaf95a2520e33447dd3098f8c96c69f0dd8866d99050952202fda63116",
+        "blockHeight": 887,
+        "blockTimestamp": 1790291220001,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "b5c2de7118645dfe9810b8891b5b3366cea229d33f792daa5c3248a5be6bb19a",
+        "operation": "createRequest",
+        "txId": "005644263f0fcb54302f0aa9e46d3e7c6722bf7630e91f725b7c178b4e22e34293",
+        "txHash": "0a3c5415a07071db1dad1ea3085d996407492ec9683b64e0e4a2bf2a5dcbb42d",
+        "blockHash": "29f80b36ef1b5c294ec6f8d7f3090c58c9a57d2cc767dddf1acee5ee0a22eeaa",
+        "blockHeight": 891,
+        "blockTimestamp": 1790291244001,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "b5c2de7118645dfe9810b8891b5b3366cea229d33f792daa5c3248a5be6bb19a",
+        "operation": "submit",
+        "txId": "0003d5b69b5fe3ab8297d9ae4b568820a54414095552e522c5b13f13c39ddfcd46",
+        "txHash": "7034d80c23fec804efc4f77258b817e5117413e0fd00bbeeac0519da890e6b62",
+        "blockHash": "d8a4cc94b4542de653629246f9decfffd04dc7207440bf82ccd99346d94421bc",
+        "blockHeight": 895,
+        "blockTimestamp": 1790291268001,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      },
+      {
+        "network": "undeployed",
+        "contractAddress": "b5c2de7118645dfe9810b8891b5b3366cea229d33f792daa5c3248a5be6bb19a",
+        "operation": "revokeCredential",
+        "txId": "0093d3e2ac64713f97ba8ef40642c9203c9421a6647fdf56542286d6f3ff72cab2",
+        "txHash": "ec8dd4ad0ca528569dfa82e52f56dcdd08427c59c8e3e7ae268afa14b11c2f16",
+        "blockHash": "6c4c9725b17e1895d847e9f17dc806c066ded93f8c7516565be79b445135da4b",
+        "blockHeight": 915,
+        "blockTimestamp": 1790291388001,
+        "status": "SucceedEntirely",
+        "mode": "midnight-finalized"
+      }
+    ]
+  },
+  "independentVerification": {
+    "context": "bizproof:midnight:job-verification:v1",
+    "jobId": "ef34ec66-7cad-4544-9d8d-163653f9fa8f",
+    "challenge": "b5d0778e-dc16-4049-912e-bc472f997335",
+    "taskDigest": "69fc4bbd910cf59b0f1a08e8d85774968f2e95c8508b506f0f6b17cb0de2e882",
+    "sourceDigest": "6fa4429036dfe780841f1b12e898138e7f23b0e2150ac74f788d7ff6f3afd3ec",
+    "network": "undeployed",
+    "contractAddress": "b5c2de7118645dfe9810b8891b5b3366cea229d33f792daa5c3248a5be6bb19a",
+    "checkedAt": "2026-09-24T23:08:53.672Z",
+    "contractCodeVerified": true,
+    "receiptsVerified": 8,
+    "results": [
+      {
+        "id": "request-269745c9-def7-41e5-b890-828331b48461",
+        "requestId": "264d8508b89e3b48b664e7a4134d180aa79002878b1238f466aae40474493b7f",
+        "policyHash": "0329f83c69182fab2deb24bb70dfbab3160a8bab92184384abc16b92d43e72dd",
+        "eligible": true
+      },
+      {
+        "id": "request-64eba1e6-084d-4790-9832-d77cc618fe22",
+        "requestId": "aa53c4f44e1173e7ca0669af9ec95ebf4ef37fff2987461895c07e22e42618a6",
+        "policyHash": "80e476f88450a7918323e2301139402debd4c8c82b16336f5c8701df2256c35e",
+        "eligible": true
+      }
+    ],
+    "revoked": false
+  },
+  "revocationVerification": {
+    "context": "bizproof:midnight:job-verification:v1",
+    "jobId": "ef34ec66-7cad-4544-9d8d-163653f9fa8f",
+    "challenge": "a9f6236a-659f-4c0c-8b21-d01b3779d9c6",
+    "taskDigest": "6568c3045c6d7d979cf61648c5529a6a88f5552877b511f7ba52a00b6102eca3",
+    "sourceDigest": "6fa4429036dfe780841f1b12e898138e7f23b0e2150ac74f788d7ff6f3afd3ec",
+    "network": "undeployed",
+    "contractAddress": "b5c2de7118645dfe9810b8891b5b3366cea229d33f792daa5c3248a5be6bb19a",
+    "checkedAt": "2026-09-24T23:11:07.443Z",
+    "contractCodeVerified": true,
+    "receiptsVerified": 9,
+    "results": [],
+    "revoked": true
+  }
+}

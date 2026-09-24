@@ -51,7 +51,19 @@ export async function requestProofJob(owner:string,input:{credentialId:string;re
 export async function approveProofJob(id:string,actor:string,revision:number){const j=await getProofJob(id);if(j.status!=='awaiting_approval'||j.revision!==revision)fail('승인할 작업 상태를 다시 확인하세요.');await current(j);j.status='queued';j.approvedBy=actor;j.approvedAt=new Date().toISOString();return save(j);}
 export async function resumeProofJob(id:string,revision:number){const j=await getProofJob(id);if(j.status!=='needs_attention'||j.revision!==revision||!j.approvedAt)fail('복구할 작업 상태를 다시 확인하세요.');if(j.revocation==='none')await current(j);j.status='queued';j.leaseExpiresAt=0;j.reason='기존 실행기의 비공개 기록과 거래를 먼저 대조합니다. 미확정 거래는 재전송하지 않습니다.';return save(j);}
 export async function cancelProofJob(id:string,owner?:string){const j=await getProofJob(id);if(owner&&j.owner!==owner)fail('작업을 찾을 수 없습니다.',404);if(!['awaiting_approval','queued'].includes(j.status))fail('진행 중인 거래를 자동 취소할 수 없습니다. 처리 기록을 확인하세요.');j.status='cancelled';return save(j);}
-export async function noteCredentialRevoked(owner:string,credentialId:string){for(const job of await allProofJobs(owner)){if(job.credentialId!==credentialId||job.revocation==='confirmed')continue;for(let n=0;n<4;n++){const j=await getProofJob(job.id);j.revocation=j.target?'pending':'none';if(j.status!=='cancelled')j.status='blocked';j.reason='발급기관 취소 · 새 증명과 재사용 차단';try{await save(j);break;}catch(e){if(n===3)throw e;}}}}
+export async function noteCredentialRevoked(owner:string,credentialId:string){
+ for(const job of await allProofJobs(owner)){
+  if(job.credentialId!==credentialId)continue;
+  for(let n=0;n<4;n++){
+   const j=await getProofJob(job.id);
+   // Repeated issuer polling must not overwrite a running revocation verification
+   // or race every heartbeat by incrementing an already synchronized revision.
+   if(j.revocation==='confirmed'||j.revocation==='pending'||!j.target&&['blocked','cancelled'].includes(j.status))break;
+   j.revocation=j.target?'pending':'none';if(j.status!=='cancelled')j.status='blocked';j.reason='발급기관 취소 · 새 증명과 재사용 차단';
+   try{await save(j);break;}catch(e){if(!(e instanceof ProofJobError)||n===3)throw e;}
+  }
+ }
+}
 export async function refreshProofJob(j:ProofJob){
  try{const result=await current(j,true);if(result.status==='revoked'&&j.revocation!=='confirmed'){await noteCredentialRevoked(j.owner,j.credentialId);return getProofJob(j.id);}}catch{ return {...j,currentStatus:'unknown'}; }
  if(j.leaseExpiresAt&&j.leaseExpiresAt<Date.now()&&j.status==='running'){j.status='needs_attention';j.reason='실행기 연결이 끊겼습니다. 기존 거래를 확인하기 전 재전송하지 않습니다.';return save(j);}return j;
@@ -59,7 +71,7 @@ export async function refreshProofJob(j:ProofJob){
 export function publicProofJob(j:ProofJob&{currentStatus?:string}){return {id:j.id,credentialId:j.credentialId,sourceDigest:j.sourceDigest,requests:j.requests.map(r=>({id:r.id,kind:r.policy.kind,audience:r.policy.audience,policyHash:r.policyHash})),createdAt:j.createdAt,consentExpiresAt:j.consentExpiresAt,status:j.status,revision:j.revision,approvedAt:j.approvedAt,contractAddress:j.target?.contractAddress,events:j.events,receipts:j.receipts,revocation:j.revocation,verification:j.verification,reason:j.reason,currentStatus:j.currentStatus??'checked',network:'undeployed',environment:'Local Devnet'};}
 export async function claimProofJob(worker:string,id?:string){
  const jobs=id?[await getProofJob(id)]:await allProofJobs();
- for(let j of jobs){j=await refreshProofJob(j);if(j.leaseExpiresAt&&j.leaseExpiresAt>Date.now())continue;const revoke=j.revocation==='pending'&&!!j.target&&!!j.approvedAt;
+ for(let j of jobs){j=await refreshProofJob(j);if(j.status==='awaiting_verification'||j.leaseExpiresAt&&j.leaseExpiresAt>Date.now())continue;const revoke=j.revocation==='pending'&&!!j.target&&!!j.approvedAt;
   if(!revoke&&j.status!=='queued')continue;
   if(!revoke)try{await current(j);}catch{j.status='blocked';j.reason='원본·기관 상태·동의를 다시 확인해야 합니다.';await save(j);continue;}
   j.worker=worker;j.lease=crypto.randomUUID();j.leaseExpiresAt=Date.now()+180000;j.status=revoke?'blocked':'running';
@@ -98,6 +110,8 @@ export async function completeProofVerification(raw:unknown){
  if(b.challenge!==task.challenge||b.taskDigest!==await digest(task)||b.sourceDigest!==j.sourceDigest||b.contractAddress!==j.target?.contractAddress||b.receiptsVerified!==j.receipts.length||Date.parse(b.checkedAt)>Date.now()+5000||Date.parse(b.checkedAt)<Date.now()-60000||b.revoked!==task.revocation)fail('독립 검증의 원본·작업·시각 연결이 일치하지 않습니다.',422);
  if(!task.revocation){if(b.results.length!==2)fail('두 기관 결과가 필요합니다.');for(const r of task.binding.requests)if(!b.results.some(x=>x.id===r.id&&x.requestId===r.requestId&&x.policyHash===r.policyHash))fail('원래 요청과 체인 결과가 다릅니다.');await current(j);j.status='confirmed';}
  else {if((await current(j,true)).status!=='revoked')fail('기관 취소와 체인 취소가 일치하지 않습니다.');j.status='blocked';j.revocation='confirmed';}
- j.verification=b;delete j.verificationChallenge;j.reason=task.revocation?'기관 취소와 체인 취소를 모두 확인했습니다.':undefined;return publicProofJob(await save(j));
+ j.verification=b;delete j.verificationChallenge;j.reason=task.revocation?'기관 취소와 체인 취소를 모두 확인했습니다.':undefined;
+ if(j.events.length<400)j.events.push({stage:'indexer',status:'complete',seq:j.events.length+1,at:new Date().toISOString()});
+ return publicProofJob(await save(j));
 }
 export function proofWorkerTrust(){return {platform:{keyId:platformKey().keyId,publicKey:platformKey().publicKey},issuer:remoteConfig().trust};}

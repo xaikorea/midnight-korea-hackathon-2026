@@ -21,7 +21,7 @@ export async function GET(){try{
  const receipts=[];let changed=false;
  for(const r of state.credentialReceipts??[]){const c=state.credentials.find(c=>c.id===r.credentialId);if(!c||c.remoteBinding?.scope!==u.scope)continue;try{const status=await remoteCredentialStatus(c,r.statusRevision);if(status.body.revision>r.statusRevision){r.statusRevision=status.body.revision;changed=true;}if(status.body.status==='revoked'&&c.status!=='revoked'){c.status='revoked';c.revokedAt=status.body.checkedAt;changed=true;}receipts.push({...r,status:c.status==='revoked'?'revoked':Date.parse(c.expiresAt)<=Date.now()?'expired':'active',statusCheckedAt:status.body.checkedAt});}catch{receipts.push({...r,status:'unknown'});}}
  if(changed)await saveState(u.storageOwner,state,version);
- return reply({catalog,...list,receipts,identityMode:'simulated',transport:'separate-http-service',blockchain:'not-submitted'});
+ return reply({catalog,...list,receipts,identityMode:'simulated',transport:'separate-http-service',blockchain:'per-job-status',blockchainStatusUrl:'/api/proof-jobs'});
  }catch(e){return failure(e);}}
 const command=z.object({action:z.enum(['apply','start-identity','confirm-identity','cancel-identity','submit','decide','resubmit','cancel','receive','revoke']),key:z.string().uuid(),id:z.string().max(100).optional(),identityId:z.string().uuid().optional(),documentHash:z.string().regex(/^[a-f0-9]{64}$/).optional(),consent:z.boolean().optional(),revision:z.number().int().positive().optional(),decision:z.enum(['approve','needs_changes','reject']).optional(),reason:z.string().max(300).optional()}).strict();
 export async function POST(req:Request){try{
