@@ -9,7 +9,7 @@ import {createDevnetWallet} from './devnet-wallet.ts';
 import {BizProofClient} from './client.ts';
 import {IssuerVault} from './issuer.ts';
 import {runWebCredentialReuse} from './web-reuse.ts';
-import {sourceEnvelopeSchema} from './web-source.ts';
+import {sourceEnvelopeSchema,verifyWebSource} from './web-source.ts';
 import {bytes32} from './config.ts';
 import {artifactManifest,zkConfigProvider} from './public-state.ts';
 
@@ -43,6 +43,7 @@ try{
  const webIssuer=before.issuers.find(i=>i.id===credential.issuerId);if(!webIssuer)throw Error('Unknown web issuer');
  const selected=prepared.policyIds.map(id=>before.requests.find(r=>r.policyId===id&&r.status==='pending'));if(selected.some(r=>!r))throw Error('Expected two pending original web requests');
  const envelope=sourceEnvelopeSchema.parse(await api({action:'export-midnight-source',id:credential.id,consent:true,binding:{network:'undeployed',contractAddress:address,holder:enrollment.holder,requests:selected.map(r=>({id:r!.id}))}}));
+ await verifyWebSource(envelope,webIssuer.publicKey,{network:'undeployed',contractAddress:address,holder:enrollment.holder});
  event('source-signature','verified',{credentialId:credential.id,sourceDigest:envelope.body.source.digest});
  const reuse=await runWebCredentialReuse({envelope,pinnedIssuerKey:webIssuer.publicKey,network:'undeployed',contractAddress:address,holderCommitment:enrollment.holder,issuerId:1n,issuer,administrator:admin,holder,
   assertCurrent:async source=>z.object({current:z.literal(true),sourceDigest:z.string()}).parse(await api({action:'check-midnight-source',envelope:source})),onReceipt:async data=>{await record(data.receipt);}});

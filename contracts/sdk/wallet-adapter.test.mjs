@@ -3,6 +3,17 @@ import assert from 'node:assert/strict';
 import {MidnightBech32m,ShieldedAddress,ShieldedCoinPublicKey,ShieldedEncryptionPublicKey} from '@midnight-ntwrk/wallet-sdk-address-format';
 import {bindDappWallet} from './wallet-adapter.ts';
 import {walletIndexer} from './config.ts';
+import {balanceWithDustWait} from './devnet-funding.ts';
+
+test('fresh Devnet waits only for DUST balancing, expires safely and preserves other failures',async()=>{
+ let clock=0,calls=0,notices=0;
+ const options={deadline:10000,now:()=>clock,wait:async ms=>{clock+=ms},onWait:()=>notices++};
+ const recipe=await balanceWithDustWait(async()=>{if(++calls<3)throw Object.assign(Error('Insufficient Funds: could not balance dust'),{name:'(FiberFailure) Wallet.InsufficientFunds'});return {ready:true}},options);
+ assert.deepEqual(recipe,{ready:true});assert.equal(calls,3);assert.equal(notices,1);assert.equal(clock,4000);
+ const networkError=Error('node disconnected');calls=0;
+ await assert.rejects(balanceWithDustWait(async()=>{calls++;throw networkError},options),e=>e===networkError);assert.equal(calls,1);
+ await assert.rejects(balanceWithDustWait(async()=>{throw Error('Wallet.InsufficientFunds: could not balance dust')},{...options,deadline:5000}),/No transaction was submitted/);assert.equal(clock,5000);
+});
 test('connector adapter decodes public keys and blocks network/account changes before signing',async()=>{
  const shieldedAddress=MidnightBech32m.encode('undeployed',new ShieldedAddress(new ShieldedCoinPublicKey(Buffer.alloc(32,2)),new ShieldedEncryptionPublicKey(Buffer.alloc(32,3)))).asString();let status={status:'connected',networkId:'undeployed'},currentAddress=shieldedAddress,balanced=false;
  const api={hintUsage:async()=>{},getConfiguration:async()=>({networkId:'undeployed'}),getShieldedAddresses:async()=>({shieldedAddress:currentAddress}),getConnectionStatus:async()=>status,balanceUnsealedTransaction:async()=>{balanced=true;return {tx:'invalid'};}};

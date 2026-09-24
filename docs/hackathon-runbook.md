@@ -41,6 +41,8 @@ docker compose -p bizproof-devnet -f contracts/standalone.yml run --rm --no-deps
 
 노드·인덱서 준비 후 실행한다. 실행기는 컨트랙트 배포 → 발급자 등록 → 동일 자격으로 구매사/지원사업/미충족 검증 → 자격 취소 → 재사용 차단을 수행한다. 공식 SDK와 증명 서버가 실제 거래를 생성한다. 지갑은 해당 로컬 네트워크에서만 사용하는 공개 genesis 지갑이다. 사용자의 실제 자금이나 실서비스 지갑을 연결하지 않는다.
 
+새 노드에서는 DUST가 조금 생겼더라도 실제 수수료에는 부족할 수 있다. 실행기는 제출 전 잔액 계산이 DUST 부족으로 실패한 경우에만 최대 4분 동안 자원 누적을 기다린다. 노드 오류나 이미 제출한 거래를 자동 재전송하지 않는다. `dust-accumulating`은 성공·거래 확정을 뜻하지 않는다.
+
 출력: `outputs/midnight-devnet/report.json`, `receipts.json`, `events.json`. `private/`는 암호화된 개발용 비공개 상태이며 제출 자료로 배포하지 않는다. 새 실행에서는 새로운 계약과 자격을 만든다.
 
 ## 실제 웹 자격·원래 요청 연결

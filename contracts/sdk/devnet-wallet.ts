@@ -7,6 +7,7 @@ import {firstValueFrom,filter,timeout} from 'rxjs';
 import {WebSocket} from 'ws';
 import {configuration} from './config.ts';
 import {bindWalletFacade} from './facade-adapter.ts';
+import {balanceWithDustWait} from './devnet-funding.ts';
 
 export async function createDevnetWallet(onStatus:(status:string)=>void){
  Object.assign(globalThis,{WebSocket});
@@ -33,8 +34,12 @@ export async function createDevnetWallet(onStatus:(status:string)=>void){
   let state=await firstValueFrom(wallet.state().pipe(filter(s=>s.isSynced&&(s.unshielded?.balances[nativeToken().raw]??0n)>0n),timeout(180000)));
   const coins=state.unshielded.availableCoins.filter(c=>c.meta.registeredForDustGeneration===false);
   if(coins.length){onStatus('dust-registration');const recipe=await wallet.registerNightUtxosForDustGeneration(coins,keystore.getPublicKey(),payload=>keystore.signData(payload));await wallet.submitTransaction(await wallet.finalizeRecipe(recipe));}
-  onStatus('dust-ready');state=await firstValueFrom(wallet.state().pipe(filter(s=>s.isSynced&&s.dust.balance(new Date())>0n),timeout(180000)));
-  const binding=bindWalletFacade({network,accountId:'local-devnet-genesis-demo',shieldedSecretKeys,dustSecretKey,wallet,assertReady:async()=>{await firstValueFrom(wallet.state().pipe(filter(s=>s.isSynced),timeout(120000)));}});
+  onStatus('dust-sync');state=await firstValueFrom(wallet.state().pipe(filter(s=>s.isSynced&&s.dust.balance(new Date())>0n),timeout(180000)));
+  const fundingWallet={
+   balanceUnboundTransaction:(...args:Parameters<typeof wallet.balanceUnboundTransaction>)=>balanceWithDustWait(()=>wallet.balanceUnboundTransaction(...args),{deadline:Math.min(Date.now()+240000,args[2].ttl.getTime()-5000),onWait:()=>onStatus('dust-accumulating')}),
+   finalizeRecipe:wallet.finalizeRecipe.bind(wallet),submitTransaction:wallet.submitTransaction.bind(wallet),
+  };
+  const binding=bindWalletFacade({network,accountId:'local-devnet-genesis-demo',shieldedSecretKeys,dustSecretKey,wallet:fundingWallet,assertReady:async()=>{await firstValueFrom(wallet.state().pipe(filter(s=>s.isSynced),timeout(120000)));}});
   return {binding,close:()=>wallet.stop()};
  }catch(e){await wallet.stop();throw e;}
 }
