@@ -3,17 +3,40 @@ services:
   app:
     image: bizproof:public-demo-1
     restart: unless-stopped
-    env_file: /srv/bizproof/secrets/runtime.env
+    env_file:
+      - /srv/bizproof/secrets/runtime.env
+      - /srv/bizproof/secrets/issuer-client.env
     environment:
       BIZPROOF_GEOIP_PATH: /data/geoip/dbip-city-lite.mmdb
     ports: ["127.0.0.1:3100:3100"]
     volumes: ["/srv/bizproof/data:/data"]
+    networks: [default, issuer-internal]
+    depends_on:
+      issuer:
+        condition: service_healthy
     mem_limit: 1100m
     cpus: 0.8
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
     healthcheck:
       test: [CMD, node, -e, "fetch('http://127.0.0.1:3100/signin-with-chatgpt').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  issuer:
+    image: bizproof-issuer:independent-v1
+    restart: unless-stopped
+    env_file: /srv/bizproof/secrets/issuer-service.env
+    volumes: ["/srv/bizproof/issuer-data:/issuer-data"]
+    networks: [issuer-internal]
+    mem_limit: 192m
+    cpus: 0.2
+    read_only: true
+    tmpfs: [/tmp:size=8m,noexec,nosuid]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3201/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -29,3 +52,6 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+networks:
+  issuer-internal:
+    internal: true

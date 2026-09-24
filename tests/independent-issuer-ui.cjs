@@ -1,0 +1,31 @@
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const base=process.env.SMOKE_BASE||'http://127.0.0.1:3120';
+(async()=>{
+ const browser=await chromium.launch({headless:true,channel:'msedge',args:base.startsWith('https:')?['--host-resolver-rules=MAP bizproof.xaikorea.ai.kr 203.0.113.10']:[]});
+ const context=await browser.newContext({viewport:{width:1440,height:1080},reducedMotion:'reduce'}),page=await context.newPage();page.setDefaultTimeout(60000);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));fs.mkdirSync('outputs/independent-issuer',{recursive:true});let foreign;
+ async function dismiss(p){const banner=p.getByLabel('방문 분석 안내',{exact:true});if(await banner.isVisible())await banner.getByRole('button',{name:'확인',exact:true}).click();}
+ async function data(){return page.evaluate(async()=>await (await fetch('/api/issuance')).json());}
+ try{
+  await context.addCookies([{name:'bp-analytics-optout',value:'1',url:base}]);await context.addInitScript(()=>localStorage.setItem('bp-analytics-notice','1'));
+  await page.goto(base+'/issuance');await dismiss(page);await page.getByRole('button',{name:'내 체험 공간 시작하기'}).click();await page.getByRole('button',{name:'동의하고 발급 신청',exact:true}).waitFor();await dismiss(page);
+  assert.equal(await page.getByRole('button',{name:'동의하고 발급 신청',exact:true}).isDisabled(),true);await page.getByRole('checkbox').check();await page.getByRole('button',{name:'동의하고 발급 신청',exact:true}).click();await page.getByText('기관 검토 대기',{exact:true}).first().waitFor();
+  let d=await data();assert.equal(d.requests[0].status,'submitted');const requestId=d.requests[0].id;
+  await page.goto(base+'/issuer-demo');await page.getByLabel('검토 의견',{exact:false}).fill('합성 자료의 기간을 확인해 주세요.');await page.getByRole('button',{name:'보완 요청',exact:true}).click();await page.getByText('기관 처리 사유: 합성 자료의 기간을 확인해 주세요.').waitFor();
+  await page.goto(base+'/issuance');await page.getByLabel('보완 내용',{exact:false}).fill('가상 재무 자료의 적용 기간을 확인했습니다.');await page.getByRole('button',{name:'보완 내용 보내기',exact:true}).click();await page.getByText('기관 처리 사유: 가상 재무 자료의 적용 기간을 확인했습니다.').waitFor();
+  await page.goto(base+'/issuer-demo');await page.getByRole('button',{name:'검토 승인·서명 발급',exact:true}).click();await page.getByRole('link',{name:'신청자 화면에서 자격 받기',exact:true}).waitFor();await page.screenshot({path:'outputs/independent-issuer/operator.png',fullPage:true});
+  await page.goto(base+'/issuance');await page.getByRole('button',{name:'서명 확인 후 지갑에 받기',exact:true}).click();await page.getByRole('link',{name:'이 자격으로 두 곳에 신청',exact:true}).waitFor();d=await data();assert.equal(d.requests[0].id,requestId);assert.equal(d.receipts[0].status,'active');const credentialId=d.receipts[0].credentialId;
+  await page.screenshot({path:'outputs/independent-issuer/received.png',fullPage:true});
+  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'outputs/independent-issuer/received-mobile.png',fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,'mobile overflow');await page.setViewportSize({width:1440,height:1080});
+  await page.getByRole('link',{name:'이 자격으로 두 곳에 신청',exact:true}).click();await page.getByRole('button',{name:'모두 선택',exact:true}).click();await page.getByRole('button',{name:'선택한 2곳에 제출',exact:true}).waitFor();await page.getByRole('checkbox').check();await page.getByRole('button',{name:'선택한 2곳에 제출',exact:true}).click();await page.getByRole('dialog',{name:'처리 과정 관제'}).getByText('처리·저장 완료',{exact:true}).waitFor();
+  const state=await page.evaluate(async()=>await (await fetch('/api/platform')).json());const p=state.presentations.filter(p=>p.credentialId===credentialId);assert.equal(p.length,2);assert.equal(p.every(p=>p.signerKind==='platform'),true);assert.notEqual(p[0].nonce,p[1].nonce);await page.screenshot({path:'outputs/independent-issuer/two-applications.png',fullPage:true});
+  foreign=await browser.newContext();const other=await foreign.newPage();await other.goto(base+'/issuance');await dismiss(other);await other.getByRole('button',{name:'내 체험 공간 시작하기'}).click();await other.getByRole('button',{name:'동의하고 발급 신청',exact:true}).waitFor();const isolation=await other.evaluate(async id=>{const r=await fetch('/api/issuance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'receive',id,key:crypto.randomUUID()})});return r.status;},requestId);assert.equal(isolation,404);
+  await page.goto(base+'/issuer-demo');await page.getByText('발급 취소 체험',{exact:true}).click();await page.getByLabel('취소 사유',{exact:true}).fill('공개 시연의 발급 취소 테스트');await page.getByRole('button',{name:'발급기관 원장에서 취소',exact:true}).click();await page.getByRole('status').filter({hasText:'저장했습니다'}).waitFor();
+  await page.goto(base+'/issuance');await page.getByText('발급 취소',{exact:true}).first().waitFor();assert.equal(await page.getByRole('link',{name:'이 자격으로 두 곳에 신청',exact:true}).count(),0);await page.screenshot({path:'outputs/independent-issuer/revoked.png',fullPage:true});
+  const blocked=await page.evaluate(async credentialId=>{const r=await fetch('/api/platform',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'prepare-application',companyId:'issuer-demo-company',policyId:'issuer-demo-buyer',credentialId})});return r.status;},credentialId);assert.equal(blocked,422);
+  assert.deepEqual(errors,[]);console.log('PASS UI: consent, scoped operator supplement/approve, independent signed issuance, wallet receipt, desktop/mobile, actual two-target submission, separate browser isolation, issuer revocation blocks reuse');
+ }catch(e){await page.screenshot({path:'outputs/independent-issuer/failure.png',fullPage:true}).catch(()=>{});console.error((await page.locator('body').innerText()).slice(-7000));throw e;}finally{
+  for(const ctx of [context,foreign].filter(Boolean)){await ctx.request.get(base+'/signout-with-chatgpt').catch(()=>{});await ctx.close();}await browser.close();
+ }
+})().catch(e=>{console.error(e);process.exit(1);});

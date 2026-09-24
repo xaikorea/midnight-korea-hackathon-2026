@@ -19,3 +19,6 @@ contracts/managed
 integrations/*-upstream
 
 .next-nhn/
+
+.next-issuer-dev/
+docs/identity-and-issuer-development-plan-2026-09-25.md

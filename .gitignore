@@ -70,3 +70,5 @@ next-env.d.ts
 **/terraform.tfvars
 
 .next-nhn/
+
+.next-issuer-dev/

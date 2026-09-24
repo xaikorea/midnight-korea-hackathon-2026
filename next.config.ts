@@ -3,7 +3,7 @@ import path from 'node:path';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  distDir: '.next-nhn',
+  distDir: process.env.BIZPROOF_NEXT_DIST === '.next-issuer-dev' ? '.next-issuer-dev' : '.next-nhn',
   experimental: {cpus: 1},
   serverExternalPackages: ['node:sqlite','maxmind'],
   webpack(config,{webpack}) {

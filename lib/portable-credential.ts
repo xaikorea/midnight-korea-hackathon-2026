@@ -31,6 +31,7 @@ export async function exportPortableCredential(s:State,c:Credential){
  const did=issuerDid(issuer.publicKey),id=credentialUrn(c.id),sub=companyUrn(c.companyId);
  const payload={iss:did,sub,jti:id,iat:now,nbf:now,exp,vc:{'@context':contexts,type:['VerifiableCredential','BizProofBusinessCredential'],id,issuer:did,issuanceDate:new Date(now*1000).toISOString(),expirationDate:new Date(exp*1000).toISOString(),credentialSubject:{id:sub,claims:c.claims},bizproof:{profile,credentialId:c.id,companyId:c.companyId,issuerId:c.issuerId,schemaId:c.schemaId,sourceDigest:await digest(credentialPayload(c)),sourceKeyId:c.keyId}}};
  payloadSchema.parse(payload);const input=json64({alg:'EdDSA',typ:'JWT',kid:did+'#0'})+'.'+json64(payload);
+ if(!issuer.privateKey)throw new PortableCredentialError('별도 발급 자격은 원본 JSON 내보내기를 사용하세요. 웹 서버에서 발급기관 서명을 다시 만들 수 없습니다.');
  const key=await crypto.subtle.importKey('jwk',issuer.privateKey,{name:'Ed25519'},false,['sign']);
  const signature=await crypto.subtle.sign('Ed25519',key,encoder.encode(input));
  return {format:'jwt_vc_json' as const,profile,token:input+'.'+encode(new Uint8Array(signature)),credentialId:c.id,expiresAt:payload.vc.expirationDate,didDocument:issuerDidDocument(issuer.publicKey),notice:portableNotice};

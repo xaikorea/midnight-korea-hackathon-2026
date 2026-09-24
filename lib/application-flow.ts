@@ -1,3 +1,4 @@
+import {signProcessingResult,verifyProcessingResult} from './processing-signature';
 import type {ProcessObserver} from './process-types';
 import {applicationStatus,applicationStatusCopy} from './application-status';
 import {type State,type Policy,type Credential,type Presentation,type VerificationRequest,credentialPayload,presentationPayload,evaluate,statusOf} from './domain';
@@ -74,8 +75,8 @@ export async function submitApplication(s:State,ctx:BusinessActor,input:Applicat
  await observe?.('policy','success',ev.eligible?'기관의 신청 조건을 충족합니다.':'조건 판정이 완료되었으며 일부 조건은 미충족입니다.',{eligible:ev.eligible,checks:ev.checks,engine:policyEngineMode()});
  await observe?.('signature','running','요청에 묶인 제출 결과를 구성하고 Ed25519로 서명합니다.');
  const p:Presentation={id:'presentation-'+crypto.randomUUID(),proofVersion:2,schemaId:c.schemaId,credentialDigest:await digest(credentialPayload(c)),submittedBy:ctx.actor,...(preview.selected!.authorityId?{authorityId:preview.selected!.authorityId}:{}),requestId:r.id,credentialId:c.id,companyId:c.companyId,policyHash:r.policyHash,nonce:r.nonce,audience:policy.audience,issuedAt:at,expiresAt:new Date(Math.min(Date.now()+15*60e3,Date.parse(r.expiresAt),Date.parse(c.expiresAt))).toISOString(),...ev,signature:'',issuerId:issuer.id,keyId:issuer.keyId,mode:'signed-demo'};
- p.signature=await sign(issuer.privateKey,presentationPayload(p));s.presentations.push(p);r.status='submitted';
- await observe?.('signature','success','기관별 제출 결과에 서버 전자서명을 생성했습니다.',{credentialId:c.id,presentationId:p.id,credentialDigest:p.credentialDigest,keyId:p.keyId,algorithm:'Ed25519'});
+ await signProcessingResult(p,issuer);s.presentations.push(p);r.status='submitted';
+ await observe?.('signature','success',issuer.kind==='remote'?'발급기관 원본 서명을 보존하고 별도 플랫폼 키로 처리 결과를 서명했습니다.':'기관별 제출 결과에 서버 전자서명을 생성했습니다.',{credentialId:c.id,presentationId:p.id,credentialDigest:p.credentialDigest,keyId:p.keyId,algorithm:'Ed25519'});
  s.audit.push({id:crypto.randomUUID(),at,actor:ctx.actor,role:ctx.role,action:'application-submit',target:r.id,detail:preview.companyName+' → '+policy.audience+' · 공유 확인 · '+input.previewHash});
  if(preview.autoVerify){
   // Only a recipient-enabled policy may invoke the internal verifier; no role impersonation.
@@ -95,7 +96,7 @@ async function validateAutomaticResult(s:State,c:Credential,policy:Policy,r:Veri
  if(p.authorityId){const a=s.authorities?.find(a=>a.id===p.authorityId);if(!a||a.holderUserId!==ctx.actor||!(await checkAuthority(s,a,c.companyId,policy.kind)).valid)error('담당자 권한이 변경되었습니다.');}
  if(operational(ctx)&&!p.authorityId)error('본인에게 연결된 담당자 권한이 필요합니다.');
  const i=s.issuers.find(i=>i.id===p.issuerId)!;
- if(!await verify(i.publicKey,presentationPayload(p),p.signature)||p.credentialDigest!==await digest(credentialPayload(c))||p.policyHash!==await digest(r.policy)||p.nonce!==r.nonce||p.audience!==r.policy.audience||Date.parse(p.expiresAt)<=Date.now())error('제출 결과 연결 검증에 실패했습니다.');
+ if(!await verifyProcessingResult(p,i)||p.credentialDigest!==await digest(credentialPayload(c))||p.policyHash!==await digest(r.policy)||p.nonce!==r.nonce||p.audience!==r.policy.audience||Date.parse(p.expiresAt)<=Date.now())error('제출 결과 연결 검증에 실패했습니다.');
  const ev=evaluate(c.claims,r.policy,new Date(p.issuedAt));if(await digest(ev)!==await digest({eligible:p.eligible,checks:p.checks}))error('조건 판정이 일치하지 않습니다.');
 }
 function applicationReceipt(s:State,id:string,replayed:boolean){const r=s.requests.find(r=>r.id===id)!;const p=s.presentations.find(p=>p.requestId===id)!;const status=applicationStatus(r,p);return {requestId:r.id,presentationId:p.id,status,eligible:p.eligible,verifiedAt:p.verifiedAt,replayed,message:applicationStatusCopy(status).message};}

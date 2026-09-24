@@ -40,7 +40,9 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts",
     ".next-nhn/types/**/*.ts",
-    ".next-nhn/dev/types/**/*.ts"
+    ".next-nhn/dev/types/**/*.ts",
+    ".next-issuer-dev/types/**/*.ts",
+    ".next-issuer-dev/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
