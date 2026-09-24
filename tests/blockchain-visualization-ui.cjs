@@ -16,6 +16,28 @@ const base=process.env.SMOKE_BASE||'http://127.0.0.1:3100';
   let writes=0;page.on('request',r=>{if(['POST','PUT','PATCH','DELETE'].includes(r.method())&&/midnight|platform/.test(r.url()))writes++});
   await visual.getByRole('button',{name:'03 구매사 증명',exact:true}).click();
   assert.equal(await visual.locator('[data-node=finality]').getAttribute('data-state'),'waiting');
+  // Individual stage explanations animate without moving the execution cursor
+  // or presenting an unconfirmed block as finalized.
+  const stageCursor=await visual.getAttribute('data-cursor');
+  for(const stage of ['source','proof','balance','submission','finality']){
+   await visual.locator('[data-node='+stage+'] button').click();
+   const scene=visual.locator('.chain-stage-scene');
+   assert.equal(await scene.getAttribute('data-scene'),stage);
+   assert.equal(await scene.getAttribute('data-mode'),'explanation');
+   assert.ok(await scene.evaluate(el=>el.getAnimations({subtree:true}).some(a=>a.playState==='running')),'missing stage animation: '+stage);
+   const t=await scene.evaluate(el=>el.getAnimations({subtree:true})[0].currentTime);
+   await page.waitForTimeout(180);
+   assert.ok(await scene.evaluate((el,t)=>el.getAnimations({subtree:true})[0].currentTime>t,t));
+   assert.equal(await visual.getAttribute('data-cursor'),stageCursor);
+  }
+  assert.equal(await visual.locator('.chain-stage-scene').getAttribute('data-confirmed'),'false');
+  await visual.getByRole('button',{name:'단계 애니메이션 일시정지',exact:true}).click();
+  assert.equal(await visual.locator('.chain-stage-scene').evaluate(el=>el.getAnimations({subtree:true}).filter(a=>a.playState==='running').length),0);
+  for(let i=0;i<7;i++)await visual.getByRole('button',{name:'다음 블록체인 기록',exact:true}).click();
+  assert.equal(await visual.locator('.chain-stage-scene').getAttribute('data-confirmed'),'true');
+  assert.match(await visual.locator('.chain-stage-scene').innerText(),/확정 #172/);
+  assert.equal(await visual.locator('.scene-new-block').count(),1);
+  await visual.getByRole('button',{name:'03 구매사 증명',exact:true}).click();
   await visual.getByRole('button',{name:'다음 블록체인 기록',exact:true}).click();
   await visual.getByRole('button',{name:'다음 블록체인 기록',exact:true}).click();
   assert.equal(await visual.locator('[data-node=proof]').getAttribute('data-state'),'complete');
@@ -31,6 +53,9 @@ const base=process.env.SMOKE_BASE||'http://127.0.0.1:3100';
   assert.match(await visual.locator('.chain-receipt').innerText(),/11 \/ 11건/);
   assert.match(await visual.locator('[data-scenario=negative]').innerText(),/조건 미충족/);
   assert.match(await visual.locator('.chain-receipt').innerText(),/새 성공 거래 없음/);
+  assert.equal(await visual.locator('.chain-stage-scene').getAttribute('data-scene'),'blocked');
+  await visual.getByRole('button',{name:'이 단계 동작 재생',exact:true}).click();
+  assert.ok(await visual.locator('.chain-stage-scene').evaluate(el=>el.getAnimations({subtree:true}).some(a=>a.playState==='running')));
   await visual.locator('[data-node=source] button').click();
   assert.match(await visual.locator('.chain-explanation').innerText(),/원본을 처리하는 신뢰 주체/);
   await visual.locator('summary').click();assert.match(await visual.locator('.chain-privacy').innerText(),/웹 서버와 로컬 증명 환경은 원본을 처리/);
@@ -63,6 +88,6 @@ const base=process.env.SMOKE_BASE||'http://127.0.0.1:3100';
   await page.route('**/evidence/midnight-web-devnet.json',r=>r.fulfill({status:200,contentType:'application/json',body:'{"receipts":[]}'}));
   await page.goto(base+'/verification',{waitUntil:'networkidle'});await page.getByRole('alert').filter({hasText:'완료로 추정하지 않습니다'}).waitFor();
   assert.equal(await page.locator('.chain-visualizer').count(),0);assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({pass:true,base,checks:['five technical stages','no premature confirmation','seven chapters','replay and pause','11 receipts and blocked reuse','privacy disclosure','reduced motion','no replay mutations','390px layout','application sheet','process console','invalid evidence fails closed']}));
+  console.log(JSON.stringify({pass:true,base,checks:['five distinct stage animations','explanation animation keeps cursor fixed','animation pause and revocation stop','no premature confirmation','seven chapters','replay and pause','11 receipts and blocked reuse','privacy disclosure','reduced motion','no replay mutations','390px layout','application sheet','process console','invalid evidence fails closed']}));
  }finally{await context.close();await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});

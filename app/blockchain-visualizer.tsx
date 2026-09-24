@@ -4,6 +4,7 @@ import {ArrowRight,Blocks,Check,FileKey2,LockKeyhole,Pause,Play,RefreshCw,Send,S
 import {midnightEvidenceSchema,type MidnightEvidence} from '@/lib/midnight-evidence';
 import {blockchainChapters,blockchainNodes,blockchainOperations,blockchainProjection,blockchainStages,blockchainStateNames,type BlockchainNode} from '@/lib/blockchain-visualization';
 import './blockchain-visualizer.css';
+import BlockchainStageScene from './blockchain-stage-scene';
 
 const icons={source:FileKey2,proof:ShieldCheck,balance:Wallet,submission:Send,finality:Blocks};
 const subscribeMotion=(notify:()=>void)=>{const media=matchMedia('(prefers-reduced-motion: reduce)');media.addEventListener('change',notify);return()=>media.removeEventListener('change',notify);};
@@ -14,13 +15,16 @@ const short=(s:string)=>s.slice(0,10)+'…'+s.slice(-6);
 
 export default function BlockchainVisualizer({report,enabled=true}:{report:MidnightEvidence;enabled?:boolean}){
   const [cursor,setCursor]=useState(0),[playing,setPlaying]=useState(false),[speed,setSpeed]=useState(1),[selected,setSelected]=useState<BlockchainNode>();
+  const [previewing,setPreviewing]=useState(false);
   const reduced=useSyncExternalStore(subscribeMotion,getReduced,serverReduced),visible=useSyncExternalStore(subscribeVisibility,getVisible,serverVisible);
   const frame=blockchainProjection(report,cursor),chapters=blockchainChapters(report),last=report.events.length-1;
   const moving=playing&&!reduced&&visible&&enabled&&cursor<last;
+  const sceneMoving=(moving||previewing)&&!reduced&&visible&&enabled;
   const node=blockchainNodes.find(n=>n.id===(selected??frame.focus))!;
-  useEffect(()=>{if(!moving)return;const timer=setTimeout(()=>{setSelected(undefined);setCursor(n=>Math.min(last,n+1));},1000/speed);return()=>clearTimeout(timer);},[moving,cursor,last,speed]);
-  function seek(index:number){setPlaying(false);setSelected(undefined);setCursor(index);}
-  function play(){setSelected(undefined);if(cursor>=last)setCursor(0);setPlaying(p=>cursor>=last?true:!p);}
+  useEffect(()=>{if(!moving)return;const timer=setTimeout(()=>{setSelected(undefined);setCursor(n=>Math.min(last,n+1));},1600/speed);return()=>clearTimeout(timer);},[moving,cursor,last,speed]);
+  function seek(index:number){setPlaying(false);setPreviewing(false);setSelected(undefined);setCursor(index);}
+  function play(){setSelected(undefined);setPreviewing(false);if(cursor>=last)setCursor(0);setPlaying(p=>cursor>=last?true:!p);}
+  function toggleScene(){setPlaying(false);setSelected(node.id);setPreviewing(!sceneMoving);}
   const event=frame.event;
   const status=event?({running:'실행 시작',complete:'완료',pending:'확인 중',sent:'전송됨',finalized:'확정 기록',unconfirmed:'성공 미확정',blocked:'차단 확인',verified:'검사 통과',failed:'실패'} as Record<string,string>)[event.status]??event.status:'기록 없음';
   return <section className="chain-visualizer" aria-label="블록체인 기술 시각화" data-motion={moving?'on':'off'} data-cursor={cursor}>
@@ -29,9 +33,10 @@ export default function BlockchainVisualizer({report,enabled=true}:{report:Midni
     <nav className="chain-chapters" aria-label="블록체인 시연 구간">{chapters.map((c,i)=><button type="button" key={c.label} aria-current={cursor>=c.index&&cursor<(chapters[i+1]?.index??Infinity)?'step':undefined} onClick={()=>seek(c.index)}>{String(i+1).padStart(2,'0')} {c.label}</button>)}</nav>
     <div className="chain-operation"><span>{blockchainOperations[event?.operation]??event?.operation}</span><b>{blockchainStages[event?.stage]??event?.stage} · {status}</b><time dateTime={event?.at}>{event?new Date(event.at).toLocaleTimeString('ko-KR',{hour12:false}):'—'}</time></div>
     <ol className="chain-nodes" aria-label="블록체인 처리 단계">{blockchainNodes.map((n,i)=>{const Icon=icons[n.id],state=frame.states[n.id];return <li key={n.id} data-node={n.id} data-state={state} data-focus={frame.focus===n.id}>
-      <button type="button" aria-pressed={node.id===n.id} onClick={()=>{setSelected(n.id);setPlaying(false);}}><span className="chain-node-icon">{state==='blocked'?<X size={24}/>:<Icon size={24}/>}</span><small>0{i+1} / {n.technology}</small><strong>{n.title}</strong><span className="chain-node-state">{state==='complete'&&<Check size={12}/>} {blockchainStateNames[state]}</span></button>
+      <button type="button" aria-pressed={node.id===n.id} onClick={()=>{setSelected(n.id);setPlaying(false);setPreviewing(true);}}><span className="chain-node-icon">{state==='blocked'?<X size={24}/>:<Icon size={24}/>}</span><small>0{i+1} / {n.technology}</small><strong>{n.title}</strong><span className="chain-node-state">{state==='complete'&&<Check size={12}/>} {blockchainStateNames[state]}</span></button>
       {i<blockchainNodes.length-1&&<span className="chain-connector" aria-hidden="true" data-active={frame.focus===blockchainNodes[i+1].id}><i/><ArrowRight size={12}/></span>}
     </li>;})}</ol>
+    <BlockchainStageScene stage={node.id} state={frame.states[node.id]} moving={sceneMoving} previewing={Boolean(selected)} reduced={reduced} speed={speed} blockHeight={frame.receipt?.blockHeight} onToggle={toggleScene}/>
     <div className="chain-explanation"><ShieldCheck size={20}/><div><b>{node.title}에서는 무엇을 하나요?</b><p>{frame.blocked&&node.id==='proof'?'취소 거래 확정 후 제출 전 회로 검사에서 거절되었습니다. 새 증명·성공 거래는 만들어지지 않았습니다.':node.description}</p></div></div>
     <div className="chain-controls"><button type="button" disabled={reduced||last<0} onClick={play}>{moving?<Pause size={14}/>:<Play size={14}/>} {moving?'재생 일시정지':'기록 재생'}</button><button type="button" aria-label="이전 블록체인 기록" disabled={cursor===0} onClick={()=>seek(cursor-1)}><StepBack size={16}/></button><button type="button" aria-label="다음 블록체인 기록" disabled={cursor>=last} onClick={()=>seek(cursor+1)}><StepForward size={16}/></button><label>재생 속도<select aria-label="블록체인 재생 속도" value={speed} onChange={e=>setSpeed(Number(e.target.value))}><option value={1}>1배</option><option value={2}>2배</option><option value={4}>4배</option></select></label><button type="button" onClick={()=>seek(Math.max(0,last))}>최종 기록 보기</button></div>
     <label className="chain-slider">실행 기록 {cursor+1} / {report.events.length}<input aria-label="실행 기록 위치" type="range" min={0} max={Math.max(0,last)} value={cursor} onChange={e=>seek(Number(e.target.value))}/></label>

@@ -20,7 +20,7 @@ const base=process.env.SMOKE_BASE||'http://127.0.0.1:3100';
   fs.mkdirSync('outputs/verification-ui',{recursive:true});await file.saveAs('outputs/verification-ui/evidence.json');
   assert.equal(JSON.parse(fs.readFileSync('outputs/verification-ui/evidence.json')).receipts.length,11);
   let writes=0;page.on('request',r=>{if(['POST','PUT','PATCH','DELETE'].includes(r.method())&&/midnight|application/.test(r.url()))writes++});
-  await page.getByRole('button',{name:'기록 재생',exact:true}).click();await page.waitForTimeout(1500);
+  await page.getByRole('button',{name:'기록 재생',exact:true}).click();await page.waitForFunction(()=>Number(document.querySelector('input[type=range]').value)>0);
   assert.ok(Number(await page.getByRole('slider').inputValue())>0);
   await page.getByRole('button',{name:'재생 일시정지'}).click();assert.equal(writes,0);
   await page.getByRole('button',{name:'로컬 체인 현재 상태 대조'}).click();
