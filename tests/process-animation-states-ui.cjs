@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const base=process.env.SMOKE_BASE||'http://127.0.0.1:3112';
 if(base!=='http://127.0.0.1:3112')throw Error('Visual status fixtures require the isolated staging origin');
 (async()=>{
- const browser=await chromium.launch({headless:true,channel:'msedge'});
+ const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||'chromium'});
  try{
   const page=await browser.newPage({viewport:{width:1440,height:1100}});
   let run={id:'visual-status-fixture',companyId:'fixture-company',companyName:'상태 검증용 가상 기업',startedAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'running',committed:false,historySaved:true,policies:[{id:'buyer',audience:'검증용 구매사'},{id:'grant',audience:'검증용 지원기관'}],events:[],engine:{signature:'Ed25519',policy:'local',networkConnected:false}};

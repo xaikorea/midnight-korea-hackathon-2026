@@ -16,6 +16,7 @@ jobs:
           cache: npm
       - run: npm install -g npm@11.19.0
       - run: npm ci
+      - run: npm run check:publication
       - run: npm run typecheck
       - run: npm run check:validators
       - run: npm run test:unit

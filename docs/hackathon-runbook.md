@@ -6,7 +6,7 @@ Node.js 24.11.1, npm 11.19.0, Docker Compose v2, Linux 또는 WSL2 기준. 공�
 
 `/issuance`에서 자격을 발급받고 두 기관에 제출한 뒤, 신청 결과 하단의 Midnight 처리에서 같은 자격·신청에 대한 공유 동의를 확인한다. 관리자가 해당 작업을 승인하면 가동 중인 실행기와 별도 검증기가 처리한다. `/chain-jobs`에서도 같은 작업을 조회할 수 있다.
 
-[공개 NHN 원본 9건 실행 증거](evidence/issued-job-public-local-devnet-2026-09-25.json)는 새 발급→원래 두 신청→실제 증명→동일 자격 취소까지 연결한 기록이다. 아래의 빠른 웹 체험·11건 재현 경로는 이전 별도 사례다. [실행기 명령](issued-midnight-integration.md)과 [자동 처리·장애 복구](operations-runbook.md)를 먼저 참고한다. Local Devnet을 다시 시작해야 새 거래를 생성할 수 있다.
+[공개 NHN 원본 9건 실행 증거](evidence/issued-job-public-local-devnet-2026-09-25.json)는 새 발급→원래 두 신청→실제 증명→동일 자격 취소까지 연결한 기록이다. 아래의 빠른 웹 체험·11건 재현 경로는 이전 별도 사례다. [실행기 명령](issued-midnight-integration.md)과 [자동 처리·장애 복구](operations-runbook.md)를 먼저 참고한다. 새 거래 생성에는 해당 Devnet 서비스가 가동 중이어야 한다. 공개 운영 상태와 독립적으로 아래 명령으로 로컬 재현 환경을 구성할 수 있다.
 
 ## 웹 체험
 

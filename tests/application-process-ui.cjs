@@ -2,7 +2,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const base=process.env.SMOKE_BASE||'http://127.0.0.1:3106';
 (async()=>{
- const browser=await chromium.launch({headless:true,channel:'msedge',args:base.startsWith('https:')?['--host-resolver-rules=MAP bizproof.xaikorea.ai.kr 203.0.113.10']:[]});
+ const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||'chromium',args:[]});
  const errors=[];fs.mkdirSync('outputs',{recursive:true});
  async function enter(ctx){const page=await ctx.newPage();page.setDefaultTimeout(60000);page.on('pageerror',e=>errors.push(e.message));await page.goto(base+'/welcome',{waitUntil:'domcontentloaded'});const notice=page.getByLabel('방문 분석 안내',{exact:true});if(await notice.isVisible())await notice.getByRole('button',{name:'확인',exact:true}).click();await page.getByRole('button',{name:'내 체험 공간 시작하기'}).click();await page.waitForURL('**/?view=apply');await page.getByRole('button',{name:'모두 선택',exact:true}).waitFor();if(await notice.isVisible())await notice.getByRole('button',{name:'확인',exact:true}).click();return page;}
  const ctx=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});ctx.setDefaultTimeout(60000);let foreign;

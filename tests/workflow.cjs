@@ -1,7 +1,7 @@
 const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 const assert=require('node:assert/strict');
 (async()=>{
- const browser=await chromium.launch({headless:true,channel:'msedge'});
+ const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||'chromium'});
  const ctx=await browser.newContext({viewport:{width:1440,height:1040}});const page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://localhost:5173/signin-with-chatgpt?return_to=/',{waitUntil:'networkidle',timeout:90000});
  async function post(action,payload={},expected=200){const r=await ctx.request.post('http://localhost:5173/api/platform',{data:{action,...payload}});const value=await r.json();assert.equal(r.status(),expected,JSON.stringify(value));return value;}

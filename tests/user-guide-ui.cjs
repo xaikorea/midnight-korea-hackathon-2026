@@ -2,7 +2,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const base=process.env.SMOKE_BASE||'http://127.0.0.1:3114';
 (async()=>{
- const browser=await chromium.launch({channel:'msedge',headless:true,args:base.startsWith('https://bizproof.')?['--host-resolver-rules=MAP bizproof.xaikorea.ai.kr 203.0.113.10']:[]});
+ const browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'chromium',headless:true,args:[]});
  const ctx=await browser.newContext({viewport:{width:1440,height:1000}}),page=await ctx.newPage(),errors=[];
  page.setDefaultTimeout(60000);page.on('pageerror',e=>errors.push(e.message));
  await ctx.addCookies([{name:'bp-analytics-optout',value:'1',url:base}]);

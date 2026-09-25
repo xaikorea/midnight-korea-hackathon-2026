@@ -1,6 +1,6 @@
 # BizProof 제출 준비 기록
 
-기술 보완 기준일: 2026-09-25 KST. 이전 [준비도 검토](hackathon-readiness-review-2026-09-24.md)는 보완 전 평가이다.
+기술 보완 기준일: 2026-09-25 KST. [공개 구성](public-deployment.md)에서 현재 검증 범위와 운영 예제를 확인한다.
 
 ## 프로젝트 설명
 
@@ -8,13 +8,17 @@
 
 **English:** BizProof reuses one business credential to prove eligibility for supplier onboarding and a support program. The public web demo offers a three-step business flow. A separately executed, reproducible Midnight Local Devnet path binds a real web-issued credential and its original requests to Compact proofs, finalized transactions, a negative eligibility result, and revocation enforcement.
 
-## 최신 완료 증거 — 공개 발급 원본 9건
+## 정상 완료와 취소 검증
+
+별도 실행 환경에서 동일 합성 자격과 원래 두 신청의 거래 8건, 두 조건 충족을 검증했다. 정상 완료 사례는 취소하지 않았다. 다음 9건은 다른 자격의 취소까지 포함한 사례다.
+
+## 취소 포함 증거 — 공개 발급 원본 9건
 
 공개 NHN의 별도 발급 서버에서 합성 자격을 발급하고 원래 구매사·지원사업 두 신청을 생성했다. 관리자가 작업 `e75cfcb5-92ec-4113-b4f2-f1b356599d5b`를 승인한 뒤 같은 원본/신청으로 실제 Local Devnet 거래 8건을 확인했고, 발급기관 취소와 체인 취소 거래 1건을 추가 검증했다. 두 조건 true, 최종 revoked=true다.
 
 [개인키 없는 9건 증거](evidence/issued-job-public-local-devnet-2026-09-25.json), [구현 설명](issued-midnight-integration.md), [운영 절차](operations-runbook.md). 최신 9건 실행에는 비교 조건 false 거래가 없으며 아래 이전 11건 시나리오에 포함되어 있다. 두 기록의 영상·작업·계약을 혼합하지 않는다.
 
-신청 화면 하단에서 같은 신청의 체인 승인·실행·대조 상태를 연결했다. 일반 웹 신청은 체인 확정과 구분하며, 상시 증명 호스트 가동과 실제 외부 인증은 아직 운영 조건이다.
+신청 화면 하단에서 같은 신청의 체인 승인·실행·대조 상태를 연결했다. 일반 웹 신청은 체인 확정과 구분하며, 실제 외부 인증은 별도 공급자 인수시험이 남아 있다.
 
 ## 이전 완료 증거 — 웹 자격 11건
 

@@ -1,5 +1,5 @@
 const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
-(async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});try{const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage(),base='http://localhost:5173',errors=[];page.on('pageerror',e=>errors.push(e.message));
+(async()=>{const browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'chromium',headless:true});try{const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage(),base='http://localhost:5173',errors=[];page.on('pageerror',e=>errors.push(e.message));
  assert.equal((await context.request.get(base+'/api/security')).status(),403);await page.goto(base+'/api/auth/login?return_to=/?view=settings',{waitUntil:'networkidle'});
  await context.request.post(base+'/api/platform',{data:{action:'switch-role',role:'admin'}});await page.reload({waitUntil:'networkidle'});await page.getByRole('heading',{name:'저장 데이터 보호 · OpenBao'}).waitFor();
  const status=await (await context.request.get(base+'/api/security')).json();assert.equal(status.mode,'demo');assert.equal(status.encrypted,false);assert.equal(status.available,false);assert.ok(!JSON.stringify(status).includes('privateKey'));

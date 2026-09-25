@@ -6,7 +6,7 @@ if(!['stage','verify-restart'].includes(mode)||base!=='http://127.0.0.1:3111')th
 const original='initial-stage-password';
 const next='newpass8';
 (async()=>{
- const browser=await chromium.launch({channel:'msedge',headless:true,args:[]});
+ const browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'chromium',headless:true,args:[]});
  try{
   const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();
   const login=async(p,password)=>{await p.goto(base+'/admin/login');await p.getByLabel('관리자 아이디').fill('admin');await p.getByLabel('관리자 비밀번호').fill(password);await Promise.all([p.waitForURL(base+'/admin'),p.getByRole('button',{name:'관리자 로그인',exact:true}).click()]);};

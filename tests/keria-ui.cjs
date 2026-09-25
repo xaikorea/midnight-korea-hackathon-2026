@@ -1,6 +1,6 @@
 const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 const assert=require('node:assert/strict');
-(async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});try{
+(async()=>{const browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'chromium',headless:true});try{
  const ctx=await browser.newContext({viewport:{width:1440,height:1100}}),page=await ctx.newPage(),base='http://localhost:5173';
  await page.goto(base+'/signin-with-chatgpt?return_to=/',{waitUntil:'networkidle'});await ctx.request.post(base+'/api/platform',{data:{action:'switch-role',role:'admin'}});await page.goto(base+'/?view=settings',{waitUntil:'networkidle'});
  const expected={aid:'E'+'a'.repeat(43),said:'E'+'b'.repeat(43),lei:'5493001KJTIIGC8Y1R12',role:'Procurement Officer'};

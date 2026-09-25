@@ -2,7 +2,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const base=process.env.SMOKE_BASE||'http://127.0.0.1:3120';
 (async()=>{
- const browser=await chromium.launch({headless:true,channel:'msedge',args:base.startsWith('https:')?['--host-resolver-rules=MAP bizproof.xaikorea.ai.kr 203.0.113.10']:[]});
+ const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||'chromium',args:[]});
  const context=await browser.newContext({viewport:{width:1440,height:1080},reducedMotion:'reduce'}),page=await context.newPage();page.setDefaultTimeout(60000);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));fs.mkdirSync('outputs/independent-issuer',{recursive:true});let foreign;
  async function dismiss(p){const banner=p.getByLabel('방문 분석 안내',{exact:true});if(await banner.isVisible())await banner.getByRole('button',{name:'확인',exact:true}).click();}

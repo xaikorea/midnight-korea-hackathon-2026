@@ -2,7 +2,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const base=process.env.SMOKE_BASE||'http://127.0.0.1:3120',out=path.resolve(process.env.SMOKE_OUTPUT||'outputs/proof-jobs-ui');fs.mkdirSync(out,{recursive:true});
 const localPreview=base.startsWith('http://127.0.0.1:')&&process.env.BIZPROOF_ANALYTICS_LOCAL_PREVIEW==='true';
-(async()=>{const browser=await chromium.launch({headless:true,channel:'msedge',args:base.startsWith('https:')?['--host-resolver-rules=MAP bizproof.xaikorea.ai.kr 203.0.113.10']:[]}),ctx=await browser.newContext({viewport:{width:1440,height:1100},reducedMotion:'reduce'}),page=await ctx.newPage();page.setDefaultTimeout(60000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+(async()=>{const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||'chromium',args:[]}),ctx=await browser.newContext({viewport:{width:1440,height:1100},reducedMotion:'reduce'}),page=await ctx.newPage();page.setDefaultTimeout(60000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
 try{
 await ctx.addCookies([{name:'bp-analytics-optout',value:'1',url:base}]);await ctx.addInitScript(()=>localStorage.setItem('bp-analytics-notice','1'));await page.goto(base+'/issuance');await page.getByRole('button',{name:'내 체험 공간 시작하기'}).click();await page.getByRole('button',{name:'동의하고 발급 신청',exact:true}).waitFor();
 const post=async(route,body)=>{const r=await ctx.request.post(base+route,{headers:{Origin:base},data:body});const b=await r.json();assert.ok(r.ok(),JSON.stringify(b));return b;};

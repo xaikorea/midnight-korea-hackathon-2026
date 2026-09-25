@@ -24,3 +24,11 @@ integrations/*-upstream
 docs/identity-and-issuer-development-plan-2026-09-25.md
 
 **/__pycache__/
+
+docs/private/
+*.key
+*.p12
+*.pfx
+*.sqlite*
+**/*.auto.tfvars*
+**/terraform.tfvars.json

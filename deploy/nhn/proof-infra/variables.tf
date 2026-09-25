@@ -82,6 +82,15 @@ variable "additional_admin_cidrs" {
   }
 }
 
+variable "backup_source_cidr" {
+  type        = string
+  description = "Authorized backup sender's private IPv4 /32. Supply through private deployment configuration."
+  validation {
+    condition     = can(cidrnetmask(var.backup_source_cidr)) && endswith(var.backup_source_cidr, "/32")
+    error_message = "Backup SSH access must be limited to one authorized IPv4 /32."
+  }
+}
+
 variable "admin_cidr" {
   type        = string
   description = "Administrator's public IPv4 address with /32 for SSH."

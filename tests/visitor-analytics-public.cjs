@@ -1,9 +1,9 @@
 const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const base=process.env.SMOKE_BASE||'http://127.0.0.1:3108',publicHost=base.startsWith('https:');
-const password=process.env.TEST_ADMIN_PASSWORD||fs.readFileSync('outputs/test-admin-access.txt','utf8').split(/\r?\n/).find(x=>x.startsWith('Password: '))?.slice(10);
+const password=process.env.TEST_ADMIN_PASSWORD;
 if(!password)throw Error('Admin test password is unavailable');
-(async()=>{const browser=await chromium.launch({channel:'msedge',headless:true,args:publicHost?['--host-resolver-rules=MAP bizproof.xaikorea.ai.kr 203.0.113.10']:[]});const errors=[];let admin,visitor,other;
+(async()=>{const browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'chromium',headless:true,args:[]});const errors=[];let admin,visitor,other;
  const get=async(page,url)=>page.evaluate(async url=>{const r=await fetch(url,{cache:'no-store'});return {status:r.status,data:await r.json()}},url);
  try{
  visitor=await browser.newContext({viewport:{width:1440,height:1000},extraHTTPHeaders:publicHost?{}:{'x-bizproof-client-ip':'8.8.8.8'}});const page=await visitor.newPage();page.setDefaultTimeout(45000);page.on('pageerror',e=>errors.push(e.message));

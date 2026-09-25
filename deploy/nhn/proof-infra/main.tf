@@ -25,7 +25,7 @@ resource "nhncloud_networking_secgroup_rule_v2" "backup" {
   protocol          = "tcp"
   port_range_min    = 22
   port_range_max    = 22
-  remote_ip_prefix  = "192.0.2.10/32"
+  remote_ip_prefix  = var.backup_source_cidr
   security_group_id = nhncloud_networking_secgroup_v2.demo.id
 }
 

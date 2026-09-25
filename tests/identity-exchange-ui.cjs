@@ -1,5 +1,5 @@
 const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');const assert=require('node:assert/strict');
-(async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});try{
+(async()=>{const browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'chromium',headless:true});try{
  const ctx=await browser.newContext({viewport:{width:1440,height:1100}}),page=await ctx.newPage(),base='http://localhost:5173',errors=[];page.on('pageerror',e=>errors.push(e.message));
  assert.equal((await ctx.request.get(base+'/api/vlei')).status(),401);
  await page.goto(base+'/signin-with-chatgpt?return_to=/',{waitUntil:'networkidle'});

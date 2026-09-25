@@ -4,7 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const source=path.resolve(process.env.SMOKE_OUTPUT||'outputs/proof-jobs-ui'),job=JSON.parse(fs.readFileSync(path.join(source,'job.json'),'utf8')),phase=process.argv[2];
 assert.ok(['confirmed','revoke','revoked'].includes(phase));
-(async()=>{const browser=await chromium.launch({headless:true,channel:'msedge'}),context=await browser.newContext({storageState:path.join(source,'private-browser-state.json'),viewport:{width:1440,height:1100},reducedMotion:'reduce'}),page=await context.newPage();
+(async()=>{const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||'chromium'}),context=await browser.newContext({storageState:path.join(source,'private-browser-state.json'),viewport:{width:1440,height:1100},reducedMotion:'reduce'}),page=await context.newPage();
 try{
 const get=async()=>{const r=await context.request.get(job.origin+'/api/proof-jobs');assert.equal(r.status(),200);const b=await r.json(),j=b.jobs.find(j=>j.id===job.id);assert.ok(j);assert.equal(j.sourceDigest,job.sourceDigest);assert.deepEqual(j.requests,job.requests);return j;};
 let current=await get();

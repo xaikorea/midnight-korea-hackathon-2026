@@ -74,3 +74,17 @@ next-env.d.ts
 .next-issuer-dev/
 
 **/__pycache__/
+
+# Internal plans, operating records and reviewer output stay on the local machine.
+/docs/private/
+/docs/identity-and-issuer-development-plan-2026-09-25.md
+*.key
+*.p12
+*.pfx
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+**/*.auto.tfvars
+**/*.auto.tfvars.json
+**/terraform.tfvars.json

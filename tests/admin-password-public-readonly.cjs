@@ -1,9 +1,11 @@
 // Read-only public deployment check. No password-change request is sent.
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
-const base='https://bizproof.xaikorea.ai.kr';
+const base=process.env.SMOKE_BASE||'http://127.0.0.1:3100';
+const password=process.env.TEST_ADMIN_PASSWORD;
+if(!password)throw Error('Set TEST_ADMIN_PASSWORD for the authorized test environment');
 (async()=>{
- const browser=await chromium.launch({channel:'msedge',headless:true,args:['--host-resolver-rules=MAP bizproof.xaikorea.ai.kr 203.0.113.10']});
+ const browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'chromium',headless:true,args:[]});
  try{
   const context=await browser.newContext({viewport:{width:1440,height:1000}});
   let attemptedChange=false;
@@ -11,7 +13,6 @@ const base='https://bizproof.xaikorea.ai.kr';
   await context.route('**/api/admin/password',route=>{attemptedChange=true;return route.abort()});
   const page=await context.newPage();
   await page.goto(base+'/admin/security');await page.waitForURL(base+'/admin/login');
-  const password=fs.readFileSync('outputs/test-admin-access.txt','utf8').split(/\r?\n/).find(s=>s.startsWith('Password: ')).slice(10);
   await page.getByLabel('관리자 아이디').fill('admin');await page.getByLabel('관리자 비밀번호').fill(password);
   await Promise.all([page.waitForURL(base+'/admin'),page.getByRole('button',{name:'관리자 로그인',exact:true}).click()]);
   await page.getByRole('link',{name:'비밀번호 변경',exact:true}).click();

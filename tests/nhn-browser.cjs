@@ -1,6 +1,6 @@
 const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs'),{createHash}=require('node:crypto');
-(async()=>{const browser=await chromium.launch({headless:true,channel:'msedge'});const base=process.env.SMOKE_BASE||'http://localhost:3102';try{
+(async()=>{const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||'chromium'});const base=process.env.SMOKE_BASE||'http://localhost:3102';try{
  fs.mkdirSync('outputs',{recursive:true});const ctx=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'/signin-with-chatgpt',{waitUntil:'networkidle'});await page.getByRole('button',{name:'내 체험 공간 시작하기'}).click();await page.waitForURL('**/?view=apply');
  await page.getByLabel('방문 분석 안내', {exact:true}).getByRole('button',{name:'확인',exact:true}).click();

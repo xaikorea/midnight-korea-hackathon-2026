@@ -1,6 +1,6 @@
 const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs'),{createHash}=require('node:crypto');
-(async()=>{const browser=await chromium.launch({headless:true,channel:'msedge'});const base='http://localhost:5173';try{
+(async()=>{const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||'chromium'});const base='http://localhost:5173';try{
  fs.mkdirSync('outputs',{recursive:true});const ctx=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'/signin-with-chatgpt?return_to=/',{waitUntil:'networkidle'});
  async function post(action,payload={},status=200){const r=await ctx.request.post(base+'/api/platform',{data:{action,...payload}});const d=await r.json();assert.equal(r.status(),status,JSON.stringify(d));return d;}
