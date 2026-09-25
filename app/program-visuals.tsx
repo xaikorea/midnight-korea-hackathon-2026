@@ -37,8 +37,8 @@ export function ProgramOverview({grants,buyers,credentialCount,checks,recordCoun
  </>;
 }
 
-export function PreparationSteps({selected,checked,saved}:{selected:boolean;checked:boolean;saved:boolean}){
+export function PreparationSteps({selected,checked,saved,automatic=false}:{selected:boolean;checked:boolean;saved:boolean;automatic?:boolean}){
  const current=saved?3:checked?2:selected?1:0;
  const steps=[{name:'기업·대상 선택',description:'어디에 준비할지 고르기',icon:Building2},{name:'보유 자료 확인',description:'조건과 보완 항목 확인',icon:ScanLine},{name:'준비 기록 저장',description:'동의 후 목록 내려받기',icon:FolderOpen}];
- return <div className="program-route"><ol aria-label="현재 준비 단계">{steps.map((s,i)=>{const Icon=s.icon,done=current>i;return <li key={s.name} className={done?'done':current===i?'current':''} aria-current={current===i?'step':undefined}><span className="program-route-icon">{done?<Check size={19}/>:<Icon size={19}/>}</span><div><small>{done?'완료':`0${i+1}`}</small><strong>{s.name}</strong><p>{s.description}</p></div></li>;})}</ol><div className="program-route-extra"><ShieldCheck size={20}/><span><strong>선택 · Midnight 검증</strong><small>저장 후 별도 동의와 관리자 승인</small></span></div></div>;
+ return <div className="program-route"><ol aria-label="현재 준비 단계">{steps.map((s,i)=>{const Icon=s.icon,done=current>i;return <li key={s.name} className={done?'done':current===i?'current':''} aria-current={current===i?'step':undefined}><span className="program-route-icon">{done?<Check size={19}/>:<Icon size={19}/>}</span><div><small>{done?'완료':`0${i+1}`}</small><strong>{s.name}</strong><p>{s.description}</p></div></li>;})}</ol><div className="program-route-extra"><ShieldCheck size={20}/><span><strong>선택 · Midnight 검증</strong><small>{automatic?'공개 시연은 최초 동의 후 자동 실행':'저장 후 별도 동의와 관리자 승인'}</small></span></div></div>;
 }

@@ -39,11 +39,11 @@
 
 공개 NHN에서 별도 발급한 합성 자격 하나와 원래 구매사·지원사업 신청 두 건을 사용했다. 해당 작업을 서비스 관리자가 승인한 뒤 실제 Local Devnet 거래 8건을 별도 검증기가 대조했고, 동일 자격 취소 후 9번째 거래와 revoked=true를 확인했다. [공개 실행 증거](docs/evidence/issued-job-public-local-devnet-2026-09-25.json). 위의 이전 11건 실행과 다른 작업이며 이번 9건에 비교 조건 false 거래가 포함된 것은 아니다.
 
-별도 발급 신청 화면은 **신청 접수 → 관리자 승인 → 증명·거래 처리 → 거래 대조 → 검증 결과**를 원래 신청 아래에서 이어서 보여준다. 기록만 있는 경우와 실행 중 상태를 구분하며 취소·장애를 완료 단계로 표시하지 않는다.
+별도 발급 신청 화면은 **신청 접수 → 자동 실행 허용(수동 모드는 관리자 승인) → 증명·거래 처리 → 거래 대조 → 검증 결과**를 원래 신청 아래에서 이어서 보여준다. 기록만 있는 경우와 실행 중 상태를 구분하며 취소·장애를 완료 단계로 표시하지 않는다.
 
-별도 실행 환경에서 승인된 새 작업의 거래 8건과 원래 두 기관 신청의 조건 충족을 확인했다. 이 정상 완료 사례는 취소하지 않았으며, 위의 취소 포함 9건 사례와 구분한다. 기존 체인의 이전·재시작 후 기록 대조도 확인했다. 사설 `undeployed` 네트워크를 사용하며 새 실행은 원래 공유 동의와 관리자 승인이 필요하다. [공개 구성과 검증 범위](docs/public-deployment.md), [실제 인증 공급자 연결 조건](docs/identity-provider-acceptance.md).
+별도 실행 환경에서 승인된 새 작업의 거래 8건과 원래 두 기관 신청의 조건 충족을 확인했다. 이 정상 완료 사례는 취소하지 않았으며, 위의 취소 포함 9건 사례와 구분한다. 기존 체인의 이전·재시작 후 기록 대조도 확인했다. 사설 `undeployed` 네트워크를 사용하며 새 실행은 원래 공유 동의가 필요하다. 공개 합성 자동 모드에서는 별도 관리자 클릭 없이 처리하며 수동 모드만 관리자 승인을 받는다. [공개 구성과 검증 범위](docs/public-deployment.md), [실제 인증 공급자 연결 조건](docs/identity-provider-acceptance.md).
 
-승인 작업을 순차 처리하는 실행기/검증기 루프를 제공한다. 상시 호스트가 가동되지 않으면 승인 대기로 남으며, 불확실한 거래는 자동 재전송하지 않는다. 네트워크는 Local Devnet이고 실제 본인확인·문서 전자서명·기업 대표권은 연결 전이다.
+승인 작업을 순차 처리하는 실행기/검증기 루프를 제공한다. 상시 호스트가 가동되지 않으면 실행기 대기로 남으며, 불확실한 거래는 자동 재전송하지 않는다. 네트워크는 Local Devnet이고 실제 본인확인·문서 전자서명·기업 대표권은 연결 전이다.
 
 - [발급·체인 연결 구현 및 실제 증거](docs/issued-midnight-integration.md)
 - [백업·암호화 외부 사본·실행기 운영과 복구](docs/operations-runbook.md)
@@ -137,3 +137,5 @@ Schnorr 모듈과 지갑 초기화 패턴은 Midnight example-zkloan에서 참�
 ### Public-condition preparation examples
 
 The application includes six reference profiles for three startup support organizations and three buyers. Use **신청하기 → 실제 기관·구매사 준비** for persisted synthetic documents, signed credentials, conditional checks, manual review and a private preparation manifest. Official external submission is not connected. See [scope, setup and limitations](docs/program-preparation.md). The separate program numeric Compact contract is locally tested; these new applications do not yet execute chain transactions.
+
+공개 합성 데이터의 [자동 시연 흐름과 경계](docs/public-demo-automation.md)를 제공한다. 기관·구매사 준비에서 한 번 동의하면 준비·저장·새 Local Devnet 요청을 이어가고, 별도 발급은 모의 검토·서명·지갑 수신을 자동 처리한다.

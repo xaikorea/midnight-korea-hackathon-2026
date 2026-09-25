@@ -5,7 +5,7 @@ export type ProgressStep={label:string;state:'done'|'current'|'waiting'|'stopped
 
 /** Only server evidence advances a step. Historical proof success cannot imply current validity. */
 export function proofJobProgress(job?:Job):ProgressStep[]{
- const labels=['신청 접수','관리자 승인','증명·거래 처리','거래 대조','검증 결과'];
+ const labels=['신청 접수',job?.approvalMode==='automatic-synthetic'?'자동 실행 허용':'관리자 승인','증명·거래 처리','거래 대조','검증 결과'];
  if(!job)return labels.map((label,i)=>({label,state:i===0?'done':'waiting'}));
  const stopped=['blocked','cancelled','needs_attention'].includes(job.status)||job.revocation!=='none'||job.currentStatus==='unknown';
  const verified=job.status==='confirmed'&&!!job.verification&&!job.verification.revoked;

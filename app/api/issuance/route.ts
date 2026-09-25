@@ -1,3 +1,5 @@
+import {demoAutomationEnabled} from '@/lib/demo-automation';
+import {finishDemoIssuance} from '@/lib/demo-issuance';
 import {getChatGPTUser} from '@/app/chatgpt-auth';
 import {publicDemo,requestOrigin} from '@/lib/public-demo';
 import {demoWriteAllowed} from '@/lib/public-demo-guard';
@@ -21,9 +23,9 @@ export async function GET(){try{
  const receipts=[];let changed=false;
  for(const r of state.credentialReceipts??[]){const c=state.credentials.find(c=>c.id===r.credentialId);if(!c||c.remoteBinding?.scope!==u.scope)continue;try{const status=await remoteCredentialStatus(c,r.statusRevision);if(status.body.revision>r.statusRevision){r.statusRevision=status.body.revision;changed=true;}if(status.body.status==='revoked'&&c.status!=='revoked'){c.status='revoked';c.revokedAt=status.body.checkedAt;changed=true;}receipts.push({...r,status:c.status==='revoked'?'revoked':Date.parse(c.expiresAt)<=Date.now()?'expired':'active',statusCheckedAt:status.body.checkedAt});}catch{receipts.push({...r,status:'unknown'});}}
  if(changed)await saveState(u.storageOwner,state,version);
- return reply({catalog,...list,receipts,identityMode:'simulated',transport:'separate-http-service',blockchain:'per-job-status',blockchainStatusUrl:'/api/proof-jobs'});
+ return reply({autoRun:demoAutomationEnabled(),catalog,...list,receipts,identityMode:'simulated',transport:'separate-http-service',blockchain:'per-job-status',blockchainStatusUrl:'/api/proof-jobs'});
  }catch(e){return failure(e);}}
-const command=z.object({action:z.enum(['apply','start-identity','confirm-identity','cancel-identity','submit','decide','resubmit','cancel','receive','revoke']),key:z.string().uuid(),id:z.string().max(100).optional(),identityId:z.string().uuid().optional(),documentHash:z.string().regex(/^[a-f0-9]{64}$/).optional(),consent:z.boolean().optional(),revision:z.number().int().positive().optional(),decision:z.enum(['approve','needs_changes','reject']).optional(),reason:z.string().max(300).optional()}).strict();
+const command=z.object({action:z.enum(['apply','start-identity','confirm-identity','cancel-identity','submit','decide','resubmit','cancel','receive','revoke']),key:z.string().uuid(),id:z.string().max(100).optional(),identityId:z.string().uuid().optional(),documentHash:z.string().regex(/^[a-f0-9]{64}$/).optional(),consent:z.boolean().optional(),automatic:z.boolean().optional(),revision:z.number().int().positive().optional(),decision:z.enum(['approve','needs_changes','reject']).optional(),reason:z.string().max(300).optional()}).strict();
 export async function POST(req:Request){try{
  const u=await context();if(req.headers.get('origin')!==requestOrigin(req))throw new RemoteIssuerError(403,'같은 사이트에서 요청하세요.');
  if(!await demoWriteAllowed(u.userId))throw new RemoteIssuerError(429,'요청이 많습니다. 잠시 후 다시 시도하세요.');
@@ -32,11 +34,13 @@ export async function POST(req:Request){try{
  let result:unknown;
  switch(b.action){
   case 'apply':{
+   if(b.automatic===true&&!demoAutomationEnabled())throw new RemoteIssuerError(403,'자동 시연이 활성화되지 않았습니다.');
    if(b.consent!==true)throw new RemoteIssuerError(400,'문서와 시뮬레이션 안내를 확인하고 동의하세요.');
    const key=async(label:string)=>{const h=await digest({key:b.key,label});return h.slice(0,8)+'-'+h.slice(8,12)+'-4'+h.slice(13,16)+'-a'+h.slice(17,20)+'-'+h.slice(20,32);};
    const identity=await issuerCall<{id:string}>(u.scope,'POST','/v1/identity-sessions',{key:await key('identity'),mode:'simulated',documentHash:b.documentHash});
    await issuerCall(u.scope,'POST','/v1/identity-sessions/'+identity.id+'/confirm',{key:await key('consent'),documentHash:b.documentHash,consent:true});
-   result=await issuerCall(u.scope,'POST','/v1/issuance-requests',{key:await key('submit'),identityId:identity.id,documentHash:b.documentHash});break;
+   const request=await issuerCall<{id:string;revision:number;status:string}>(u.scope,'POST','/v1/issuance-requests',{key:await key('submit'),identityId:identity.id,documentHash:b.documentHash});
+   result=b.automatic===true?await finishDemoIssuance(u.storageOwner,u.scope,request):request;break;
   }
   case 'start-identity':result=await issuerCall(u.scope,'POST','/v1/identity-sessions',{key:b.key,mode:'simulated',documentHash:b.documentHash});break;
   case 'confirm-identity':case 'cancel-identity':result=await issuerCall(u.scope,'POST','/v1/identity-sessions/'+requestId()+'/'+(b.action==='confirm-identity'?'confirm':'cancel'),{key:b.key,documentHash:b.documentHash,consent:b.consent});break;
