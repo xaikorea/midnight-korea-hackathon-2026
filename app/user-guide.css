@@ -12,4 +12,23 @@
 .guide-extra-help p{margin-bottom:0!important}
 .guide-quickstart,.guide-extra-help{scroll-margin-top:24px}
 .guide-boundary a{text-decoration:underline}
+.guide-journeys{padding:28px 0}
+.guide-journeys>h2{font-size:22px;font-weight:750;margin-bottom:8px}
+.guide-journey-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}
+.guide-journey-grid>a{display:flex;flex-direction:column;gap:12px;border:1px solid #d7e4ee;border-radius:14px;background:#fff;padding:22px;color:#203c58;text-decoration:none}
+.guide-journey-grid>a:hover{border-color:#238774;background:#f7fcfb}
+.guide-journey-grid strong{font-size:17px}
+.guide-journey-grid p{font-size:14px;line-height:1.7;margin:0}
+.guide-journey-grid span{font-size:12px;line-height:1.7;color:#536b80}
+.guide-journey-grid b{display:flex;align-items:center;gap:5px;font-size:13px;color:#145e57;margin-top:auto}
+.guide-table-scroll{max-width:100%;overflow-x:auto;margin:24px 0;border:1px solid #d7e4ee;border-radius:10px}
+.guide-table-scroll:focus-visible,.guide-journey-grid>a:focus-visible{outline:3px solid #238774;outline-offset:3px}
+.guide-table-scroll table{width:100%;min-width:540px;border-collapse:collapse;text-align:left;font-size:13px;line-height:1.75}
+.guide-table-scroll caption{padding:16px;text-align:left;font-weight:700;color:#203c58;background:#f4f8fc}
+.guide-table-scroll th,.guide-table-scroll td{padding:13px 16px;vertical-align:top;border-top:1px solid #d7e4ee;overflow-wrap:anywhere}
+.guide-table-scroll thead{background:#edf7f4;color:#145e57}
+.guide-table-scroll tbody th{width:25%;font-weight:650;color:#203c58}
+.guide-table-scroll td{color:#405a73}
+@media(max-width:900px){.guide-journey-grid{grid-template-columns:1fr}.guide-journey-grid>a{padding:18px}}
+@media(max-width:700px){.guide-table-scroll caption::after{content:'← 좌우로 밀어 나머지 내용을 확인하세요 →';display:block;margin-top:6px;font-size:11px;font-weight:400;color:#536b80}}
 @media(max-width:900px){.user-guide .guide-essential-steps{grid-template-columns:1fr}.user-guide .guide-essential-steps li{padding:16px}.guide-demo-facts p{grid-template-columns:1fr;gap:2px}}

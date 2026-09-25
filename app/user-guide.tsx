@@ -4,11 +4,17 @@ import {ArrowUpRight,BookOpen,Search} from 'lucide-react';
 import {guideTopics,guideFaq,guideUpdatedAt} from '@/lib/user-guide';
 import './user-guide.css';
 
+const journeys = [
+ ['빠르게 자격 재사용 체험','준비된 자격으로 가상 구매사·지원기관 두 곳에 신청합니다.','대상 선택 → 공유 동의 → 결과 확인','public-demo'],
+ ['발급부터 직접 체험','별도 발급 서버에 신청하고 보완·서명·수신·재사용을 실행합니다.','발급 신청 → 기관 검토 → 지갑 수신 → 두 곳에 신청','independent-issuer'],
+ ['실제 기관·구매사 사례 체험','공개 조건을 참고한 6개 사례를 준비하고 별도로 체인 실행을 요청합니다.','자료 불러오기 → 사전 확인 → 준비 기록 → 선택적 체인 실행','real-programs'],
+];
 const paths = [
  ['기업 담당자','대상 선택 → 공유 확인·제출 → 결과','apply'],
  ['처리 과정 확인','실제 결과 → 기록 재생 → 검사 근거','process'],
  ['발급·검증 담당자','검토 대기·서명 발급 / 기관 정책·확인','studio'],
  ['서비스 관리자','방문·고객 분석 → 비밀번호 관리','analytics'],
+ ['체인 실행 진행자','신규 사례 승인 → 거래 대조 → 결과 확인','program-midnight'],
 ];
 const glossary = [
  ['자격 (Credential)','발급기관이 기업의 속성에 서명한 전자 증명서입니다.'],
@@ -26,14 +32,20 @@ const glossary = [
 export default function UserGuide(){
  const [query,setQuery]=useState('');
  const terms=query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
- const topics=guideTopics.filter(topic=>terms.every(term=>[topic.title,topic.group,topic.roles,topic.intro,topic.prepare,...topic.steps,topic.result,topic.tip].join(' ').toLocaleLowerCase().includes(term)));
+ const topics=guideTopics.filter(topic=>terms.every(term=>[topic.title,topic.group,topic.roles,topic.intro,topic.prepare,...topic.steps,topic.result,topic.tip,topic.table?.caption,...(topic.table?.columns??[]),...(topic.table?.rows.flat()??[])].join(' ').toLocaleLowerCase().includes(term)));
  return <div className="user-guide">
   <section className="guide-hero">
    <span className="guide-eyebrow"><BookOpen size={16}/> BIZPROOF USER GUIDE</span>
    <h2>대상을 고르고, 확인한 뒤 제출하세요.</h2>
-   <p>공개 체험에는 기업과 자격이 준비되어 있습니다. 직접 결정할 것은 신청 대상과 공유 동의입니다. 나머지 처리 과정은 결과와 실행 기록으로 확인하세요.</p>
+   <p>준비된 자격으로 바로 신청하거나, 자격 발급부터 시작할 수 있습니다. 실제 기관·구매사 6개 사례는 사전 확인과 준비 기록을 만든 뒤, 원하는 신청에만 별도 체인 실행을 요청하세요.</p>
    <p className="guide-updated">최근 업데이트 <time dateTime={guideUpdatedAt}>{guideUpdatedAt.replaceAll('-','. ')}</time> · 현재 공개 체험 기준</p>
-   <div className="guide-actions"><a href="/welcome">체험 시작하기 <ArrowUpRight size={16}/></a><a href="#guide-public-demo" onClick={()=>setQuery('')}>3단계 따라 하기 ↓</a><a href="#guide-process" onClick={()=>setQuery('')}>처리 애니메이션 사용법 ↓</a></div>
+   <div className="guide-actions"><a href="/welcome">체험 시작하기 <ArrowUpRight size={16}/></a><a href="#guide-real-programs" onClick={()=>setQuery('')}>6개 사례 따라 하기 ↓</a><a href="#guide-program-midnight" onClick={()=>setQuery('')}>새 체인 거래 확인하기 ↓</a></div>
+  </section>
+
+  <section className="guide-journeys" aria-labelledby="guide-journeys-title">
+   <h2 id="guide-journeys-title">원하는 체험 하나부터 시작하세요</h2>
+   <p>세 가지를 모두 거칠 필요는 없습니다. 모든 공개 체험은 가상 기업과 합성 자료를 사용합니다.</p>
+   <div className="guide-journey-grid">{journeys.map(([title,description,flow,id])=><a href={'#guide-'+id} key={id} onClick={()=>setQuery('')}><strong>{title}</strong><p>{description}</p><span>{flow}</span><b>사용법 보기 <ArrowUpRight size={15}/></b></a>)}</div>
   </section>
 
   <section className="guide-quickstart" id="guide-public-demo" aria-labelledby="guide-quickstart-title">
@@ -57,14 +69,14 @@ export default function UserGuide(){
   </section>
 
   <section className="guide-paths" aria-label="목적별 안내">{paths.map(([role,path,id])=><a href={'#guide-'+id} key={role} onClick={()=>setQuery('')}><strong>{role}</strong><span>{path}</span></a>)}</section>
-  <p className="guide-boundary"><strong>안내를 읽는 기준</strong> 기본 공개 체험은 가상 데이터와 서버 전자서명을 사용합니다. 아래 발급·정책·외부 연결 안내는 권한과 별도 설정이 필요한 상세 업무입니다. 업무 관리자 역할과 <a href="#guide-analytics" onClick={()=>setQuery('')}>별도 서비스 관리자</a>를 구분하세요. 조건 검증은 기관의 최종 선정·계약 승인이나 실제 블록체인 거래 완료를 뜻하지 않습니다.</p>
+  <p className="guide-boundary"><strong>결과를 읽는 기준</strong> 내부 준비 기록 저장, 서버 조건 검증, 새 거래 검증 완료, 공식 기관 접수는 서로 다릅니다. 체인 작업은 별도 동의·서비스 관리자 승인·독립 검증까지 끝나야 완료입니다. 실제 기관의 자동 접수 API는 연결 전이며, 합성 자료를 공식 기관에 제출하지 마세요. <a href="#guide-official-submission" onClick={()=>setQuery('')}>공식 접수 경로 안내</a>에서 현재 범위를 확인하세요.</p>
   <label className="guide-search"><Search size={20}/><span className="sr-only">이용자 가이드 검색</span><input type="search" placeholder="궁금한 기능을 검색하세요. 예: 애니메이션, 비밀번호, 방문, 제출" value={query} onChange={e=>setQuery(e.target.value)}/>{query&&<button onClick={()=>setQuery('')} type="button">초기화</button>}</label>
   <p className="guide-count" role="status">전체 {guideTopics.length}개 안내 중 {topics.length}개 표시</p>
   <div className="guide-layout">
    <nav className="guide-toc" aria-label="이용자 가이드 목차"><b>기능별 이용 안내</b>{[...new Set(topics.map(t=>t.group))].map(group=><div key={group}><small>{group}</small>{topics.filter(t=>t.group===group).map(t=><a key={t.id} href={'#guide-'+t.id}>{t.title}</a>)}</div>)}<a href="#guide-faq">자주 묻는 질문</a><a href="#guide-glossary">용어 쉽게 이해하기</a></nav>
    <div className="guide-articles">
     {topics.length===0&&<section className="guide-empty"><h2>검색 결과가 없습니다.</h2><p>더 짧은 단어나 메뉴 이름으로 검색해 보세요.</p><button onClick={()=>setQuery('')}>모든 안내 보기</button></section>}
-    {topics.map(topic=><article id={'guide-'+topic.id} className="guide-topic" key={topic.id}><div className="guide-topic-meta"><span>{topic.group}</span><span>{topic.roles}</span></div><h2>{topic.title}</h2><p>{topic.intro}</p><div className="guide-prepare"><strong>시작 전에</strong><p>{topic.prepare}</p></div><h3>이렇게 사용하세요</h3><ol>{topic.steps.map((step,index)=><li key={step}><span aria-hidden="true">{index+1}</span><p>{step}</p></li>)}</ol><div className="guide-result"><strong>완료 후 확인</strong><p>{topic.result}</p></div><p className="guide-tip"><strong>알아두세요</strong>{topic.tip}</p><a className="guide-open" href={topic.href}>이 기능 열기 <ArrowUpRight size={16}/><span className="sr-only"> · {topic.title}</span></a><a className="guide-back" href="#guide-top">맨 위로 ↑</a></article>)}
+    {topics.map(topic=><article id={'guide-'+topic.id} className="guide-topic" key={topic.id}><div className="guide-topic-meta"><span>{topic.group}</span><span>{topic.roles}</span></div><h2>{topic.title}</h2><p>{topic.intro}</p><div className="guide-prepare"><strong>시작 전에</strong><p>{topic.prepare}</p></div><h3>이렇게 사용하세요</h3><ol>{topic.steps.map((step,index)=><li key={step}><span aria-hidden="true">{index+1}</span><p>{step}</p></li>)}</ol>{topic.table&&<div className="guide-table-scroll" role="region" aria-label={topic.table.caption} tabIndex={0}><table><caption>{topic.table.caption}</caption><thead><tr>{topic.table.columns.map(column=><th scope="col" key={column}>{column}</th>)}</tr></thead><tbody>{topic.table.rows.map(row=><tr key={row[0]}>{row.map((cell,index)=>index===0?<th scope="row" key={index}>{cell}</th>:<td key={index}>{cell}</td>)}</tr>)}</tbody></table></div>}<div className="guide-result"><strong>완료 후 확인</strong><p>{topic.result}</p></div><p className="guide-tip"><strong>알아두세요</strong>{topic.tip}</p><a className="guide-open" href={topic.href}>이 기능 열기 <ArrowUpRight size={16}/><span className="sr-only"> · {topic.title}</span></a><a className="guide-back" href="#guide-top">맨 위로 ↑</a></article>)}
     <section className="guide-topic" id="guide-faq"><h2>자주 묻는 질문</h2>{guideFaq.map(([q,a])=><details key={q}><summary>{q}</summary><p>{a}</p></details>)}</section>
     <section className="guide-topic" id="guide-glossary"><h2>용어 쉽게 이해하기</h2><dl>{glossary.map(([term,meaning])=><div key={term}><dt>{term}</dt><dd>{meaning}</dd></div>)}</dl></section>
    </div>
