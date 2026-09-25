@@ -26,7 +26,8 @@ try{
   try{
    const result=await processWork({api,role,cooldowns,ready,run:async job=>{
     console.log(JSON.stringify({role,jobId:job.id,kind:job.kind,event:'started',at:new Date().toISOString()}));
-    const ok=await childTask(script,job.id,state,{signal:stop.signal});
+    const selected=job.family==='program'?fileURLToPath(new URL(role==='executor'?'./run-program-job.ts':'./verify-program-job.ts',import.meta.url)):script;
+    const ok=await childTask(selected,job.id,state,{signal:stop.signal});
     console.log(JSON.stringify({role,jobId:job.id,event:ok?'finished':'needs-review',at:new Date().toISOString()}));return ok;
    }});
    console.log(JSON.stringify({role,at:new Date().toISOString(),...result}));

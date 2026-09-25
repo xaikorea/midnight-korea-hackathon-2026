@@ -1,0 +1,3 @@
+'use client';
+import {programSubmission} from '@/lib/program-submission';
+export default function ProgramSubmissionPanel({profileId}:{profileId:string}){const s=programSubmission(profileId);return <section className="program-submission"><h4>{s.window==='closed'?'종료된 회차 · 원문 확인':'공식 접수 경로 안내'}</h4><p>{s.notice}</p><ol>{s.steps.map(step=><li key={step}>{step}</li>)}</ol><a className="program-download" href={s.url} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">{s.label} 열기 ↗</a><details><summary>자동 접수 연동 준비 상태</summary><p>공식 API·협약 계정 미확보. 기관과 연결되기 전까지 자동 전송과 공식 접수 완료 표시는 비활성화됩니다.</p><ul>{s.requirements.map(v=><li key={v}>{v}</li>)}</ul></details></section>;}

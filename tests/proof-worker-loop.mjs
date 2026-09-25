@@ -12,6 +12,9 @@ test('unsupported networks, duplicate IDs and command injection are rejected',()
  assert.throws(()=>selectWork({...response,network:'preprod'},'executor'));
  assert.throws(()=>selectWork({...response,jobs:[...response.jobs,...response.jobs]},'executor'));
  assert.throws(()=>selectWork({...response,jobs:[{id:'../other; command',kind:'proof'}]},'executor'));
+ assert.deepEqual(selectWork({...response,jobs:[{id,kind:'proof',family:'program'}]},'executor'),[{id,kind:'proof',family:'program'}]);
+ assert.throws(()=>selectWork({...response,jobs:[{id,kind:'proof',family:'unknown'}]},'executor'));
+ assert.throws(()=>selectWork({...response,jobs:[{id,kind:'revoke',family:'program'}]},'executor'));
 });
 test('unavailable network never starts a child or claims work',async()=>{
  let started=0;const calls=[];

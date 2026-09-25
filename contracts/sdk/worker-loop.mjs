@@ -7,7 +7,9 @@ export function selectWork(response,role){
  const seen=new Set();
  return response.jobs.map(job=>{
   if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(job.id)||!['proof','revoke'].includes(job.kind)||seen.has(job.id))throw Error('Invalid or duplicate work');
-  seen.add(job.id);return {id:job.id,kind:job.kind};
+  if(job.family!==undefined&&job.family!=='program')throw Error('Unsupported work family');
+  if(job.family==='program'&&job.kind!=='proof')throw Error('Unsupported program action');
+  seen.add(job.id);return {id:job.id,kind:job.kind,...(job.family?{family:job.family}:{})};
  });
 }
 
