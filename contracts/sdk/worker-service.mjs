@@ -25,9 +25,9 @@ try{
  do{
   try{
    const result=await processWork({api,role,cooldowns,ready,run:async job=>{
-    console.log(JSON.stringify({role,jobId:job.id,kind:job.kind,event:'started'}));
+    console.log(JSON.stringify({role,jobId:job.id,kind:job.kind,event:'started',at:new Date().toISOString()}));
     const ok=await childTask(script,job.id,state,{signal:stop.signal});
-    console.log(JSON.stringify({role,jobId:job.id,event:ok?'finished':'needs-review'}));return ok;
+    console.log(JSON.stringify({role,jobId:job.id,event:ok?'finished':'needs-review',at:new Date().toISOString()}));return ok;
    }});
    console.log(JSON.stringify({role,at:new Date().toISOString(),...result}));
   }catch{console.error(JSON.stringify({role,event:'poll-failed',at:new Date().toISOString()}));if(mode==='--once')process.exitCode=1;}

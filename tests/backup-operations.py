@@ -1,5 +1,5 @@
 from contextlib import closing
-import importlib.util, io, json, sqlite3, tarfile, tempfile, unittest
+import datetime, hashlib, importlib.util, io, json, sqlite3, tarfile, tempfile, unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,6 +38,41 @@ class OperationsTests(unittest.TestCase):
         (self.root / 'data/bizproof.sqlite').unlink()
         with self.assertRaises(RuntimeError): backup.backup(self.root)
         self.assertFalse((self.root / 'data/bizproof.sqlite').exists())
+
+    def test_full_restore_preserves_sources_and_refuses_overwrite(self):
+        originals = {name: (self.root / name).read_bytes() for name in ['data/bizproof.sqlite', 'issuer-data/issuer.sqlite', 'issuer-data/issuer-key.json']}
+        archive = backup.backup(self.root)
+        destination = self.root / 'recovery'
+        restored = module('restore-drill')
+        restored.restore_files(archive, destination)
+        for name, original in originals.items():
+            self.assertEqual((self.root / name).read_bytes(), original)
+        self.assertEqual((destination / 'issuer-data/issuer-key.json').read_bytes(), originals['issuer-data/issuer-key.json'])
+        with closing(sqlite3.connect(destination / 'data/bizproof.sqlite')) as restored_db:
+            self.assertEqual(json.loads(restored_db.execute('SELECT payload FROM proof_jobs').fetchone()[0])['credentialId'], 'c1')
+        with self.assertRaisesRegex(ValueError, 'must be new'):
+            restored.restore_files(archive, destination)
+
+    def test_encrypted_replica_replay_tamper_and_path_guard(self):
+        import base64
+        receive = module('receive-backup').receive
+        # Envelope-shaped fixture: receiver has no decryption key and checks transport integrity only.
+        data = json.dumps({'version': 1, 'key': base64.b64encode(b'k'*384).decode(), 'nonce': base64.b64encode(b'n'*12).decode(), 'ciphertext': base64.b64encode(b'c'*32).decode()}).encode()
+        entry = {'name': 'bizproof-20260925T005956.000025Z.tar.gz.encrypted.json', 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
+        stream = lambda e, d=data: io.BytesIO(json.dumps(e).encode()+b'\n'+d)
+        result = receive(stream(entry), self.root)
+        self.assertTrue(result['stored'])
+        self.assertTrue(receive(stream(entry), self.root)['alreadyPresent'])
+        for patch in [{'name':'../outside'}, {'sha256':'0'*64}, {'bytes':entry['bytes']-1}]:
+            with self.assertRaises(ValueError): receive(stream({**entry, **patch}), self.root)
+        self.assertFalse((self.root.parent / 'outside').exists())
+
+    def test_offhost_manifest_rejects_unsafe_or_duplicate_exports(self):
+        validate = module('offhost-backup').validate_manifest
+        item = {'name': 'bizproof-20260925T005956.000025Z.tar.gz.encrypted.json', 'bytes': 500, 'sha256': 'a'*64}
+        self.assertEqual(validate({'version':1, 'encryptedOnly':True, 'files':[item]}), [item])
+        for entries in [[item, item], [{**item, 'name':'runtime.env'}], [{**item, 'bytes':-1}]]:
+            with self.assertRaises(ValueError): validate({'version':1, 'encryptedOnly':True, 'files':entries})
 
     def test_missing_issuer_fails(self):
         (self.root / 'issuer-data/issuer.sqlite').unlink()

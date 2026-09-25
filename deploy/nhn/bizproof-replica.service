@@ -1,0 +1,12 @@
+[Unit]
+Description=BizProof encrypted off-host backup replication
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /srv/bizproof/operations/ship-backups.py
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/bizproof/backups

@@ -1,0 +1,7 @@
+[Unit]
+Description=BizProof dedicated proof host health
+After=docker.service
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /srv/bizproof-proof/operations/proof-health.py
+UMask=0077

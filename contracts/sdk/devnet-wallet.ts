@@ -1,6 +1,6 @@
 // Wallet initialization adapted from midnightntwrk/example-zkloan (eff9030d), Apache-2.0.
 // Copyright (C) 2025 Midnight Foundation. SPDX-License-Identifier: Apache-2.0
-// Public genesis funding is for the isolated Local Devnet ONLY. Never use this wallet remotely.
+// Public genesis funding is for the isolated Devnet ONLY. Never use this wallet on a public network.
 import {HDWallet,Roles,WalletFacade,ShieldedWallet,DustWallet,UnshieldedWallet,createKeystore,InMemoryTransactionHistoryStorage,WalletEntrySchema,PublicKey} from '@midnight-ntwrk/wallet-sdk';
 import {ZswapSecretKeys,DustSecretKey,LedgerParameters,nativeToken} from '@midnight-ntwrk/midnight-js-protocol/ledger';
 import {firstValueFrom,filter,timeout} from 'rxjs';

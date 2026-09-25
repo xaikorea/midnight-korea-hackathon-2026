@@ -1,0 +1,20 @@
+#cloud-config
+# Dedicated synthetic Local Devnet, never a public validator or mainnet wallet.
+package_update: true
+packages:
+  - docker.io
+  - docker-compose-v2
+  - ca-certificates
+  - unattended-upgrades
+  - python3-cryptography
+ssh_pwauth: false
+disable_root: true
+write_files:
+  - path: /etc/docker/daemon.json
+    permissions: '0644'
+    content: |
+      {"log-driver":"local","log-opts":{"max-size":"10m","max-file":"3"}}
+runcmd:
+  - [systemctl, enable, --now, docker]
+  - [install, -d, -m, '0755', /srv/bizproof-proof, /srv/bizproof-proof/releases, /srv/bizproof-proof/operations]
+  - [install, -d, -m, '0700', /srv/bizproof-proof/secrets, /srv/bizproof-proof/backups, /srv/bizproof-proof/chain]

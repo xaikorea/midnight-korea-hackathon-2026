@@ -1,5 +1,5 @@
 FROM node:24.11.1-bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl unzip && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl unzip util-linux && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY contracts/package.json contracts/package-lock.json ./contracts/
 RUN npm ci --prefix contracts --no-audit --no-fund

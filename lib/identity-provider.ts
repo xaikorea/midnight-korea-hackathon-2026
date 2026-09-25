@@ -1,5 +1,6 @@
 import {z} from 'zod';
-import {createHmac} from 'node:crypto';
+import {createHmac,createHash} from 'node:crypto';
+import {canonical} from './domain';
 import {digest} from './signatures';
 export type IdentityIntent={id:string;actor:string;companyId:string;purpose:'business-issuance';documentHash:string;createdAt:number;expiresAt:number;nonce:string};
 export type IdentityEvidence={provider:'portone-v2';mode:'provider-test'|'live';kind:'person-identity';transactionId:string;subjectRef:string;verifiedAt:string;intentHash:string;documentSigned:false};
@@ -10,7 +11,7 @@ const text=z.string().min(1).max(200);
 export const portOneConfigSchema=z.object({storeId:text,channelKey:text,channelType:z.enum(['TEST','LIVE']),secret:z.string().min(20),subjectSecret:z.string().min(48)}).strict();
 type Config=z.infer<typeof portOneConfigSchema>;
 const verifiedSchema=z.object({status:z.literal('VERIFIED'),id:text,channel:z.object({key:text,type:z.enum(['TEST','LIVE'])}),verifiedCustomer:z.object({ci:z.string().optional(),di:z.string().optional()}),customData:z.string(),requestedAt:z.string().datetime({offset:true}),verifiedAt:z.string().datetime({offset:true}),version:z.literal('V2')});
-export function identityCapabilities(){const enabled=process.env.BIZPROOF_IDENTITY_PILOT==='true'&&process.env.BIZPROOF_PUBLIC_DEMO!=='true';return {personIdentity:{provider:'portone-v2',configured:enabled&&!!process.env.BIZPROOF_PORTONE_CONFIG,mode:enabled?'restricted-pilot':'unavailable'},documentSigning:{configured:false,reason:'전자서명 공급자의 계약·검증 규격 확인 필요'},businessAuthority:{automatic:false,reason:'본인확인과 별도로 기업 담당자 권한을 검토합니다.'}};}
+export function identityCapabilities(){const enabled=process.env.BIZPROOF_IDENTITY_PILOT==='true'&&process.env.BIZPROOF_PUBLIC_DEMO!=='true';let configured=false;try{configured=enabled&&portOneConfigSchema.safeParse(JSON.parse(process.env.BIZPROOF_PORTONE_CONFIG??'null')).success;}catch{}return {personIdentity:{provider:'portone-v2',configured,mode:enabled?'restricted-pilot':'unavailable'},documentSigning:{configured:false,reason:'전자서명 공급자의 계약·검증 규격 확인 필요'},businessAuthority:{automatic:false,reason:'본인확인과 별도로 기업 담당자 권한을 검토합니다.'}};}
 export class PortOneIdentityProvider implements IdentityProvider{
  private readonly config:Config;
  constructor(config:Config,private readonly transport:typeof fetch=fetch){this.config=portOneConfigSchema.parse(config);}
@@ -27,4 +28,7 @@ export class PortOneIdentityProvider implements IdentityProvider{
   return {provider:'portone-v2' as const,mode:b.channel.type==='LIVE'?'live' as const:'provider-test' as const,kind:'person-identity' as const,transactionId:b.id,subjectRef:createHmac('sha256',this.config.subjectSecret).update(this.config.storeId+'\0'+subject).digest('hex'),verifiedAt:b.verifiedAt,intentHash:await digest(intent),documentSigned:false as const};
  }
 }
-export function requireDocumentSignature(evidence:IdentityEvidence|Awaited<ReturnType<DocumentSigningProvider['verify']>>,intent:IdentityIntent){if(evidence.kind!=='document-signature'||evidence.documentHash!==intent.documentHash||!evidence.signatureVerified)throw new IdentityProviderError(422,'본인확인 결과를 신청 문서의 전자서명으로 대신할 수 없습니다.');}
+export function requireDocumentSignature(evidence:IdentityEvidence|Awaited<ReturnType<DocumentSigningProvider['verify']>>,intent:IdentityIntent,mode:'live'|'provider-test'='live'){
+ const expected=createHash('sha256').update(canonical(intent)).digest('hex'),verifiedAt=Date.parse(evidence.verifiedAt);
+ if(evidence.kind!=='document-signature'||evidence.documentHash!==intent.documentHash||evidence.signatureVerified!==true||evidence.intentHash!==expected||evidence.mode!==mode||intent.expiresAt<=Date.now()||!Number.isFinite(verifiedAt)||verifiedAt<intent.createdAt||verifiedAt>Math.min(Date.now()+5000,intent.expiresAt))throw new IdentityProviderError(422,'해당 신청·문서·유효기간에 대한 전자서명 검증이 필요합니다. 본인확인 결과로 대신할 수 없습니다.');
+}
