@@ -84,6 +84,7 @@ class OperationsTests(unittest.TestCase):
         public = pair.public_key().public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo)
         envelope = crypto.encrypt(b'backup-fixture', public)
         self.assertEqual(crypto.verify(envelope, private)['bytes'], 14)
+        self.assertEqual(crypto.decrypt(envelope, private), b'backup-fixture')
         damaged = json.loads(envelope)
         damaged['ciphertext'] = 'A' + damaged['ciphertext'][1:] if damaged['ciphertext'][0] != 'A' else 'B' + damaged['ciphertext'][1:]
         with self.assertRaises(Exception): crypto.verify(json.dumps(damaged), private)

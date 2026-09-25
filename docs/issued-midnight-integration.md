@@ -71,3 +71,9 @@ node contracts/sdk/verify-issued-job.ts JOB_UUID /private/job-state
 실제 인증 계정이 없어 공급자 테스트는 계약 fixture로 수행한다. 상용/테스트 채널 발급, 공급자 화면 연결과 인수시험은 계정 준비 후 진행해야 한다. 본인확인은 문서 전자서명·기업 대표권의 증거가 아니며 `DocumentSigningProvider`는 별도 공급자 규격을 연결할 경계만 준비되어 있다. 공동인증서의 유효성·폐지·서명 검증 구현은 공급자 선정 후 남은 작업이다.
 
 공식 규격: [PortOne V2 본인인증](https://developers.portone.io/api/rest-v2/identityVerification), [브라우저 요청 형식](https://developers.portone.io/sdk/ko/v2-sdk/identity-verification-request), [카카오 인증 개요](https://developers.kakao.com/docs/ko/kakao-certification/common).
+
+## 우선 보완 적용 — 2026-09-25
+
+별도 발급 자격의 신청 결과 하단에서 같은 요청의 체인 진행 단계를 확인할 수 있다. 승인 작업 자동 발견·순차 실행과 별도 검증 루프는 [운영 안내](operations-runbook.md)를 따른다. 실패한 취소 거래의 자동 재점유, 취소 상태 조회 중 만료 lease 누락, 만료 원본 때문에 취소 동기화가 막히는 문제를 수정했다.
+
+브라우저 테스트가 localhost라는 이유만으로 관리자 접근을 가정하지 않도록 했다. 로컬에서 승인까지 테스트하려면 서버와 테스트 명령에 모두 `BIZPROOF_ANALYTICS_LOCAL_PREVIEW=true`를 명시하거나 테스트 관리자 세션을 제공한다. 이 옵션은 development + loopback에서만 작동하며 공개 배포에 켜지 않는다. 관리자 설정이 없는 공개 UI 검사는 방문자 권한 거부·실행 요청·취소를 확인한다.
