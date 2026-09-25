@@ -2,6 +2,8 @@
 
 현재 공급자와 테스트 계정은 미준비다. 공개 시연은 합성 인증을 유지한다. `/identity-pilot`은 별도 파일럿에서 브라우저 SDK와 서버 조회를 연결하는 시험 화면이며, 본인확인 결과로 기업 자격이나 대표권을 자동 승인하지 않는다.
 
+2026-09-25 공개 배포 후 `tests/identity-pilot-ui.cjs`로 PC·모바일의 준비 중 화면, 인증 시작 버튼 부재, 공급자 네트워크 요청 0건, 서버의 실제 본인확인·문서 서명 비활성을 확인했다. 이것은 공개 데모의 접근 제한 검증이며 아래의 실제 공급자 인수시험을 대체하지 않는다.
+
 ## 준비할 설정
 
 공개 데모와 다른 배포에서 `BIZPROOF_PUBLIC_DEMO=false`, `BIZPROOF_IDENTITY_PILOT=true`, 승인된 Keycloak 사용자 ID 목록 `BIZPROOF_IDENTITY_PILOT_USERS`를 설정한다. Keycloak 로그인·issuer/audience/역할·워크스페이스 권한 설정이 먼저 정상이어야 한다.
