@@ -3,7 +3,9 @@
 한 번 발급한 기업 자격을 구매사 등록과 지원사업 신청에 재사용하는 Midnight Korea Hackathon 2026 프로젝트입니다. 기업은 신청 대상을 선택하고 공유 내용에 동의하면 됩니다.
 
 - **공개 체험:** https://bizproof.xaikorea.ai.kr/welcome
-- **실제 Midnight 검증 증거:** https://bizproof.xaikorea.ai.kr/verification
+- **별도 발급부터 체험:** https://bizproof.xaikorea.ai.kr/issuance
+- **내 신청의 실제 Midnight 처리:** https://bizproof.xaikorea.ai.kr/chain-jobs
+- **이전 11건 시나리오 기록:** https://bizproof.xaikorea.ai.kr/verification
 - **이용자 가이드:** https://bizproof.xaikorea.ai.kr/guide
 - **시연 영상·캡처·아키텍처·자막:** [2026-09-25 제출 자료](https://github.com/xaikorea/midnight-korea-hackathon-2026/releases/tag/hackathon-demo-2026-09-25)
 - **심사자 실행 안내:** [docs/hackathon-runbook.md](docs/hackathon-runbook.md)
@@ -32,6 +34,17 @@
 2026-09-24 실제 웹 연결 실행에서 **11개 거래 확정, 동일 자격의 구매사·지원사업 충족, 비교 조건 미충족, 취소 후 재사용 차단**을 확인했습니다. [공개 실행 기록](public/evidence/midnight-web-devnet.json)과 [독립 인덱서 대조 결과](public/evidence/independent-verification.json)를 함께 제공합니다. 별도 읽기 전용 검증기로 모든 영수증·계약 검증 키·세 요청 결과·취소 상태를 다시 조회했습니다. 새 환경에서의 실행 방법은 위 심사자 안내를 따르세요.
 
 제출 문구와 아직 확인해야 할 외부 항목은 [제출 준비 기록](docs/submission-notes.md)에 정리했습니다.
+
+## 새 발급 자격과 원래 신청의 연결 — 2026-09-25
+
+공개 NHN에서 별도 발급한 합성 자격 하나와 원래 구매사·지원사업 신청 두 건을 사용했다. 해당 작업을 서비스 관리자가 승인한 뒤 실제 Local Devnet 거래 8건을 별도 검증기가 대조했고, 동일 자격 취소 후 9번째 거래와 revoked=true를 확인했다. [공개 실행 증거](docs/evidence/issued-job-public-local-devnet-2026-09-25.json). 위의 이전 11건 실행과 다른 작업이며 이번 9건에 비교 조건 false 거래가 포함된 것은 아니다.
+
+별도 발급 신청 화면은 **신청 접수 → 관리자 승인 → 증명·거래 처리 → 거래 대조 → 검증 결과**를 원래 신청 아래에서 이어서 보여준다. 기록만 있는 경우와 실행 중 상태를 구분하며 취소·장애를 완료 단계로 표시하지 않는다.
+
+승인 작업을 순차 처리하는 실행기/검증기 루프를 제공한다. 상시 호스트가 가동되지 않으면 승인 대기로 남으며, 불확실한 거래는 자동 재전송하지 않는다. 네트워크는 Local Devnet이고 실제 본인확인·문서 전자서명·기업 대표권은 연결 전이다.
+
+- [발급·체인 연결 구현 및 실제 증거](docs/issued-midnight-integration.md)
+- [백업·암호화 외부 사본·실행기 운영과 복구](docs/operations-runbook.md)
 
 ## 빠른 실행
 

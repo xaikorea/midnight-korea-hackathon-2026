@@ -1,0 +1,16 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,f);
+const {proofJobProgress,matchesApplication}=require('../lib/proof-job-progress.ts');
+assert.deepEqual(proofJobProgress().map(s=>s.state),['done','waiting','waiting','waiting','waiting']);
+const job={credentialId:'a',requests:[{id:'r1'},{id:'r2'}],approvedAt:'2026-09-25',status:'queued',revocation:'none'};
+assert.deepEqual(proofJobProgress(job).map(s=>s.state),['done','done','current','waiting','waiting']);
+assert.equal(proofJobProgress({...job,status:'awaiting_verification'})[4].state,'waiting');
+const verified={...job,status:'confirmed',verification:{revoked:false}};
+assert.ok(proofJobProgress(verified).every(s=>s.state==='done'));
+for(const status of ['blocked','cancelled','needs_attention'])assert.notEqual(proofJobProgress({...verified,status})[4].state,'done');
+assert.notEqual(proofJobProgress({...verified,revocation:'pending'})[4].state,'done');
+assert.notEqual(proofJobProgress({...verified,currentStatus:'unknown'})[4].state,'done');
+assert.equal(matchesApplication(job,'a',['r1','r2']),true);
+assert.equal(matchesApplication(job,'a',['r1','different']),false);
+assert.equal(matchesApplication(job,'other',['r1','r2']),false);
+console.log('PASS application linkage, receipt-versus-verification and revoked/failed timeline states');

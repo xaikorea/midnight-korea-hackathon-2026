@@ -1,0 +1,10 @@
+[Unit]
+Description=BizProof disk, backup freshness and container health checks
+After=docker.service
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /srv/bizproof/operations/health.py
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true

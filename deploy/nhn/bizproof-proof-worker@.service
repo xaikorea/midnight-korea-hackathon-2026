@@ -1,0 +1,25 @@
+# Install on a dedicated proof host after paths, accounts and original state are provisioned.
+# Do not enable this template on the 2GB NHN web host.
+[Unit]
+Description=BizProof approved Local Devnet %i worker
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=simple
+User=bizproof-%i
+WorkingDirectory=/opt/bizproof
+Environment=BIZPROOF_PROOF_CONFIG=/etc/bizproof-proof/%i.json
+Environment=BIZPROOF_PROOF_STATE_DIR=/var/lib/bizproof-proof/%i
+ExecStart=/usr/bin/node contracts/sdk/worker-service.mjs %i --watch
+Restart=on-failure
+RestartSec=30
+TimeoutStopSec=20
+KillMode=control-group
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/bizproof-proof/%i
+UMask=0077
+[Install]
+WantedBy=multi-user.target

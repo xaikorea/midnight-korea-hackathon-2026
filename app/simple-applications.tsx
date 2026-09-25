@@ -13,6 +13,8 @@ import {readProcessStream} from '@/lib/process-stream';
 import type {ProcessRun} from '@/lib/process-types';
 import './process-console.css';
 import {applicationStatus,applicationStatusCopy} from '@/lib/application-status';
+import ProofJobsPanel from './proof-jobs-panel';
+import './issuance.css';
 
 type Props={data:ViewState;refresh:()=>Promise<void>;go:(view:string)=>void};
 type PreviewRow={policyId:string;preview?:ApplicationPreview;error?:string};
@@ -66,6 +68,7 @@ export default function SimpleApplications({data,refresh,go}:Props){
   {error&&<section role="alert" className="simple-card simple-warning"><p>{error}</p><Button variant="outline" disabled={busy} onClick={()=>setAttempt(v=>v+1)}>제출 상태 다시 확인</Button></section>}
   {outcomes.some(x=>!x.ok)&&<section className="simple-card simple-warning" role="alert"><h2>일부 기관은 추가 확인이 필요합니다</h2>{outcomes.filter(x=>!x.ok).map(x=><p key={x.policyId}>{policies.find(p=>p.id===x.policyId)?.audience}: {!x.ok&&x.error}</p>)}<p>완료된 기관에는 다시 제출하지 않습니다.</p><Button disabled={busy} onClick={()=>{setSelected(outcomes.filter(x=>!x.ok).map(x=>x.policyId));setConsent(false);setAttempt(v=>v+1);}}>실패한 기관만 다시 확인</Button></section>}
   {existing.length>0&&<section className="batch-results" aria-label="신청 결과" aria-live="polite"><h2>신청 결과</h2>{[...existing].reverse().map(r=>{const p=data.presentations.find(p=>p.requestId===r.id),status=applicationStatus(r,p),copy=applicationStatusCopy(status);return <article className="simple-card" key={r.id}><span className="simple-pill">{copy.title}</span><h3>{r.policy.audience}</h3><p>{copy.message}</p>{p?.checks.map(c=><p key={c.label}>{c.pass?'✓':'!'} {c.label} · {c.pass?'충족':'미충족'}</p>)}<details><summary>접수·자격 상세</summary><p>접수 번호: {r.id}</p><p>사용 자격: {p?.credentialId}</p></details></article>})}<Button variant="outline" onClick={()=>go('progress')}>전체 진행 현황</Button></section>}
+  {data.publicDemo&&company==='issuer-demo-company'&&existing.length>0&&<ProofJobsPanel requestIds={existing.map(r=>r.id)}/>}
   {!pendingIds.length&&!existing.length&&<p className="simple-note">신청할 대상을 선택하면 다음 내용이 자동으로 표시됩니다.</p>}
   {data.publicDemo&&<p className="simple-note">합성 데이터 기반 공개 시연입니다. 추가 사례와 기술 검증은 메뉴의 ‘상세 기능 더 보기’에서 선택할 수 있습니다.</p>}
   <VerificationLink/>

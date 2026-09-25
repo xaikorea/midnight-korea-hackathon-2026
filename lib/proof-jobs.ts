@@ -21,7 +21,8 @@ async function current(j:ProofJob,allowRevoked=false){
  const {state:s}=await readState(j.owner),c=s.credentials.find(c=>c.id===j.credentialId);
  if(!c?.remoteBinding||c.remoteBinding.scope!==j.scope||await issuerScope(j.owner,j.owner)!==j.scope||c.source?.kind!=='synthetic'||await digest(credentialPayload(c))!==j.sourceDigest)fail('원본 자격 또는 체험 공간 연결이 변경되었습니다.',422);
  const original={...c,status:'active'};delete original.revokedAt;delete original.reason;
- await verifyRemoteOriginal(original,j.scope,c.remoteBinding.requestId);
+ // Expiry prevents new use but must never prevent status checks or later revocation.
+ await verifyRemoteOriginal(original,j.scope,c.remoteBinding.requestId,allowRevoked?'status':'use');
  const receipt=s.credentialReceipts?.find(r=>r.credentialId===c.id),status=await remoteCredentialStatus(c,receipt?.statusRevision);
  if(!allowRevoked&&(status.body.status!=='active'||c.status!=='active'))fail('발급기관에서 취소한 자격입니다.',422);
  if(!allowRevoked){
@@ -65,18 +66,36 @@ export async function noteCredentialRevoked(owner:string,credentialId:string){
  }
 }
 export async function refreshProofJob(j:ProofJob){
- try{const result=await current(j,true);if(result.status==='revoked'&&j.revocation!=='confirmed'){await noteCredentialRevoked(j.owner,j.credentialId);return getProofJob(j.id);}}catch{ return {...j,currentStatus:'unknown'}; }
- if(j.leaseExpiresAt&&j.leaseExpiresAt<Date.now()&&j.status==='running'){j.status='needs_attention';j.reason='실행기 연결이 끊겼습니다. 기존 거래를 확인하기 전 재전송하지 않습니다.';return save(j);}return j;
+ let unknown=false;
+ try{const result=await current(j,true);if(result.status==='revoked'&&j.revocation!=='confirmed'){await noteCredentialRevoked(j.owner,j.credentialId);j=await getProofJob(j.id);}}catch{unknown=true;}
+ if(j.leaseExpiresAt&&j.leaseExpiresAt<Date.now()&&(j.status==='running'||j.status==='blocked'&&j.revocation==='pending')){j.status='needs_attention';j.reason='실행기 연결이 끊겼습니다. 기존 거래를 확인하기 전 재전송하지 않습니다.';return save(j);}
+ if(['awaiting_approval','queued'].includes(j.status)&&j.revocation==='none'&&j.consentExpiresAt<=Math.floor(Date.now()/1000)){j.status='blocked';j.reason='체인 처리 동의가 만료되었습니다. 새 동의로 다시 요청하세요.';return save(j);}return unknown?{...j,currentStatus:'unknown'}:j;
 }
 export function publicProofJob(j:ProofJob&{currentStatus?:string}){return {id:j.id,credentialId:j.credentialId,sourceDigest:j.sourceDigest,requests:j.requests.map(r=>({id:r.id,kind:r.policy.kind,audience:r.policy.audience,policyHash:r.policyHash})),createdAt:j.createdAt,consentExpiresAt:j.consentExpiresAt,status:j.status,revision:j.revision,approvedAt:j.approvedAt,contractAddress:j.target?.contractAddress,events:j.events,receipts:j.receipts,revocation:j.revocation,verification:j.verification,reason:j.reason,currentStatus:j.currentStatus??'checked',network:'undeployed',environment:'Local Devnet'};}
 export async function claimProofJob(worker:string,id?:string){
  const jobs=id?[await getProofJob(id)]:await allProofJobs();
- for(let j of jobs){j=await refreshProofJob(j);if(j.status==='awaiting_verification'||j.leaseExpiresAt&&j.leaseExpiresAt>Date.now())continue;const revoke=j.revocation==='pending'&&!!j.target&&!!j.approvedAt;
+ for(let j of jobs){j=await refreshProofJob(j);if(['awaiting_verification','needs_attention','cancelled'].includes(j.status)||j.leaseExpiresAt&&j.leaseExpiresAt>Date.now())continue;const revoke=j.revocation==='pending'&&!!j.target&&!!j.approvedAt;
   if(!revoke&&j.status!=='queued')continue;
   if(!revoke)try{await current(j);}catch{j.status='blocked';j.reason='원본·기관 상태·동의를 다시 확인해야 합니다.';await save(j);continue;}
   j.worker=worker;j.lease=crypto.randomUUID();j.leaseExpiresAt=Date.now()+180000;j.status=revoke?'blocked':'running';
   try{await save(j);return {id:j.id,scope:j.scope,lease:j.lease,kind:revoke?'revoke':'proof',target:j.target,sourceDigest:j.sourceDigest};}catch(e){if(!(e instanceof ProofJobError))throw e;}
  }return null;
+}
+// Work discovery carries no original attributes and does not grant approval or a lease.
+export async function availableProofWork(role:'executor'|'verifier'){
+ await proofJobTables();
+ const condition=role==='verifier'?"json_extract(payload,'$.status')='awaiting_verification'":"(json_extract(payload,'$.status') IN ('queued','running') OR (json_extract(payload,'$.status')='blocked' AND json_extract(payload,'$.revocation')='pending'))";
+ const rows=await binding().prepare("SELECT payload,revision FROM proof_jobs WHERE json_extract(payload,'$.approvedAt') IS NOT NULL AND "+condition+" ORDER BY created ASC LIMIT 20").all<Row>();
+ const work:{id:string;kind:'proof'|'revoke'}[]=[];
+ for(const row of rows.results){
+  const original={...JSON.parse(row.payload),revision:row.revision} as ProofJob;
+  const j=await refreshProofJob(original);
+  if('currentStatus' in j&&j.currentStatus==='unknown')continue;
+  if(role==='verifier'?j.status!=='awaiting_verification':j.status!=='queued'&&!(j.status==='blocked'&&j.revocation==='pending'))continue;
+  if(role==='executor'&&j.leaseExpiresAt&&j.leaseExpiresAt>Date.now())continue;
+  work.push({id:j.id,kind:j.revocation==='pending'?'revoke':'proof'});
+ }
+ return {jobs:work,network:'undeployed' as const};
 }
 function requireLease(j:ProofJob,worker:string,lease:string){if(j.worker!==worker||j.lease!==lease||!j.leaseExpiresAt||j.leaseExpiresAt<Date.now())fail('실행 권한이 만료되었거나 다른 실행기가 소유하고 있습니다.',403);}
 export async function proofWorkerCommand(worker:string,raw:unknown){

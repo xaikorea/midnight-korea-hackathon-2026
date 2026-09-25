@@ -8,7 +8,15 @@
 
 **English:** BizProof reuses one business credential to prove eligibility for supplier onboarding and a support program. The public web demo offers a three-step business flow. A separately executed, reproducible Midnight Local Devnet path binds a real web-issued credential and its original requests to Compact proofs, finalized transactions, a negative eligibility result, and revocation enforcement.
 
-## 실제 완료 증거
+## 최신 완료 증거 — 공개 발급 원본 9건
+
+공개 NHN의 별도 발급 서버에서 합성 자격을 발급하고 원래 구매사·지원사업 두 신청을 생성했다. 관리자가 작업 `e75cfcb5-92ec-4113-b4f2-f1b356599d5b`를 승인한 뒤 같은 원본/신청으로 실제 Local Devnet 거래 8건을 확인했고, 발급기관 취소와 체인 취소 거래 1건을 추가 검증했다. 두 조건 true, 최종 revoked=true다.
+
+[개인키 없는 9건 증거](evidence/issued-job-public-local-devnet-2026-09-25.json), [구현 설명](issued-midnight-integration.md), [운영 절차](operations-runbook.md). 최신 9건 실행에는 비교 조건 false 거래가 없으며 아래 이전 11건 시나리오에 포함되어 있다. 두 기록의 영상·작업·계약을 혼합하지 않는다.
+
+신청 화면 하단에서 같은 신청의 체인 승인·실행·대조 상태를 연결했다. 일반 웹 신청은 체인 확정과 구분하며, 상시 증명 호스트 가동과 실제 외부 인증은 아직 운영 조건이다.
+
+## 이전 완료 증거 — 웹 자격 11건
 
 공개 저장소: https://github.com/xaikorea/midnight-korea-hackathon-2026
 
@@ -31,7 +39,7 @@
 
 공개 JSON SHA-256: `716f528e9e31aaf6fba1dace11745e5296fc6ec1ae4a75d09769a68fa0ec713c`.
 
-## 심사 시 확인할 흐름
+## 이전 11건 자료의 재현 흐름
 
 1. `/welcome`에서 독립 합성 체험 공간 시작 → 같은 자격으로 두 기관 신청 → 결과 저장·재조회.
 2. `/verification`에서 별도 실제 Midnight 실행의 거래·판정·취소 기록과 공개 범위 확인.
@@ -45,7 +53,7 @@
 - Midnight의 역할은 기관이 공개 원본 수치를 받지 않고 회로의 조건 판정을 확인할 수 있게 하는 것이다. 일반 웹 경로는 서버 판정·서명에 의존한다.
 - Ed25519 원본을 Schnorr attestation으로 연결하는 로컬 실행기는 신뢰 경계 안에 있다. 회로가 원본 문서의 사실성이나 Ed25519 서명을 직접 검증하는 것으로 설명하지 않는다.
 - 웹 서버와 로컬 증명 환경은 원본 속성을 처리한다. 서버로부터도 원본이 숨겨지는 구조 또는 기관 간 추적 불가능성을 주장하지 않는다.
-- 취소는 체인 attestation에 적용했다. 웹 원본 자격의 취소와 자동 양방향 동기화가 완료된 것은 아니다.
+- 최신 별도 발급 경로는 기관 취소 시 웹의 새 사용을 막고 원래 계약의 취소 작업을 만든다. 가동 중인 승인 작업 실행기와 별도 검증기가 체인 취소를 확인한다. 순차 반영이며 원자적·양방향 동기화나 무중단 상시 운영을 뜻하지 않는다. 이전 11건 경로의 취소는 별도 시나리오다.
 - 공식 GLEIF 인증, SAP 실연동, 실제 지원기관의 승인, 실제 고객의 도입 효과는 아직 입증하지 않았다.
 - 이 기록은 Local Devnet 실행이며 Preprod/Preview 또는 메인넷 실행으로 기재하지 않는다.
 
