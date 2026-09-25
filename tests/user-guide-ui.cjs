@@ -13,7 +13,7 @@ const publicOnly=process.env.GUIDE_PUBLIC_ONLY==='1';
   await page.goto(base+'/guide',{waitUntil:'networkidle'});
   await page.getByRole('heading',{name:'이용자 가이드',exact:true}).waitFor();
   assert.equal(await page.locator('article.guide-topic').count(),28);
-  assert.equal(await page.locator('time').getAttribute('datetime'),'2026-09-25');
+  assert.equal(await page.locator('time').getAttribute('datetime'),'2026-09-26');
   assert.equal(await page.locator('.guide-essential-steps > li').count(),3);
   assert.equal(await page.locator('#guide-faq details').count(),16);
   assert.equal(await page.locator('.guide-journey-grid > a').count(),3);
