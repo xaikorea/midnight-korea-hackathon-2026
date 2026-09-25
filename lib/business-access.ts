@@ -18,7 +18,7 @@ export async function visibleBusinessState(s:State,actor:BusinessActor):Promise<
  const credentials=related(s.credentials),requests=related(s.requests),credentialIds=new Set(credentials.map(c=>c.id)),requestIds=new Set(requests.map(r=>r.id));
  const drafts=related(s.drafts??[]),authorities=related(s.authorities??[]),evidence=related(s.evidence),connections=related(s.connections);
  const targets=new Set([...allowed,...credentialIds,...requestIds,...drafts.map(x=>x.id),...authorities.map(x=>x.id),...evidence.map(x=>x.id),...connections.map(x=>x.id)]);
- return {...s,accessRequests:(s.accessRequests??[]).filter(r=>actor.role==='admin'||r.actor===actor.actor||actor.role==='issuer'&&r.kind==='authority'&&!!r.companyId&&allowed.has(r.companyId)),applicationSubmissions:[],issuanceRequests:related(s.issuanceRequests??[]),companies:s.companies.filter(c=>allowed.has(c.id)),credentials,requests,drafts,authorities,evidence,connections,
+ return {...s,programData:undefined,accessRequests:(s.accessRequests??[]).filter(r=>actor.role==='admin'||r.actor===actor.actor||actor.role==='issuer'&&r.kind==='authority'&&!!r.companyId&&allowed.has(r.companyId)),applicationSubmissions:[],issuanceRequests:related(s.issuanceRequests??[]),companies:s.companies.filter(c=>allowed.has(c.id)),credentials,requests,drafts,authorities,evidence,connections,
  presentations:related(s.presentations),demoJourneys:related(s.demoJourneys??[]),walletEntries:(s.walletEntries??[]).filter(x=>credentialIds.has(x.credentialId)),
  compactRuns:(s.compactRuns??[]).filter(x=>requestIds.has(x.requestId)),issuerSnapshots:[],audit:s.audit.filter(x=>targets.has(x.target)),verifierSessions:[]};
 }

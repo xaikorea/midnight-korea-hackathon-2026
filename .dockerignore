@@ -32,3 +32,5 @@ docs/private/
 *.sqlite*
 **/*.auto.tfvars*
 **/terraform.tfvars.json
+
+contracts/managed-program

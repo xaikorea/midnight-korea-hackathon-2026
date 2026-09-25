@@ -1,0 +1,73 @@
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const base=process.env.TEST_BASE_URL||'http://127.0.0.1:3135';
+if(!['localhost','127.0.0.1'].includes(new URL(base).hostname))throw Error('Use an isolated local synthetic demo for this test.');
+
+(async()=>{
+  const browser=await chromium.launch({headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||'chromium'});
+  try{
+    const ctx=await browser.newContext(),page=await ctx.newPage(),errors=[];
+    page.on('pageerror',error=>errors.push(error.message));
+    const entry=await ctx.request.post(base+'/signin-with-chatgpt',{headers:{Origin:base},maxRedirects:0});
+    assert.equal(entry.status(),303);
+    const role=await ctx.request.post(base+'/api/platform',{headers:{Origin:base},data:{action:'switch-role',role:'admin'}});
+    assert.equal(role.status(),200);
+    await page.goto(base+'/?view=policies',{waitUntil:'networkidle'});
+    const optOut=page.getByRole('button',{name:'이 브라우저 수집 중지',exact:true});
+    if(await optOut.isVisible())await optOut.click();
+    await page.getByRole('button',{name:'정책 만들기',exact:true}).click();
+    const dialog=page.getByRole('dialog'),name='고정 기준일 합성 테스트 '+Date.now();
+    await dialog.getByLabel('정책명',{exact:false}).fill(name);
+    await dialog.getByLabel('검증기관명',{exact:false}).fill('합성 검증기관');
+    await dialog.getByLabel('최대 업력 (개월)',{exact:false}).fill('84');
+    await dialog.getByLabel('최소 매출 (원)',{exact:false}).fill('100');
+    await dialog.getByLabel('최대 매출 (원, 이하)',{exact:false}).fill('50');
+    await dialog.getByLabel('업력 경계',{exact:false}).click();
+    await page.getByRole('option',{name:'미만 (경계 제외)',exact:true}).click();
+    await dialog.getByRole('button',{name:'저장하기',exact:true}).click();
+    await dialog.getByText('입력 오류를 수정한 후 다시 저장하세요.').waitFor();
+    assert.equal(await dialog.getByLabel('정책명',{exact:false}).inputValue(),name);
+    await dialog.getByLabel('최대 매출 (원, 이하)',{exact:false}).fill('100');
+    await dialog.getByRole('button',{name:'저장하기',exact:true}).click();
+    await dialog.getByText('미만 판정에는 업력 기준일이 필요합니다.').waitFor();
+    assert.equal(await dialog.getByLabel('정책명',{exact:false}).inputValue(),name,'validation failure must preserve previously entered values');
+    assert.equal(await dialog.getByLabel('최대 업력 (개월)',{exact:false}).inputValue(),'84');
+    // Occupancy dates can be in the future; they are not credential issue dates.
+    await dialog.getByLabel('업력 기준일',{exact:false}).fill('2099-06-10');
+    await dialog.getByLabel('공고·구매 기준 원문 주소',{exact:false}).fill('https://example.com/synthetic-notice');
+    await dialog.getByLabel('공고 회차·버전',{exact:false}).fill('합성 인수시험');
+    await dialog.getByLabel('지역 제한 사용',{exact:false}).click();
+    await page.getByRole('option',{name:'지역 지정',exact:true}).click();
+    await dialog.getByLabel('소재지 제한',{exact:false}).fill('서울');
+    await dialog.getByLabel('지역 제한 사용',{exact:false}).click();
+    await page.getByRole('option',{name:'제한 없음',exact:true}).click();
+    await page.setViewportSize({width:390,height:844});
+    await page.waitForFunction(()=>{
+      const rect=document.querySelector('[role="dialog"]')?.getBoundingClientRect();
+      return rect&&rect.x>=-1&&rect.right<=innerWidth+1;
+    });
+    const bounds=await dialog.boundingBox();
+    assert.ok(bounds.x>=-1&&bounds.x+bounds.width<=391);
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    fs.mkdirSync('outputs/project-review-20260925',{recursive:true});
+    await page.screenshot({path:'outputs/project-review-20260925/policy-reference-mobile.png'});
+    await dialog.getByRole('button',{name:'저장하기',exact:true}).click();
+    await dialog.waitFor({state:'hidden',timeout:15000}).catch(async error=>{console.log(await dialog.innerText());throw error;});
+    const state=await (await ctx.request.get(base+'/api/platform')).json();
+    const policy=state.policies.find(p=>p.name===name);
+    assert.equal(policy.ageReferenceDate,'2099-06-10');
+    assert.equal(policy.ageComparison,'lt');
+    assert.equal(policy.maxAgeMonths,84);
+    assert.equal(policy.minRevenue,100);
+    assert.equal(policy.maxRevenue,100);
+    assert.equal(policy.region,null,'hidden region values must not leak into the policy');
+    assert.equal(policy.sourceVersion,'합성 인수시험');
+    assert.equal(policy.sourceUrl,'https://example.com/synthetic-notice');
+    await page.getByText('2099-06-10 기준 · 업력 84개월 미만',{exact:true}).waitFor();
+    await page.setViewportSize({width:1440,height:1000});
+    await page.screenshot({path:'outputs/project-review-20260925/policy-reference-desktop.png',fullPage:true});
+    assert.deepEqual(errors,[]);
+    console.log('PASS policy reference UI: required fixed date for strict age, future calendar date, persisted source/version, mobile layout and rendered policy.');
+  }finally{await browser.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;});

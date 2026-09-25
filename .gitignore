@@ -88,3 +88,5 @@ next-env.d.ts
 **/*.auto.tfvars
 **/*.auto.tfvars.json
 **/terraform.tfvars.json
+
+/contracts/managed-program/

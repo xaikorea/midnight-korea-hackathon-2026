@@ -2,8 +2,10 @@ import {execFileSync} from 'node:child_process';
 import {existsSync, readFileSync} from 'node:fs';
 import path from 'node:path';
 
-// Check tracked submission material only. Never print matched values.
-const files=execFileSync('git',['ls-files','-z'],{encoding:'utf8'}).split('\0').filter(Boolean);
+// Optional pre-commit inventory includes new files, but still excludes ignored local material.
+// Never print matched secret values.
+const workingTree=process.argv.includes('--working-tree');
+const files=[...new Set(execFileSync('git',['ls-files','-z',...(workingTree?['--cached','--others','--exclude-standard']:[])],{encoding:'utf8'}).split('\0').filter(Boolean))];
 const tracked=new Set(files), failures=[];
 const forbiddenPath=/(^|\/)(outputs|work|\.tools|\.node-data|\.midnight-private|\.terraform|private)(\/|$)|(?:^|\/)(?:\.env(?:\..*)?|\.dev\.vars[^/]*|terraform\.tfvars(?:\.json)?|[^/]+\.auto\.tfvars(?:\.json)?|[^/]+\.tfstate[^/]*|(?:private-browser-state|storage-state|cookies)\.json|[^/]+\.(?:pem|key|p12|pfx|sqlite|sqlite3))$|^docs\/identity-and-issuer-development-plan-/;
 for(const file of files){
@@ -33,4 +35,4 @@ for(const file of files){
   }
 }
 if(failures.length){console.error([...new Set(failures)].join('\n'));process.exitCode=1;}
-else console.log(`PASS publication boundaries: ${files.length} tracked files; private paths, key markers, host settings and document links checked.`);
+else console.log(`PASS publication boundaries: ${files.length} ${workingTree?'tracked and new non-ignored':'tracked'} files; private paths, key markers, host settings and document links checked.`);

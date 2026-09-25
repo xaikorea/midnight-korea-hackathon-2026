@@ -119,7 +119,9 @@ Schnorr 모듈과 지갑 초기화 패턴은 Midnight example-zkloan에서 참�
 
 `Core verification` CI는 웹 빌드·핵심 테스트를, `Compact verification`은 새 환경의 회로 컴파일·SDK 검사를 실행합니다. 후자의 수동 실행에서 실제 Devnet 거래 검사도 선택할 수 있습니다.
 
-[실제 Devnet CI 실행](https://github.com/xaikorea/midnight-korea-hackathon-2026/actions/runs/36019675856)은 새 GitHub 환경에서 컴파일·23개 검사·배포·조건 판정·취소 후 차단까지 통과했습니다. 이 독립 실행의 13개 영수증은 웹 연결 시연의 11개 기록과 별도 사례입니다.
+공개 자료 정리 기준 커밋 `468a72e`의 [Core 검사](https://github.com/xaikorea/midnight-korea-hackathon-2026/actions/runs/36092965650)와 [Compact 검사](https://github.com/xaikorea/midnight-korea-hackathon-2026/actions/runs/36092965819)가 통과했습니다. 이 Compact 실행은 회로 컴파일·계약·SDK 검사이며 실제 네트워크 거래 단계는 실행하지 않았습니다. 실제 거래 근거는 [별도 발급 자격의 9건 기록](docs/evidence/issued-job-public-local-devnet-2026-09-25.json)과 [이전 웹 연결 11건 기록](public/evidence/midnight-web-devnet.json)에서 확인하세요. 서로 다른 실행의 거래 수를 합산하지 않습니다.
+
+새 정책은 업력의 고정 기준일·미만/이내와 원문 주소·회차를 지정할 수 있습니다. 기준일이 없는 기존 정책의 의미와 서명 기록은 유지합니다. 새 별도 발급 체인 작업은 원래 서명된 신청 결과의 판정 시점을 사용하며 동의·자격 만료는 현재 시각으로 검사합니다. 실제 기관의 전체 조건이나 공식 접수 연동을 구현했다는 뜻은 아닙니다.
 
 공개 영상은 5분 15초, 1080p이며 11개 기능 구간에 한국어 자막과 직접 합성한 음악을 포함합니다. 실제 웹 신청·저장·재조회와 별도 Midnight 실행 기록을 구분합니다. 릴리스 ZIP에는 주요 캡처 12개, 아키텍처, SRT 자막, 공개 증거, 음악 출처와 녹화·편집 스크립트가 있습니다.
 
@@ -131,3 +133,7 @@ Schnorr 모듈과 지갑 초기화 패턴은 Midnight example-zkloan에서 참�
 - 이 코드는 해커톤 시제품이며 운영용 자금·실제 민감 자료를 처리하는 시스템의 보안 감사를 완료한 것은 아닙니다.
 
 추가 문서는 [제출 자료 안내](docs/README.md)에 정리했습니다. 선택적 화면 검사는 [브라우저 검증](docs/browser-testing.md)을 참고하세요. 내부 운영 자료와 실제 자격 증명은 공개 저장소에 포함하지 않습니다.
+
+### Public-condition preparation examples
+
+The application includes six reference profiles for three startup support organizations and three buyers. Use **신청하기 → 실제 기관·구매사 준비** for persisted synthetic documents, signed credentials, conditional checks, manual review and a private preparation manifest. Official external submission is not connected. See [scope, setup and limitations](docs/program-preparation.md). The separate program numeric Compact contract is locally tested; these new applications do not yet execute chain transactions.

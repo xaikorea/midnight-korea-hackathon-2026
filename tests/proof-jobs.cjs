@@ -15,6 +15,7 @@ for(const policyId of ['issuer-demo-buyer','issuer-demo-grant']){const choice={c
 const requestIds=state.presentations.filter(p=>p.credentialId===receipt.credentialId).map(p=>p.requestId),input={credentialId:receipt.credentialId,requestIds,key:uuid(),consent:true};
 await assert.rejects(jobs.requestProofJob(owner,{...input,consent:false}));await assert.rejects(jobs.requestProofJob(other,input));
 let job=await jobs.requestProofJob(owner,input);assert.equal(job.status,'awaiting_approval');assert.equal((await jobs.requestProofJob(owner,input)).id,job.id);assert.equal(await jobs.claimProofJob('worker'),null);await assert.rejects(jobs.requestProofJob(owner,{...input,requestIds:[requestIds[0],requestIds[0]]}));
+for(const snapshot of job.requests)assert.equal(snapshot.evaluationAt,state.presentations.find(p=>p.requestId===snapshot.id).issuedAt,'job preserves the signed original evaluation time');
 await assert.rejects(jobs.approveProofJob(job.id,'service-admin',99));job=await jobs.approveProofJob(job.id,'service-admin',job.revision);
 assert.deepEqual((await jobs.availableProofWork('executor')).jobs,[{id:job.id,kind:'proof'}]);
 assert.deepEqual((await jobs.availableProofWork('verifier')).jobs,[]);
@@ -27,6 +28,9 @@ const realNow=Date.now;try{Date.now=()=>Date.parse(source.body.original.expiresA
 const bad=structuredClone(source);bad.body.binding.claims.revenue++;bad.signature=protocol.signBody(platform.privateKey,bad.body);await assert.rejects(verifyIssuedSource(bad,pins,expected),/Converted/,'even platform-resigned transformed claims cannot override issuer original');
 const tamper=structuredClone(source);tamper.body.original.claims.revenue++;tamper.signature=protocol.signBody(platform.privateKey,tamper.body);await assert.rejects(verifyIssuedSource(tamper,pins,expected),/signature/);await assert.rejects(verifyIssuedSource(source,pins,{...expected,jobId:uuid()}));
 const snapshot=await store.readState(owner);snapshot.state.requests.find(r=>r.id===requestIds[0]).nonce='changed';await store.saveState(owner,snapshot.state,snapshot.version);await assert.rejects(cmd({action:'source'}));snapshot.state.requests.find(r=>r.id===requestIds[0]).nonce=source.body.originalRequests[0].nonce;await store.saveState(owner,snapshot.state,snapshot.version+1);
+const changedTime=await store.readState(owner),presentation=changedTime.state.presentations.find(p=>p.requestId===requestIds[0]),savedPresentation=structuredClone(presentation);
+presentation.issuedAt=new Date(Date.parse(presentation.issuedAt)+1000).toISOString();await require('../lib/processing-signature.ts').signProcessingResult(presentation,changedTime.state.issuers.find(i=>i.id===presentation.issuerId));await store.saveState(owner,changedTime.state,changedTime.version);await assert.rejects(cmd({action:'source'}),/두 신청/,'even a newly signed receipt cannot replace the approved evaluation time');
+Object.assign(presentation,savedPresentation);await store.saveState(owner,changedTime.state,changedTime.version+1);
 outage=true;await assert.rejects(cmd({action:'source'}));outage=false;
 const base={network:'undeployed',contractAddress:target.contractAddress,blockHash:'d'.repeat(64),blockHeight:12,blockTimestamp:Date.now(),status:'SucceedEntirely',mode:'midnight-finalized'};
 for(let n=0;n<2;n++)await cmd({action:'receipt',receipt:{...base,operation:'submit',txId:String(n+1).repeat(64),txHash:String(n+1).repeat(64)}});

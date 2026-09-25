@@ -8,6 +8,14 @@ const ids=await Promise.all([pool.claimPreparedDemo('192.0.2.1'),pool.claimPrepa
 const first=await readState(ids[0]),second=await readState(ids[1]);first.state.credentials[0].status='revoked';await require('../lib/store.ts').saveState(ids[0],first.state,first.version);assert.equal((await readState(ids[1])).state.credentials[0].status,'active');
 await Promise.all([pool.claimPreparedDemo('192.0.2.3'),pool.claimPreparedDemo('192.0.2.4'),pool.claimPreparedDemo('192.0.2.5'),pool.claimPreparedDemo('192.0.2.6')]);assert.equal((await env.DB.prepare('SELECT COUNT(*) AS n FROM demo_sessions').first()).n,5);assert.equal(await pool.claimPreparedDemo('192.0.2.7'),null);
 const before=await readState(ids[1]);await pool.ensurePreparedWorkspace(ids[1]);await pool.ensurePreparedWorkspace(ids[1]);assert.equal((await readState(ids[1])).version,before.version);
+const blocked=await pool.demoAdmissionStatus('192.0.2.7');assert.equal(blocked.capacityFull,true);assert.equal(blocked.maxActive,5);assert.ok(blocked.retryAfterSeconds>300);
+process.env.BIZPROOF_DEMO_MAX_ACTIVE='7';
+const added=await Promise.all([pool.claimPreparedDemo('192.0.2.7'),pool.claimPreparedDemo('192.0.2.8'),pool.claimPreparedDemo('192.0.2.9')]);assert.equal(added.filter(Boolean).length,2);
+assert.equal((await env.DB.prepare('SELECT COUNT(*) AS n FROM demo_sessions WHERE expires>?').bind(Date.now()).first()).n,7);
+process.env.BIZPROOF_DEMO_MAX_ACTIVE='8';process.env.BIZPROOF_DEMO_PER_IP_HOUR='1';
+assert.equal(await pool.claimPreparedDemo('192.0.2.1'),null);const limited=await pool.demoAdmissionStatus('192.0.2.1');assert.equal(limited.capacityFull,false);assert.equal(limited.rateLimited,true);
+process.env.BIZPROOF_DEMO_MAX_ACTIVE='1000';assert.throws(()=>pool.demoLimits(),/configuration/);
+delete process.env.BIZPROOF_DEMO_MAX_ACTIVE;delete process.env.BIZPROOF_DEMO_PER_IP_HOUR;
 const old='demo-'+crypto.randomUUID();await readState(old);const oldBefore=await readState(old);await pool.ensurePreparedWorkspace(old);const upgraded=await readState(old);assert.ok(upgraded.state.preparedDemo);assert.equal(upgraded.state.companies.length,oldBefore.state.companies.length+1);await pool.ensurePreparedWorkspace(old);assert.equal((await readState(old)).state.companies.length,upgraded.state.companies.length);
 const {DatabaseSync}=require('node:sqlite'),reopened=new DatabaseSync(path.join(process.env.BIZPROOF_DATA_DIR,'bizproof.sqlite'));assert.ok(reopened.prepare('SELECT payload FROM workspaces WHERE owner=?').get(ids[1]).payload.includes('preparedDemo'));reopened.close();
 console.log('PASS demo pool: pre-saved SQLite credentials, concurrent isolated claims, 5-session cap, persistence and idempotent non-destructive upgrade');

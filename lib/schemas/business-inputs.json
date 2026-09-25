@@ -2,40 +2,191 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://bizproof.local/schemas/business-inputs-v1",
   "definitions": {
-    "text": {"type":"string","minLength":1,"maxLength":160,"pattern":"\\S"},
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "\\S"
+    },
     "claims": {
-      "type":"object","additionalProperties":false,
-      "required":["revenue","foundedOn","region","certified"],
-      "properties":{
-        "revenue":{"type":"integer","minimum":0,"maximum":1000000000000},
-        "foundedOn":{"type":"string","format":"date"},
-        "region":{"$ref":"#/definitions/text"},
-        "certified":{"type":"boolean"}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revenue",
+        "foundedOn",
+        "region",
+        "certified"
+      ],
+      "properties": {
+        "revenue": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000000000
+        },
+        "foundedOn": {
+          "type": "string",
+          "format": "date"
+        },
+        "region": {
+          "$ref": "#/definitions/text"
+        },
+        "certified": {
+          "type": "boolean"
+        }
       }
     },
     "company": {
-      "type":"object","additionalProperties":false,
-      "required":["name","registration","industry","region","contact"],
-      "properties":{
-        "name":{"$ref":"#/definitions/text"},
-        "registration":{"type":"string","minLength":3,"maxLength":40,"pattern":"\\S"},
-        "industry":{"$ref":"#/definitions/text"},
-        "region":{"$ref":"#/definitions/text"},
-        "contact":{"type":"string","format":"email","maxLength":180}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "registration",
+        "industry",
+        "region",
+        "contact"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/text"
+        },
+        "registration": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 40,
+          "pattern": "\\S"
+        },
+        "industry": {
+          "$ref": "#/definitions/text"
+        },
+        "region": {
+          "$ref": "#/definitions/text"
+        },
+        "contact": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 180
+        }
       }
     },
     "policy": {
-      "type":"object","additionalProperties":false,
-      "required":["name","audience","kind","minRevenue","maxRevenue","maxAgeMonths","region","requireCertification","issuerIds"],
-      "properties":{
-        "name":{"$ref":"#/definitions/text"},"audience":{"$ref":"#/definitions/text"},
-        "kind":{"type":"string","enum":["buyer","grant"]},
-        "minRevenue":{"type":["integer","null"],"minimum":0,"maximum":1000000000000},
-        "maxRevenue":{"type":["integer","null"],"minimum":0,"maximum":1000000000000},
-        "maxAgeMonths":{"type":["integer","null"],"minimum":0,"maximum":1200},
-        "region":{"anyOf":[{"$ref":"#/definitions/text"},{"type":"null"}]},
-        "requireCertification":{"type":"boolean"},
-        "issuerIds":{"type":"array","minItems":1,"maxItems":20,"uniqueItems":true,"items":{"type":"string","minLength":1,"maxLength":160}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "audience",
+        "kind",
+        "minRevenue",
+        "maxRevenue",
+        "maxAgeMonths",
+        "region",
+        "requireCertification",
+        "issuerIds"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/text"
+        },
+        "audience": {
+          "$ref": "#/definitions/text"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "buyer",
+            "grant"
+          ]
+        },
+        "minRevenue": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1000000000000
+        },
+        "maxRevenue": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1000000000000
+        },
+        "maxAgeMonths": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1200
+        },
+        "region": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/text"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requireCertification": {
+          "type": "boolean"
+        },
+        "issuerIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "ageReferenceDate": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^(19[7-9][0-9]|[2-9][0-9]{3})-"
+        },
+        "ageComparison": {
+          "type": "string",
+          "enum": [
+            "lt",
+            "lte"
+          ]
+        },
+        "sourceUrl": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 2048,
+          "pattern": "^https://"
+        },
+        "sourceVersion": {
+          "$ref": "#/definitions/text"
+        }
+      },
+      "dependencies": {
+        "ageReferenceDate": {
+          "required": [
+            "ageComparison"
+          ],
+          "properties": {
+            "ageComparison": {},
+            "maxAgeMonths": {
+              "type": "integer"
+            }
+          }
+        },
+        "ageComparison": [
+          "ageReferenceDate"
+        ],
+        "sourceUrl": [
+          "sourceVersion"
+        ],
+        "sourceVersion": [
+          "sourceUrl"
+        ]
       }
     }
   }

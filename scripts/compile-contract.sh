@@ -15,4 +15,4 @@ fi
 echo "$sha  $cache/compiler.zip" | sha256sum --check --status
 unzip -qo "$cache/compiler.zip" -d "$cache/bin"
 chmod +x "$cache/bin/compactc" "$cache/bin/compactc.bin" "$cache/bin/zkir" "$cache/bin/zkir-v3"
-"$cache/bin/compactc" "$root/contracts/bizproof.compact" "${1:-$root/contracts/managed}"
+PATH="$cache/bin:$PATH" "$cache/bin/compactc.bin" "${2:-$root/contracts/bizproof.compact}" "${1:-$root/contracts/managed}"

@@ -26,7 +26,7 @@
 
 공개 시연 자료: https://github.com/xaikorea/midnight-korea-hackathon-2026/releases/tag/hackathon-demo-2026-09-25
 
-새 환경의 [웹 CI](https://github.com/xaikorea/midnight-korea-hackathon-2026/actions/runs/36021183167)와 [실제 Devnet CI](https://github.com/xaikorea/midnight-korea-hackathon-2026/actions/runs/36019675856)를 모두 통과했다. 아래 웹 연결 기록과 CI의 독립 실행은 서로 다른 합성 시연이다.
+공개 정리 커밋 `468a72e`의 [웹 CI](https://github.com/xaikorea/midnight-korea-hackathon-2026/actions/runs/36092965650)와 [Compact CI](https://github.com/xaikorea/midnight-korea-hackathon-2026/actions/runs/36092965819)를 통과했다. 후자는 컴파일·계약·SDK 검사이며 실제 Devnet 거래 단계는 건너뛰었다. 아래 웹 연결 거래 기록과 위의 발급 원본 거래 기록은 별도 실행 증거이며 새 CI에서 다시 거래를 실행했다고 해석하지 않는다.
 
 | 항목 | 결과와 확인 자료 |
 |---|---|

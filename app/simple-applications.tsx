@@ -15,10 +15,12 @@ import './process-console.css';
 import {applicationStatus,applicationStatusCopy} from '@/lib/application-status';
 import ProofJobsPanel from './proof-jobs-panel';
 import './issuance.css';
+import ProgramApplications from './program-applications';
 
 type Props={data:ViewState;refresh:()=>Promise<void>;go:(view:string)=>void};
 type PreviewRow={policyId:string;preview?:ApplicationPreview;error?:string};
 export default function SimpleApplications({data,refresh,go}:Props){
+ const [caseView,setCaseView]=useState(false);
  const issuedFlow=typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('flow')==='issued';
  const [company,setCompany]=useState((issuedFlow?'issuer-demo-company':data.preparedDemo?.companyId)??(data.companies.length===1?data.companies[0].id:''));
  const [selected,setSelected]=useState<string[]>([]),[choices,setChoices]=useState<Record<string,string>>({});
@@ -56,7 +58,7 @@ export default function SimpleApplications({data,refresh,go}:Props){
   catch(e){setError(e instanceof Error?e.message:'제출 결과를 확인하지 못했습니다. 다시 확인하면 이미 완료된 신청은 제외됩니다.');await refresh();}
   finally{setBusy(false);}
  }
- return <div className="simple-workspace batch-workspace">
+ return <div><nav className="application-modes" aria-label="신청 방식"><button aria-pressed={!caseView} onClick={()=>setCaseView(false)}>빠른 자격 재사용 시연</button><button aria-pressed={caseView} onClick={()=>setCaseView(true)}>실제 기관·구매사 준비</button></nav>{caseView?<ProgramApplications data={data} refresh={refresh}/>:<div className="simple-workspace batch-workspace">
   <div className="simple-steps"><span className={!selected.length&&!existing.length?'active':''}>1 대상 선택</span><ArrowRight size={16}/><span className={pendingIds.length?'active':''}>2 공유 확인·제출</span><ArrowRight size={16}/><span className={existing.length&&!pendingIds.length?'active':''}>3 결과</span></div>
   <section className="simple-card batch-company"><ShieldCheck/><div><h2>{currentCompany?.name??'신청할 기업을 선택하세요'}</h2>{issuedFlow?<p>별도 발급기관에서 받은 자격을 사용합니다. 제출 전 기관의 현재 상태를 다시 확인합니다.</p>:data.preparedDemo?<p>기업 정보와 서명된 자격이 미리 저장되어 있습니다. 추가 입력 없이 시작하세요.</p>:<p>보유한 기업 정보와 자격을 자동으로 확인합니다.</p>}{data.companies.length>1&&!data.preparedDemo&&<label className="simple-field">신청 기업<select aria-label="신청 기업" disabled={busy} value={company} onChange={e=>{setCompany(e.target.value);setSelected([]);setChoices({});setOutcomes([]);}}><option value="">기업 선택</option>{data.companies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}{!data.companies.length&&<Button onClick={()=>go('access')}>기업 연결 요청</Button>}</div></section>
   <div className="process-launcher"><div><Activity size={24}/><div><strong>서버에서는 어떻게 처리할까요?</strong><p>자격 검사·서명·기관별 검증·저장 기록을 직접 확인하세요.</p></div></div><div className="process-launcher-actions"><Button variant="outline" onClick={()=>setProcessOpen(true)}><Activity size={15}/>처리 과정 보기</Button><Button variant="outline" onClick={()=>setBlockchainOpen(true)}><ShieldCheck size={15}/>블록체인 흐름 보기</Button><a href="/process" target="_blank" rel="noopener noreferrer">별도 관제 창 ↗</a></div></div>
@@ -74,5 +76,5 @@ export default function SimpleApplications({data,refresh,go}:Props){
   <VerificationLink/>
  <Sheet open={blockchainOpen} onOpenChange={setBlockchainOpen}><SheetContent className="process-sheet" showCloseButton={false}><SheetClose className="process-close" aria-label="블록체인 창 닫기"><X size={19}/></SheetClose><SheetHeader><SheetTitle>블록체인 기술 시각화</SheetTitle><SheetDescription>기업 자격이 증명과 거래로 이어지는 실제 Midnight 기록을 살펴보세요.</SheetDescription></SheetHeader><div className="process-sheet-scroll"><p className="chain-modal-intro">현재 신청은 Ed25519 서버 검증으로 처리됩니다. 아래는 별도로 실행한 Local Devnet 기록이며, 현재 신청의 온체인 결과가 아닙니다.</p>{blockchainOpen&&<BlockchainEvidenceViewer enabled={blockchainOpen}/>}</div></SheetContent></Sheet>
  <Sheet open={processOpen} onOpenChange={setProcessOpen}><SheetContent className="process-sheet" showCloseButton={false}><SheetClose className="process-close" aria-label="관제 창 닫기"><X size={19}/></SheetClose><SheetHeader><SheetTitle>처리 과정 관제</SheetTitle><SheetDescription>서버의 실제 처리 기록입니다. 창을 닫아도 제출은 계속됩니다.</SheetDescription></SheetHeader><div className="process-sheet-scroll"><ProcessConsole key={processRun?.id??'history'} live={processRun} companyId={company} busy={busy} enabled={processOpen}/></div></SheetContent></Sheet>
- </div>;
+ </div>}</div>;
 }

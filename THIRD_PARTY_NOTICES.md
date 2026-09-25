@@ -21,3 +21,5 @@ SAP Supplier Profiles, GLEIF vLEI and Truvity SSI informed the business workflow
 walt.id, Privado ID, Keycloak, OpenBao, OPA, OpenFGA, ClamAV and KERI/vLEI are referenced by optional integration adapters or design notes. An adapter in the source is not a claim that every external service is deployed in the public demo. Component-specific notices, including `integrations/vlei/LICENSE-APACHE-2.0`, remain in their directories.
 
 Original background animation and sample-free synthesized demo music are documented with the local media artifacts; no third-party music track is required for the demo video.
+
+PDF parsing and synthetic demonstration documents use [pdf-lib](https://github.com/Hopding/pdf-lib), version 1.17.1, MIT license. Package copyright and license text remain in the installed distribution.

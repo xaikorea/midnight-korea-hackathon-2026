@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {assertAgeProofSupported} from './policy-age';
 import {binding,readState} from './store';
 import {credentialPayload,type Credential,type VerificationRequest} from './domain';
 import {digest,sign} from './signatures';
@@ -16,7 +17,7 @@ export async function proofJobTables(){await binding().prepare('CREATE TABLE IF 
 export async function getProofJob(id:string){await proofJobTables();const row=await binding().prepare('SELECT payload,revision FROM proof_jobs WHERE id=?').bind(id).first<Row>();if(!row)fail('체인 작업을 찾을 수 없습니다.',404);const j=JSON.parse(row!.payload) as ProofJob;j.revision=row!.revision;return j;}
 async function save(j:ProofJob){const updated=await binding().prepare('UPDATE proof_jobs SET payload=?,revision=revision+1 WHERE id=? AND revision=?').bind(JSON.stringify(j),j.id,j.revision).run();if(updated.meta.changes!==1)fail('작업 상태가 변경되었습니다. 다시 조회하세요.');j.revision++;return j;}
 export async function allProofJobs(owner?:string){await proofJobTables();const rows=owner?await binding().prepare('SELECT payload,revision FROM proof_jobs WHERE owner=? ORDER BY created DESC LIMIT 10').bind(owner).all<Row>():await binding().prepare('SELECT payload,revision FROM proof_jobs ORDER BY created DESC LIMIT 100').all<Row>();return rows.results.map(r=>({...JSON.parse(r.payload),revision:r.revision}) as ProofJob);}
-function originalRequest(r:VerificationRequest){return originalRequestSchema.parse({id:r.id,companyId:r.companyId,policyId:r.policyId,policyHash:r.policyHash,policy:r.policy,nonce:r.nonce,expiresAt:r.expiresAt,createdAt:r.createdAt});}
+function originalRequest(r:VerificationRequest,evaluationAt?:string){return originalRequestSchema.parse({...(evaluationAt?{evaluationAt}:{}),id:r.id,companyId:r.companyId,policyId:r.policyId,policyHash:r.policyHash,policy:r.policy,nonce:r.nonce,expiresAt:r.expiresAt,createdAt:r.createdAt});}
 async function current(j:ProofJob,allowRevoked=false){
  const {state:s}=await readState(j.owner),c=s.credentials.find(c=>c.id===j.credentialId);
  if(!c?.remoteBinding||c.remoteBinding.scope!==j.scope||await issuerScope(j.owner,j.owner)!==j.scope||c.source?.kind!=='synthetic'||await digest(credentialPayload(c))!==j.sourceDigest)fail('원본 자격 또는 체험 공간 연결이 변경되었습니다.',422);
@@ -28,7 +29,8 @@ async function current(j:ProofJob,allowRevoked=false){
  if(!allowRevoked){
   if(j.consentExpiresAt<=Math.floor(Date.now()/1000))fail('체인 처리 동의가 만료되었습니다. 새 동의가 필요합니다.',422);
   for(const snapshot of j.requests){const r=s.requests.find(r=>r.id===snapshot.id),p=s.presentations.find(p=>p.requestId===snapshot.id&&p.credentialId===c.id),issuer=s.issuers.find(i=>i.id===c.issuerId);
-   if(!r||!['verified','rejected'].includes(r.status)||!p?.verifiedAt||!issuer||p.submittedBy!==j.owner||!await verifyProcessingResult(p,issuer)||p.credentialDigest!==j.sourceDigest||p.policyHash!==snapshot.policyHash||p.nonce!==snapshot.nonce||p.audience!==snapshot.policy.audience||await digest(originalRequest(r))!==await digest(snapshot)||await digest(r.policy)!==r.policyHash||Date.parse(r.expiresAt)<=Date.now())fail('원래 두 신청의 서명·동의·정책·상태가 변경되었습니다.',422);
+   try{assertAgeProofSupported(c.claims.foundedOn,snapshot.policy);}catch{fail('설립일이 업력 기준일 이후입니다. 현재 회로에서는 이 미충족 조건의 증명을 지원하지 않습니다.',422);}
+   if(!r||!['verified','rejected'].includes(r.status)||!p?.verifiedAt||!issuer||p.submittedBy!==j.owner||!await verifyProcessingResult(p,issuer)||p.credentialDigest!==j.sourceDigest||p.policyHash!==snapshot.policyHash||p.nonce!==snapshot.nonce||p.audience!==snapshot.policy.audience||await digest(originalRequest(r,snapshot.evaluationAt?p.issuedAt:undefined))!==await digest(snapshot)||await digest(r.policy)!==r.policyHash||Date.parse(r.expiresAt)<=Date.now())fail('원래 두 신청의 서명·동의·정책·상태가 변경되었습니다.',422);
   }
  }
  return {original:original as Credential,status:status.body.status};
@@ -41,7 +43,7 @@ export async function requestProofJob(owner:string,input:{credentialId:string;re
  const {state:s}=await readState(owner),c=s.credentials.find(c=>c.id===input.credentialId);
  if(!c?.remoteBinding)fail('별도 발급기관에서 받은 자격을 선택하세요.',422);
  const requests=input.requestIds.map(id=>s.requests.find(r=>r.id===id));if(requests.length!==2||requests.some(r=>!r)||new Set(requests.map(r=>r!.policy.kind)).size!==2||new Set(requests.map(r=>r!.nonce)).size!==2)fail('구매사와 지원사업의 원래 신청 두 건이 필요합니다.',422);
- const now=Math.floor(Date.now()/1000),j:ProofJob={id:crypto.randomUUID(),owner,scope,key:input.key,credentialId:c!.id,sourceDigest:await digest(credentialPayload(c!)),requests:requests.map(r=>originalRequest(r!)),referenceTime:now,consentExpiresAt:now+5400,createdAt:new Date().toISOString(),status:'awaiting_approval',revision:0,receipts:[],events:[],revocation:'none'};
+ const now=Math.floor(Date.now()/1000),j:ProofJob={id:crypto.randomUUID(),owner,scope,key:input.key,credentialId:c!.id,sourceDigest:await digest(credentialPayload(c!)),requests:requests.map(r=>{const p=s.presentations.find(p=>p.requestId===r!.id&&p.credentialId===c!.id);if(!p)fail('원래 신청의 처리 결과가 필요합니다.',422);return originalRequest(r!,p!.issuedAt);}),referenceTime:now,consentExpiresAt:now+5400,createdAt:new Date().toISOString(),status:'awaiting_approval',revision:0,receipts:[],events:[],revocation:'none'};
  await current(j);
  // An atomic capacity predicate also prevents concurrent duplicate work under distinct click keys.
  const lock=await digest({credentialId:j.credentialId,requests:j.requests.map(r=>r.id).sort()});

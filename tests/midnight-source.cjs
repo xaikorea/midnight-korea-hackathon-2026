@@ -9,6 +9,10 @@ require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f
  await assert.rejects(verifyWebSource(envelope,(await makeKeys()).publicKey,binding));await assert.rejects(verifyWebSource(envelope,key,binding,b.expiresAt));
  const tampered=structuredClone(envelope);tampered.body.claims.revenue++;await assert.rejects(verifyWebSource(tampered,key,binding));
  await assert.rejects(exportMidnightSource(state,c,binding,'alice',true),/검토/);
+ const oldPolicy=structuredClone(state.requests[0].policy),oldHash=state.requests[0].policyHash;
+ Object.assign(state.requests[0].policy,{maxAgeMonths:84,ageReferenceDate:'2000-01-01',ageComparison:'lte'});state.requests[0].policyHash=await digest(state.requests[0].policy);
+ await assert.rejects(exportMidnightSource(state,c,binding,'alice',false),/기준일 이후/);
+ state.requests[0].policy=oldPolicy;state.requests[0].policyHash=oldHash;
  state.requests[0].status='cancelled';await assert.rejects(checkMidnightSource(state,envelope,'alice',false));state.requests[0].status='pending';c.status='revoked';await assert.rejects(checkMidnightSource(state,envelope,'alice',false));c.status='active';
  binding.requests=[binding.requests[0],binding.requests[0]];await assert.rejects(exportMidnightSource(state,c,binding,'alice',false));
  console.log('PASS web-to-Midnight source: same signed credential digest and claims, two policies, trusted key, tamper/target/expiry rejection, current revocation/cancellation checks');

@@ -41,7 +41,7 @@ export async function prepareApplication(s:State,ctx:BusinessActor,choice:Applic
  await observe?.('credential',selected?'success':needsChoice?'waiting':'failed',selected?'사용할 기업 자격을 연결했습니다.':needsChoice?'내용이 다른 자격 중 선택이 필요합니다.':'신청에 사용할 유효 자격 또는 담당자 권한이 없습니다.',{candidateCount:candidates.length,credentialId:selected?.id,authorityId:selected?.authorityId,operational:operational(ctx)});
  const auto=!!s.policyAutomation?.find(a=>a.policyId===p.id)?.enabled;
  const credential=selected?s.credentials.find(c=>c.id===selected.id)!:undefined;
- const previewHash=await digest({actor:ctx.actor,companyId:company!.id,policy:p,auto,credential:credential?credentialPayload(credential):null,signature:credential?.signature,authority:selected?.authorityId?s.authorities?.find(a=>a.id===selected.authorityId):null});
+ const previewHash=await digest({actor:ctx.actor,companyId:company!.id,policy:p,auto,evaluation:selected?{eligible:selected.eligible,checks:selected.checks}:null,credential:credential?credentialPayload(credential):null,signature:credential?.signature,authority:selected?.authorityId?s.authorities?.find(a=>a.id===selected.authorityId):null});
  return {reasonCode: selected?'ready':needsChoice?'credential_choice':authorityCandidates.length?'missing_authority':unavailableReason,authorityCandidates,companyId:company!.id,companyName:company!.name,policyId:p.id,title:p.name,audience:p.audience,kind:p.kind,autoVerify:auto,candidates,selected,needsChoice,ready:!!selected,previewHash,shared:['기업 식별 정보','조건별 충족 여부','요청·정책 식별값','발급기관·서명·유효기간',...(selected?.authorityId?['담당자 이름·역할·업무 범위']:[])],excluded:['정확한 매출·설립일 원본','증빙 파일'],reason:needsChoice?'내용이 서로 다른 자격이 있습니다. 사용할 자격을 확인하세요.':!selected?(operational(ctx)?'검토된 유효 자격과 본인에게 연결된 업무 권한이 필요합니다.':'이 대상에서 인정하는 유효 자격이 없습니다. 보유 자격·발급기관 또는 증빙을 확인하세요.'):'',notice:'서버는 원본 속성을 처리합니다. 조건 결과로 일부 범위를 추론할 수 있습니다.'};
 }
 export type ApplicationPreview=Awaited<ReturnType<typeof prepareApplication>>;
@@ -72,6 +72,7 @@ export async function submitApplication(s:State,ctx:BusinessActor,input:Applicat
  await observe?.('request','success','수신 기관·정책 해시·일회용 요청값(nonce)을 연결했습니다.',{requestId:r.id,policyHash:r.policyHash,nonce:r.nonce});
  await observe?.('policy','running','기관 정책에 따라 조건을 판정합니다.',{engine:policyEngineMode()});
  const ev=await evaluateSubmission(c.claims,policy,new Date(at));
+ if(await digest(ev)!==await digest({eligible:preview.selected!.eligible,checks:preview.selected!.checks}))error('확인 후 판정 기준 시점이 변경되었습니다. 조건과 공유 내용을 다시 확인하세요.',409);
  await observe?.('policy','success',ev.eligible?'기관의 신청 조건을 충족합니다.':'조건 판정이 완료되었으며 일부 조건은 미충족입니다.',{eligible:ev.eligible,checks:ev.checks,engine:policyEngineMode()});
  await observe?.('signature','running','요청에 묶인 제출 결과를 구성하고 Ed25519로 서명합니다.');
  const p:Presentation={id:'presentation-'+crypto.randomUUID(),proofVersion:2,schemaId:c.schemaId,credentialDigest:await digest(credentialPayload(c)),submittedBy:ctx.actor,...(preview.selected!.authorityId?{authorityId:preview.selected!.authorityId}:{}),requestId:r.id,credentialId:c.id,companyId:c.companyId,policyHash:r.policyHash,nonce:r.nonce,audience:policy.audience,issuedAt:at,expiresAt:new Date(Math.min(Date.now()+15*60e3,Date.parse(r.expiresAt),Date.parse(c.expiresAt))).toISOString(),...ev,signature:'',issuerId:issuer.id,keyId:issuer.keyId,mode:'signed-demo'};
