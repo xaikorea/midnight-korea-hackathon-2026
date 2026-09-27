@@ -3,6 +3,8 @@
 - [프로젝트 개요](../README.md): 문제, 제품 흐름, 기술과 실제 검증 범위.
 - [심사자 실행 안내](hackathon-runbook.md): 로컬 웹·Compact 컴파일·실제 Devnet 재현.
 - [제출 설명과 증거](submission-notes.md): 서로 다른 실행 사례, 확인한 결과와 남은 항목.
+- [블록체인 적용 범위](blockchain-scope.md): 사례별 회로 검증, 동일 운영자의 신뢰 경계와 범위 밖 사항.
+- [대기·복구 동작](demo-reliability.md): 영속 자동 발급, 공유 대기열과 만료 안내.
 - [공개 구성](public-deployment.md): 서버 역할과 배포 예제.
 - [프라이버시와 신뢰 경계](privacy-architecture.md): 원본 처리 주체, 공개 정보, ZK의 한계.
 - [별도 발급·체인 연결](issued-midnight-integration.md): 승인, 원래 신청 연결, 거래 대조, 취소.

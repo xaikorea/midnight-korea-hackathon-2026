@@ -1,12 +1,16 @@
 # BizProof 제출 준비 기록
 
-기술 보완 기준일: 2026-09-25 KST. [공개 구성](public-deployment.md)에서 현재 검증 범위와 운영 예제를 확인한다.
+기술 보완 기준일: 2026-09-27 KST. [공개 구성](public-deployment.md)에서 현재 검증 범위와 운영 예제를 확인한다.
 
 ## 프로젝트 설명
 
 **기업 자격 한 번, 구매사 등록과 지원사업 조건을 각각 증명.** BizProof는 같은 기업 자격을 여러 기관에 재사용하는 업무 시제품이다. 기업은 신청 대상과 정보 공유만 확인한다. Compact 회로는 민감한 기업 속성을 비공개 입력으로 받아 각 기관의 서로 다른 정책을 판정한다.
 
 **English:** BizProof reuses one business credential to prove eligibility for supplier onboarding and a support program. The public web demo offers a three-step business flow. A separately executed, reproducible Midnight Local Devnet path binds a real web-issued credential and its original requests to Compact proofs, finalized transactions, a negative eligibility result, and revocation enforcement.
+
+## 자동 시연과 현재 범위
+
+2026-09-26 KST에 관리자 클릭 없이 신규 지원 사례 거래 5건과 별도 발급 자격 두 신청 거래 8건을 각각 대조했다. [공개 필드만 담은 기록](../public/evidence/automatic-demo-2026-09-26.json). 두 계약·작업을 구분하며 이 실행에는 취소 거래가 없다. 2026-09-27에는 자동 발급의 영속 복구와 공유 대기열을 보강했다. [장애 처리](demo-reliability.md), [블록체인 범위](blockchain-scope.md). 실제 기관 발급·공식 접수·최종 선정은 포함하지 않는다. 구매사 3곳의 참고 사례는 자격·요청 연결을 확인하며 구매 심사 통과를 증명하지 않는다.
 
 ## 정상 완료와 취소 검증
 

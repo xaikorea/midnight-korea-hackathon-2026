@@ -1,0 +1,31 @@
+const fs=require('node:fs'),path=require('node:path'),ts=require('typescript'),Module=require('node:module'),assert=require('node:assert/strict'),crypto=require('node:crypto');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,f);
+process.env.BIZPROOF_DATA_DIR=fs.mkdtempSync(path.resolve('outputs/proof-queue-'));Object.assign(process.env,{BIZPROOF_PUBLIC_DEMO:'true',BIZPROOF_DEMO_AUTO_RUN:'true'});
+const env=require('../lib/node-bindings.ts').env,load=Module._load,files=new Map();Module._load=function(id,parent,...args){if(id==='cloudflare:workers')return {env};if(id==='./program-http'&&parent.filename.endsWith('program-proof-jobs.ts'))return {readDocument:async(owner,d)=>{assert.ok(files.has(d.key));return files.get(d.key);}};return load.call(this,id,parent,...args);};
+const queue=require('../lib/proof-queue.ts'),jobs=require('../lib/program-proof-jobs.ts'),store=require('../lib/store.ts');
+async function fixture(status,created,extra={}){const id=crypto.randomUUID(),j={id,owner:'demo-'+crypto.randomUUID(),applicationId:crypto.randomUUID(),createdAt:created,status,deadline:Math.floor(Date.now()/1000)+5400,revision:0,receipts:[],events:[],approvedBy:'fixture',...extra};await env.DB.prepare('INSERT INTO program_proof_jobs VALUES(?,?,?,?,?,0)').bind(id,j.owner,j.applicationId,created,JSON.stringify(j)).run();return j;}
+(async()=>{try{
+ await queue.ensureProofQueues();const old=await fixture('queued','2026-09-01T01:00:00Z'),verify=await fixture('awaiting_verification','2026-09-01T02:00:00Z');
+ for(let n=0;n<110;n++)await fixture('confirmed',new Date(Date.parse('2026-09-02T00:00:00Z')+n*1000).toISOString());
+ assert.deepEqual((await jobs.programWork('executor')).map(j=>j.id),[old.id]);assert.deepEqual((await jobs.programWork('verifier')).map(j=>j.id),[verify.id]);
+ const newer=await fixture('queued','2026-09-03T00:00:00Z');assert.deepEqual((await jobs.programWork('executor')).map(j=>j.id),[old.id,newer.id]);
+ const view=await queue.proofQueueStatus(old.owner);assert.equal(view.positions.length,1);assert.equal(view.positions[0].id,old.id);assert.ok(!JSON.stringify(view).includes(newer.id));
+ await env.DB.prepare('DELETE FROM program_proof_jobs').run();
+ for(let n=0;n<35;n++)await fixture('queued',new Date(n*1000).toISOString(),{deadline:1});const valid=await fixture('queued','2026-09-03T00:00:00Z');assert.deepEqual((await jobs.programWork('executor')).map(j=>j.id),[valid.id],'expired pages cannot hide runnable work');
+ await env.DB.prepare('DELETE FROM program_proof_jobs').run();
+ const pair=crypto.generateKeyPairSync('ed25519');process.env.BIZPROOF_PROCESSING_KEY=JSON.stringify({keyId:'test',publicKey:pair.publicKey.export({format:'jwk'}),privateKey:pair.privateKey.export({format:'jwk'})});
+ const service=require('../lib/program-service.ts'),{precheckProgram}=require('../lib/program-rules.ts'),{programProfiles}=require('../lib/program-catalog.ts'),owner='demo-'+crypto.randomUUID(),{state,version}=await store.readState(owner),companyId=await service.prepareProgramScenario(state,'normal',async(d,b)=>files.set(d.key,b),owner),company=state.companies.find(c=>c.id===companyId);
+ for(const profile of programProfiles.slice(0,3)){const precheck=await precheckProgram({data:state.programData,company,profile,verifiedDocuments:new Set(state.programData.documents.map(d=>d.id))}),consent=await service.consentChallenge(state.programData,precheck,owner,owner);await service.saveProgramApplication(state.programData,{actor:owner,owner,profile,precheck,consent,confirmed:true});}await store.saveState(owner,state,version);
+ process.env.BIZPROOF_PROOF_QUEUE_LIMIT='2';const issuedId=crypto.randomUUID();await env.DB.prepare('INSERT INTO proof_jobs VALUES(?,?,?,?,?,0)').bind(issuedId,'another-owner','fixture-dedupe','2026-09-01T00:00:00Z',JSON.stringify({status:'queued',consentExpiresAt:Math.floor(Date.now()/1000)+5400})).run();
+ const results=await Promise.allSettled(state.programData.applications.map(a=>jobs.requestProgramJob(owner,owner,a.id)));assert.equal(results.filter(r=>r.status==='fulfilled').length,1,'both queue families share one atomic capacity limit');assert.ok(results.filter(r=>r.status==='rejected').every(r=>r.reason.status===429));assert.equal((await queue.proofQueueStatus(owner)).accepting,false);
+ const accepted=results.find(r=>r.status==='fulfilled').value;assert.equal((await jobs.requestProgramJob(owner,owner,accepted.applicationId)).id,accepted.id,'idempotent retry works even when full');
+ assert.deepEqual((await queue.orderProofWork([{id:accepted.id,kind:'proof',family:'program'},{id:issuedId,kind:'proof'}])).map(j=>j.id),[issuedId,accepted.id]);
+ await queue.noteProofWorker('executor');assert.equal((await queue.proofQueueStatus(owner)).workers.executor.recent,true);
+ const paused={...accepted,status:'needs_attention'};await env.DB.prepare('UPDATE program_proof_jobs SET payload=? WHERE id=?').bind(JSON.stringify(paused),paused.id).run();
+ const occupying=await fixture('queued',new Date().toISOString());
+ await assert.rejects(jobs.controlProgramJob(paused.id,'resume','fixture-admin',paused.revision),e=>e.status===429);
+ assert.equal((await jobs.getProgramJob(paused.id)).status,'needs_attention','a failed resume must not change saved state');
+ await env.DB.prepare('DELETE FROM program_proof_jobs WHERE id=?').bind(occupying.id).run();
+ assert.equal((await jobs.controlProgramJob(paused.id,'resume','fixture-admin',paused.revision)).status,'queued');
+ console.log('PASS queue: 100+ completed histories, verifier discovery, FIFO, expired-page pagination, scoped estimates, atomic cross-family capacity, full-queue idempotence and worker heartbeat.');
+ }finally{Module._load=load;}})().catch(e=>{console.error(e);process.exitCode=1;});

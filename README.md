@@ -35,6 +35,12 @@
 
 제출 문구와 아직 확인해야 할 외부 항목은 [제출 준비 기록](docs/submission-notes.md)에 정리했습니다.
 
+## 자동 시연과 복구 — 2026-09-27
+
+공개 합성 자동 모드는 최초 동의 후 관리자 클릭 없이 처리한다. 자동 발급 진행을 DB에 저장하고 통신 장애·웹 재시작 후 같은 신청을 이어간다. 두 종류의 체인 작업은 공통 수용 한도·FIFO·동의 만료 안내를 사용한다. 실제 발급기관과 공식 접수는 연결하지 않았다. [안정성 설명](docs/demo-reliability.md), [블록체인 적용 범위](docs/blockchain-scope.md).
+
+[2026-09-26 KST 자동 시연 기록](public/evidence/automatic-demo-2026-09-26.json)은 신규 지원 사례 5건과 별도 발급 자격 재사용 8건의 **서로 다른 작업**이다. 당시 실행 증거이며 현재 방문자의 결과나 체인 현재 상태가 아니다.
+
 ## 새 발급 자격과 원래 신청의 연결 — 2026-09-25
 
 공개 NHN에서 별도 발급한 합성 자격 하나와 원래 구매사·지원사업 신청 두 건을 사용했다. 해당 작업을 서비스 관리자가 승인한 뒤 실제 Local Devnet 거래 8건을 별도 검증기가 대조했고, 동일 자격 취소 후 9번째 거래와 revoked=true를 확인했다. [공개 실행 증거](docs/evidence/issued-job-public-local-devnet-2026-09-25.json). 위의 이전 11건 실행과 다른 작업이며 이번 9건에 비교 조건 false 거래가 포함된 것은 아니다.
@@ -136,6 +142,6 @@ Schnorr 모듈과 지갑 초기화 패턴은 Midnight example-zkloan에서 참�
 
 ### Public-condition preparation examples
 
-The application includes six reference profiles for three startup support organizations and three buyers. Use **신청하기 → 실제 기관·구매사 준비** for persisted synthetic documents, signed credentials, conditional checks, manual review and a private preparation manifest. Official external submission is not connected. See [scope, setup and limitations](docs/program-preparation.md). The separate program numeric Compact contract is locally tested; these new applications do not yet execute chain transactions.
+The application includes six reference profiles for three startup support organizations and three buyers. Use **신청하기 → 실제 기관·구매사 준비** for persisted synthetic documents, signed credentials, conditional checks, manual review and a private preparation manifest. Official external submission is not connected. See [scope, setup and limitations](docs/program-preparation.md). These applications can create new Local Devnet transactions after explicit consent. Public synthetic automatic mode proceeds without a separate administrator click; queue admission, actual receipts and separate verifier results are still required. Buyer profiles prove credential/request binding, not procurement approval. See [exact blockchain scope](docs/blockchain-scope.md) and [queue and recovery](docs/demo-reliability.md).
 
 공개 합성 데이터의 [자동 시연 흐름과 경계](docs/public-demo-automation.md)를 제공한다. 기관·구매사 준비에서 한 번 동의하면 준비·저장·새 Local Devnet 요청을 이어가고, 별도 발급은 모의 검토·서명·지갑 수신을 자동 처리한다.

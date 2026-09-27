@@ -1,3 +1,4 @@
+import {orderProofWork,noteProofWorker} from '@/lib/proof-queue';
 import {z} from 'zod';
 import {authenticateProofWorker} from '@/lib/proof-worker-auth';
 import {availableProofWork,claimProofJob,proofWorkerCommand,verificationTask,completeProofVerification,ProofJobError} from '@/lib/proof-jobs';
@@ -8,8 +9,8 @@ export const dynamic='force-dynamic';
 const reply=(value:unknown,status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
 export async function POST(req:Request){try{
  if(!publicDemo())throw new ProofJobError(403,'공개 합성 시연 작업만 지원합니다.');
- const text=await req.text();if(text.length>50000)throw new ProofJobError(413,'요청이 너무 큽니다.');const body=JSON.parse(text),u=await authenticateProofWorker(req,body);
- if(body.action==='work'){z.object({action:z.literal('work')}).strict().parse(body);const old=await availableProofWork(u.role==='verifier'?'verifier':'executor');return reply({...old,jobs:[...old.jobs.slice(0,10),...await programWork(u.role==='verifier'?'verifier':'executor')]});}
+ const text=await req.text();if(text.length>50000)throw new ProofJobError(413,'요청이 너무 큽니다.');const body=JSON.parse(text),u=await authenticateProofWorker(req,body);await noteProofWorker(u.role==='verifier'?'verifier':'executor');
+ if(body.action==='work'){z.object({action:z.literal('work')}).strict().parse(body);const old=await availableProofWork(u.role==='verifier'?'verifier':'executor');return reply({...old,jobs:await orderProofWork([...old.jobs,...await programWork(u.role==='verifier'?'verifier':'executor')])});}
  if(body.family==='program'){
   const {family:_,...command}=body;
   if(u.role==='executor')return reply(await programWorkerCommand(u.worker,command));

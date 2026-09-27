@@ -1,5 +1,5 @@
 import {demoAutomationEnabled} from '@/lib/demo-automation';
-import {finishDemoIssuance} from '@/lib/demo-issuance';
+import {startDemoIssuanceJob,processDemoIssuanceJob,resumeDemoIssuanceJob,listDemoIssuanceJobs,publicDemoIssuanceJob} from '@/lib/demo-issuance-jobs';
 import {getChatGPTUser} from '@/app/chatgpt-auth';
 import {publicDemo,requestOrigin} from '@/lib/public-demo';
 import {demoWriteAllowed} from '@/lib/public-demo-guard';
@@ -16,16 +16,16 @@ async function context(){
  if(!publicDemo()||u.authMode!=='demo'||!u.userId.startsWith('demo-')||u.storageOwner!==u.userId)throw new RemoteIssuerError(403,'별도 발급 체험은 공개 합성 체험 공간에서만 제공됩니다.');
  return {...u,scope:await issuerScope(u.storageOwner,u.userId)};
 }
-function failure(e:unknown){if(e instanceof RemoteIssuerError)return reply({error:e.message},e.status);if(e instanceof ConflictError)return reply({error:'발급 원본은 기관에 보존되어 있습니다. 새로고침 후 지갑에 다시 받으세요.'},409);if(e instanceof z.ZodError||e instanceof SyntaxError)return reply({error:'입력 형식 또는 발급기관 응답을 확인하세요.'},400);return reply({error:'발급 처리에 실패했습니다. 현재 상태를 다시 조회하세요.'},503);}
-export async function GET(){try{
- const u=await context();remoteConfig();
+function failure(e:unknown,autoJobs?:ReturnType<typeof publicDemoIssuanceJob>[]){if(e instanceof RemoteIssuerError)return reply({autoJobs,error:e.message},e.status);if(e instanceof ConflictError)return reply({autoJobs,error:'발급 원본은 기관에 보존되어 있습니다. 새로고침 후 지갑에 다시 받으세요.'},409);if(e instanceof z.ZodError||e instanceof SyntaxError)return reply({autoJobs,error:'입력 형식 또는 발급기관 응답을 확인하세요.'},400);return reply({autoJobs,error:'발급 처리에 실패했습니다. 현재 상태를 다시 조회하세요.'},503);}
+export async function GET(){let autoJobs:ReturnType<typeof publicDemoIssuanceJob>[]|undefined;try{
+ const u=await context();autoJobs=(await listDemoIssuanceJobs(u.storageOwner)).map(publicDemoIssuanceJob);remoteConfig();
  const [catalog,list,{state,version}]=await Promise.all([issuerCall(u.scope,'GET','/v1/catalog'),issuerCall(u.scope,'GET','/v1/issuance-requests'),readState(u.storageOwner)]);
  const receipts=[];let changed=false;
  for(const r of state.credentialReceipts??[]){const c=state.credentials.find(c=>c.id===r.credentialId);if(!c||c.remoteBinding?.scope!==u.scope)continue;try{const status=await remoteCredentialStatus(c,r.statusRevision);if(status.body.revision>r.statusRevision){r.statusRevision=status.body.revision;changed=true;}if(status.body.status==='revoked'&&c.status!=='revoked'){c.status='revoked';c.revokedAt=status.body.checkedAt;changed=true;}receipts.push({...r,status:c.status==='revoked'?'revoked':Date.parse(c.expiresAt)<=Date.now()?'expired':'active',statusCheckedAt:status.body.checkedAt});}catch{receipts.push({...r,status:'unknown'});}}
  if(changed)await saveState(u.storageOwner,state,version);
- return reply({autoRun:demoAutomationEnabled(),catalog,...list,receipts,identityMode:'simulated',transport:'separate-http-service',blockchain:'per-job-status',blockchainStatusUrl:'/api/proof-jobs'});
- }catch(e){return failure(e);}}
-const command=z.object({action:z.enum(['apply','start-identity','confirm-identity','cancel-identity','submit','decide','resubmit','cancel','receive','revoke']),key:z.string().uuid(),id:z.string().max(100).optional(),identityId:z.string().uuid().optional(),documentHash:z.string().regex(/^[a-f0-9]{64}$/).optional(),consent:z.boolean().optional(),automatic:z.boolean().optional(),revision:z.number().int().positive().optional(),decision:z.enum(['approve','needs_changes','reject']).optional(),reason:z.string().max(300).optional()}).strict();
+ return reply({autoRun:demoAutomationEnabled(),autoJobs,catalog,...list,receipts,identityMode:'simulated',transport:'separate-http-service',blockchain:'per-job-status',blockchainStatusUrl:'/api/proof-jobs'});
+ }catch(e){return failure(e,autoJobs);}}
+const command=z.object({action:z.enum(['apply','resume-auto','start-identity','confirm-identity','cancel-identity','submit','decide','resubmit','cancel','receive','revoke']),key:z.string().uuid(),id:z.string().max(100).optional(),identityId:z.string().uuid().optional(),documentHash:z.string().regex(/^[a-f0-9]{64}$/).optional(),consent:z.boolean().optional(),automatic:z.boolean().optional(),revision:z.number().int().positive().optional(),decision:z.enum(['approve','needs_changes','reject']).optional(),reason:z.string().max(300).optional()}).strict();
 export async function POST(req:Request){try{
  const u=await context();if(req.headers.get('origin')!==requestOrigin(req))throw new RemoteIssuerError(403,'같은 사이트에서 요청하세요.');
  if(!await demoWriteAllowed(u.userId))throw new RemoteIssuerError(429,'요청이 많습니다. 잠시 후 다시 시도하세요.');
@@ -33,14 +33,16 @@ export async function POST(req:Request){try{
  const requestId=()=>z.string().uuid().parse(b.id);
  let result:unknown;
  switch(b.action){
+  case 'resume-auto':result=await resumeDemoIssuanceJob(u.storageOwner,requestId());break;
   case 'apply':{
    if(b.automatic===true&&!demoAutomationEnabled())throw new RemoteIssuerError(403,'자동 시연이 활성화되지 않았습니다.');
    if(b.consent!==true)throw new RemoteIssuerError(400,'문서와 시뮬레이션 안내를 확인하고 동의하세요.');
+   if(b.automatic===true){const job=await startDemoIssuanceJob(u.storageOwner,u.scope,b);result=await processDemoIssuanceJob(job.id,u.storageOwner);break;}
    const key=async(label:string)=>{const h=await digest({key:b.key,label});return h.slice(0,8)+'-'+h.slice(8,12)+'-4'+h.slice(13,16)+'-a'+h.slice(17,20)+'-'+h.slice(20,32);};
    const identity=await issuerCall<{id:string}>(u.scope,'POST','/v1/identity-sessions',{key:await key('identity'),mode:'simulated',documentHash:b.documentHash});
    await issuerCall(u.scope,'POST','/v1/identity-sessions/'+identity.id+'/confirm',{key:await key('consent'),documentHash:b.documentHash,consent:true});
    const request=await issuerCall<{id:string;revision:number;status:string}>(u.scope,'POST','/v1/issuance-requests',{key:await key('submit'),identityId:identity.id,documentHash:b.documentHash});
-   result=b.automatic===true?await finishDemoIssuance(u.storageOwner,u.scope,request):request;break;
+   result=request;break;
   }
   case 'start-identity':result=await issuerCall(u.scope,'POST','/v1/identity-sessions',{key:b.key,mode:'simulated',documentHash:b.documentHash});break;
   case 'confirm-identity':case 'cancel-identity':result=await issuerCall(u.scope,'POST','/v1/identity-sessions/'+requestId()+'/'+(b.action==='confirm-identity'?'confirm':'cancel'),{key:b.key,documentHash:b.documentHash,consent:b.consent});break;
